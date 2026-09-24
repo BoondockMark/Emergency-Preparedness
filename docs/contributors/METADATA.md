@@ -1,57 +1,81 @@
 # Handout metadata
 
-Every source begins with YAML front matter:
+Every handout starts with block-style YAML between `---` delimiters. The build
+loads this metadata with `scripts/lib/metadata.mjs`, which deliberately supports
+only mappings, lists, and scalar values. YAML aliases, tags, flow collections,
+and multi-line scalars are rejected so metadata has one predictable meaning.
+Errors use the form `source/path.md: field.name: concise explanation`.
 
-| Field | Meaning |
+## Document schema
+
+| Field | Type and rule |
 |---|---|
-| `code` | Stable, unique code such as `COM-03`; never reused. |
+| `code` | Unique string matching `ABC-01` (three uppercase letters, hyphen, two digits). |
 | `title` | Resident-facing title. |
-| `section` / `sectionNumber` | Exact binder section and its number, 1–8. |
+| `section` / `sectionNumber` | Exact binder section and matching number, 1–8. |
 | `status` | `draft`, `under-review`, or `approved`. |
-| `version` | Editorial version, incremented when published content changes. |
-| `lastReviewed` | ISO date (`YYYY-MM-DD`) of the latest recorded review. For a draft, this is the date its placeholder content was last assessed, not an approval claim. |
-| `pageCount` | `1` or `2`; checked against source breaks and output PDF. |
-| `reviewers.editor` | Named editor, or `unassigned` before review. |
-| `reviewers.subjectMatter` | Named qualified reviewer, or `unassigned` before review. |
-| `sources` | YAML list of sources or an explicit placeholder while draft. |
+| `version` | String or number in `MAJOR.MINOR` form, such as `1.0`. |
+| `lastReviewed` | A real ISO calendar date (`YYYY-MM-DD`), not merely text in that shape. For drafts, it is the date the draft was last assessed and is not an approval claim. |
+| `pageCount` | Integer `1` or `2`, checked against source page breaks and the PDF. |
+| `reviewers.editor` | Name of the editor, or `unassigned` before approval. |
+| `reviewers.subjectMatter` | Name of the qualified technical reviewer, or `unassigned` before approval. |
+| `sources` | Non-empty list of structured source records described below. |
 
-Section numbering: 1 Start Here; 2 Alerts & Communication; 3 Evacuation & Shelter; 4 Water, Food & Cooking; 5 Home & Utilities; 6 Hands-On Skills; 7 Hazard Guides; 8 Plans & Records.
+Section numbering is: 1 Start Here; 2 Alerts & Communication; 3 Evacuation &
+Shelter; 4 Water, Food & Cooking; 5 Home & Utilities; 6 Hands-On Skills; 7
+Hazard Guides; 8 Plans & Records.
+
+## Structured sources
+
+Every source has a `type` and `title`. Optional `publicationDate`, `updateDate`,
+and `accessDate` values, when present, must be real ISO dates. Approved records
+have these additional requirements:
+
+| `type` | Representation and required fields for approval |
+|---|---|
+| `web` | A public web page or online document: `title`, `organization`, absolute HTTP(S) `url`, and `accessDate`; add `publicationDate` or `updateDate` when the publisher supplies one. |
+| `non-web` | A book, printed standard, or other non-web publication: `title`, `organization`, and a complete human-readable `citation` (edition, publisher, pages, or document identifier as applicable). Do not invent a URL or access date. |
+| `interview` | A conversation used as evidence: descriptive `title`, `interviewee`, `role`, and `interviewDate`. Obtain permission and do not commit private contact details. |
+| `local` | A file or record supplied locally but not publicly retrievable: descriptive `title`, `provider`, `location` (a durable repository/file-record identifier, not a workstation path), and `receivedDate`. Do not invent a public URL. |
+
+Example web source:
+
+```yaml
+sources:
+  - type: web
+    title: Ready, Set, Go! Wildland Fire Action Guide
+    organization: California Department of Forestry and Fire Protection
+    url: https://www.fire.ca.gov/prepare/get-ready-to-go
+    publicationDate: 2025-05-01
+    accessDate: 2026-09-24
+```
+
+## Status-dependent rules
+
+Draft and under-review handouts may use `unassigned` reviewers and visibly
+marked incomplete source data. This makes work in progress buildable. An
+`approved` handout fails validation unless all of the following are true:
+
+1. Both `reviewers.editor` and `reviewers.subjectMatter` contain names, neither
+   is `unassigned`, and the names differ so the two required roles are recorded
+   independently.
+2. Every source meets the requirements for its `type`; URLs and dates are valid.
+3. No source field contains `PLACEHOLDER`, `[VERIFY]`, sample-text language, or
+   another unresolved verification marker.
+4. The body contains no `SAMPLE TEXT`, `NOT APPROVED ADVICE`, `PLACEHOLDER`,
+   `[VERIFY ...]`, or “requires verification” marker.
+5. `lastReviewed` is a real ISO calendar date and `code` and `version` match the
+   formats above. These format rules apply to every status, not only approval.
+6. The approved handout also supplies the separately validated `proofRecord`
+   required by the publishing build.
+
+Validation fixtures in `test/metadata-fixtures/` exercise a valid approval and
+each approval rejection. Run them with `npm test`.
 
 ## Asset manifest
 
 Each `assets/handouts/<CODE>/` directory has a `manifest.json`. The build checks
 the manifest even if an asset is not yet referenced, verifies referenced files
-exist, and requires the HTML `alt` text to match. Example:
-
-```json
-{
-  "assets": [
-    {
-      "file": "evacuation-route.svg",
-      "type": "diagram",
-      "creator": "Jane Example, LHH Fire Watch",
-      "source": "Created for COM-03 from reviewed route information",
-      "license": "Project-owned; approved for publication",
-      "alt": "Two labeled evacuation routes lead east from the neighborhood meeting point; Route B is dashed.",
-      "caption": "Use Route B if officials close Route A.",
-      "decorative": false
-    }
-  ]
-}
-```
-
-| Asset field | Requirement |
-|---|---|
-| `file` | File name only, unique within the manifest. Published files are `.svg`, `.png`, `.jpg`, or `.jpeg`; diagrams must be SVG. |
-| `type` | `photograph`, `illustration`, or `diagram`. |
-| `creator` | Person or organization that made the visual. Use `Unknown` only after a documented rights review, never as a shortcut. |
-| `source` | Original publication, repository, or a note that the project created it. Include a stable URL here when applicable; image HTML itself remains local. |
-| `license` | License name/version, public-domain basis, or a concise permission record. “Found online” is not permission. |
-| `alt` | Useful replacement text. Must exactly match the `<img alt="…">` value. An empty string is valid only for an explicitly decorative asset. |
-| `caption` | Optional visible caption. If supplied, render equivalent text in `<figcaption>`; the manifest alone does not print it. |
-| `decorative` | Required Boolean. Set `false` for meaningful content. Set `true` deliberately for decoration and use an empty `alt`. |
-
-Record permission correspondence or license evidence with the editable source in
-the same asset directory when redistribution is allowed. Do not put private
-contact information in the repository. Reconfirm that licenses permit both the
-repository copy and distributed print/PDF output.
+exist, and requires the HTML `alt` text to match. See
+[`PRINT-DESIGN-SYSTEM.md`](PRINT-DESIGN-SYSTEM.md) and
+[`CONTRIBUTING.md`](CONTRIBUTING.md) for asset and print rules.

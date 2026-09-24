@@ -11,7 +11,11 @@ reviewers:
   editor: unassigned
   subjectMatter: unassigned
 sources:
-  - "PLACEHOLDER: Add reviewed public-works or flood-control guidance."
+  - type: web
+    title: "PLACEHOLDER: Add reviewed public-works or flood-control guidance."
+    organization: unassigned
+    url: https://example.invalid/
+    accessDate: 2026-09-24
 ---
 <p class="lede"><strong>SAMPLE TEXT — NOT APPROVED ADVICE.</strong> This two-sided layout demonstration requires technical and local review.</p>
 
