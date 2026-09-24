@@ -1,0 +1,24 @@
+{
+  "assets": [
+    {
+      "file": "landscape-illustration.svg",
+      "type": "illustration",
+      "creator": "Project maintainers",
+      "source": "Generated visual-regression fixture",
+      "license": "Project-owned; fixture use permitted",
+      "alt": "Layered hills and two trees beneath a pale sky demonstrate image cropping.",
+      "caption": "Illustration fixture with a controlled 3:2 crop.",
+      "decorative": false
+    },
+    {
+      "file": "evacuation-route.svg",
+      "type": "diagram",
+      "creator": "Project maintainers",
+      "source": "Generated visual-regression fixture",
+      "license": "Project-owned; fixture use permitted",
+      "alt": "Route diagram: a solid line goes from Home to Meeting Place and a dashed line goes to Alternate.",
+      "caption": "Line styles and labels preserve meaning without color.",
+      "decorative": false
+    }
+  ]
+}
