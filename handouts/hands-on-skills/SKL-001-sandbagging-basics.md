@@ -40,7 +40,7 @@ sources:
 <p>Flatten the sand toward the closed end. Fold the empty top underneath the filled portion. For a temporary barrier, leave the bag untied so it molds against the next bag.</p>
 
 <figure class="figure figure--full figure--diagram figure--contain" aria-labelledby="prep-caption">
-  <img src="../assets/handouts/SKL-001/fill-fold-pallet.svg" alt="Three line drawings show a half-filled bag or filling tube, the empty end folded under a flat bag, and alternating flat layers centered on a pallet.">
+  <img src="../assets/handouts/SKL-001/fill-fold-pallet.svg" style="height: 2in" alt="Three line drawings show a half-filled bag or filling tube, the empty end folded under a flat bag, and alternating flat layers centered on a pallet.">
   <figcaption id="prep-caption"><strong>Fill → fold → pallet.</strong> Keep bags flat and the pallet load centered. <span class="credit">Original Fire Watch diagram, based on the sources below.</span></figcaption>
 </figure>
 
@@ -62,26 +62,26 @@ sources:
 
 ## 1. Pick the route
 
-<p>Find where water arrives, where it can safely go, and the lowest opening to protect. Set bags on firm ground <strong>uphill of the opening</strong>; lead water toward an existing safe drainage path on your own property. Do not send it toward a neighbor, road, or another doorway. Keep drains and your exit clear. A bag line traps water that falls behind it, so watch for pooling on the house side.</p>
+<p>Find the incoming water, a safe outlet, and the lowest opening to protect. Set bags on firm ground <strong>uphill of the opening</strong>. Lead water toward an existing drainage path on your property—never toward a neighbor, road, or another doorway. Keep drains and your exit open; watch for pooling behind the line.</p>
 
 <figure class="figure figure--full figure--diagram figure--contain" aria-labelledby="site-caption">
-  <img src="../assets/handouts/SKL-001/site-route.svg" alt="Plan view: runoff approaches a house from the uphill side; a short angled sandbag line steers it toward an existing safe drainage path, leaving the doorway and exit clear.">
+  <img src="../assets/handouts/SKL-001/site-route.svg" style="height: 1.55in" alt="Plan view: runoff approaches a house from the uphill side; a short angled sandbag line steers it toward an existing safe drainage path, leaving the doorway and exit clear.">
   <figcaption id="site-caption"><strong>Plan view.</strong> Trace the water's entire path before placing a bag. <span class="credit">Original Fire Watch diagram, adapted to a hillside home.</span></figcaption>
 </figure>
 
 ## 2. Lay a low, tight line
 
 <ol class="procedure">
-<li>Clear loose debris from the strip of ground; fill small low spots first. Keep the barrier short and low on stable ground, away from a building wall.</li>
-<li>Set each bag flat with its <strong>folded end underneath and toward incoming water</strong>. Overlap the filled part of each bag over the previous bag's empty end; press bags into contact.</li>
-<li>For a second layer, put each bag across the joints below. Widen the base as height increases; do not make a tall, narrow wall.</li>
+<li>Clear loose debris and fill low spots first. Keep the line short, low, and away from a building wall.</li>
+<li>Lay bags flat, <strong>folded end underneath and toward incoming water</strong>. Lap the filled part over the previous bag's empty end; press them together.</li>
+<li>For a second layer, cover joints below. Widen the base as height increases; avoid a tall, narrow wall.</li>
 </ol>
 
 <figure class="figure figure--full figure--diagram figure--contain" aria-labelledby="lay-caption">
-  <img src="../assets/handouts/SKL-001/lay-sandbags.svg" alt="Top view shows overlapping bags with folded ends facing incoming runoff; section view shows a wider base under a staggered second layer.">
+  <img src="../assets/handouts/SKL-001/lay-sandbags.svg" style="height: 1.5in" alt="Top view shows overlapping bags with folded ends facing incoming runoff; section view shows a wider base under a staggered second layer.">
   <figcaption id="lay-caption"><strong>Top and side views.</strong> Overlap the tails; stagger joints and widen the base. <span class="credit">Original Fire Watch diagram, after USACE §2.3.</span></figcaption>
 </figure>
 
-<p><strong>Recheck from safe ground:</strong> look for water going around the ends, through gaps, or collecting behind the line. Sandbags slow and redirect shallow water; they do not form a watertight seal. Stop and leave if conditions worsen.</p>
+<p><strong>Recheck from safe ground:</strong> check for water around the ends, through gaps, or pooling behind the line. Bags redirect shallow water but do not form a watertight seal. Leave if conditions worsen.</p>
 
-<div class="sources">U.S. Army Corps of Engineers, <em>Flood Fight Handbook</em> (2022), §2.1–2.3: www.mvp.usace.army.mil/Portals/57/MVP%20Flood%20Fight%20Handbook%202022.pdf. Accessed 2026-09-24. Local route examples are illustrative and require site-specific judgment.</div>
+<div class="sources">U.S. Army Corps of Engineers, <em>Flood Fight Handbook</em> (2022), §2.2–2.3: www.mvp.usace.army.mil/Portals/57/MVP%20Flood%20Fight%20Handbook%202022.pdf. Accessed 2026-09-24.</div>
