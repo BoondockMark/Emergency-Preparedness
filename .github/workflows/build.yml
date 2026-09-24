@@ -18,6 +18,9 @@ jobs:
       - run: npm ci
         env:
           PUPPETEER_CACHE_DIR: ${{ runner.temp }}/puppeteer
+      - run: npm run build
+        env:
+          PUPPETEER_CACHE_DIR: ${{ runner.temp }}/puppeteer
       - run: npm run check
         env:
           PUPPETEER_CACHE_DIR: ${{ runner.temp }}/puppeteer
