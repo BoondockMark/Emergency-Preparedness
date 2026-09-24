@@ -42,7 +42,7 @@ Commit the updated baseline stylesheet in the same pull request so its CSS diff 
 
 For reproducibility, the renderer blocks HTTP(S) requests, decodes the repository's text-encoded fixed Binder Sans font assets, forces UTC and `en-US`, fixes the viewport and device scale, enables background graphics, and supplies explicit 8.5 × 11 inch PDF dimensions. Do not substitute a system browser or run `npm update` when producing committed artifacts; dependency and browser upgrades must update the package manifest and lockfile and regenerate all CI proof artifacts for review. Font binaries are stored as gzip-compressed Base64 text because this repository's pull-request path does not accept binary additions; the build decodes them only into the ignored `build/` directory.
 
-To run the same checks without changing behavior (the generated outputs are still refreshed deterministically):
+To validate sources and confirm every tracked index and PDF is current without modifying the working tree:
 
 ```bash
 npm run check
