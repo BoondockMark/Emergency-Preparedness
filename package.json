@@ -8,5 +8,10 @@
     "check": "node scripts/build.mjs --check",
     "preview": "node scripts/preview.mjs"
   },
-  "engines": { "node": ">=20" }
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "puppeteer": "24.16.0"
+  }
 }

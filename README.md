@@ -12,7 +12,7 @@ templates/               Generated-page HTML shell
 handouts/<section>/      Markdown source and YAML metadata
 scripts/                 Build, validation, and preview tools
 docs/pdfs/               Generated PDFs (including watermarked/status-marked drafts)
-docs/previews/           Generated visual proof SVGs
+docs/previews/           Browser-rendered PNG proofs
 docs/contributors/       Authoring and review instructions
 docs/publishing/         Moodle and print handoff instructions
 .github/                  Pull request template and CI workflow
@@ -23,14 +23,16 @@ The eight section folders are kept even when empty: Start Here; Alerts & Communi
 
 ## Exact setup and build
 
-Requirements: Node.js 20 or newer and npm.
+Requirements: Node.js 20 or newer, npm, and the ability for Puppeteer to install its pinned Chrome for Testing revision during `npm ci`.
 
 ```bash
 npm ci
 npm run build
 ```
 
-`npm run build` validates metadata and local links, renders HTML, rejects overflowing pages, writes PDFs and SVG proofs, verifies PDF page counts, and regenerates the binder and Moodle indexes. Generated browser HTML is temporary in `build/`; PDFs and proofs are versioned for review.
+`npm run build` validates metadata and local links, creates each handout from `templates/handout.html` and `assets/styles/print.css`, and loads that file in the Chrome for Testing revision pinned by the exact `puppeteer` dependency. That single browser page produces both the US Letter PDF and its 816×1056 PNG proofs, so warnings, checklists, procedures, grids, diagrams, mirrored binding margins, and outside-edge strips do not pass through a second renderer. The build rejects overflowing pages, verifies PDF page counts, and regenerates the binder and Moodle indexes. Generated browser HTML is temporary in `build/`; PDFs and proofs are versioned for review.
+
+For reproducibility, the renderer blocks HTTP(S) requests, decodes the repository's text-encoded fixed Binder Sans font assets, forces UTC and `en-US`, fixes the viewport and device scale, enables background graphics, and supplies explicit 8.5 × 11 inch PDF dimensions. Do not substitute a system browser or run `npm update` when producing committed artifacts; dependency and browser upgrades must update the package manifest and lockfile and regenerate all CI proof artifacts for review. Font binaries are stored as gzip-compressed Base64 text because this repository's pull-request path does not accept binary additions; the build decodes them only into the ignored `build/` directory.
 
 To run the same checks without changing behavior (the generated outputs are still refreshed deterministically):
 
@@ -46,11 +48,11 @@ Build first, then run:
 npm run preview -- COM-03
 ```
 
-Open the printed URL. For an immediate visual proof, open `docs/previews/COM-03-page-1.svg`. Use the browser print dialog only for spot checks; committed PDFs are produced by the reproducible build.
+Open the printed URL. For an immediate visual proof, open `docs/previews/COM-03-page-1.png`. Use the browser print dialog only for spot checks; committed PDFs are produced by the reproducible build.
 
 ## Source choice
 
-Handout prose uses **Markdown with YAML front matter** because it is readable in pull-request diffs and approachable for volunteers. Small, documented HTML classes provide print-specific patterns that Markdown alone cannot express reliably. A dependency-free Node build applies one shared HTML shell and CSS, so volunteers do not hand-edit repeated headers, footers, page numbers, or edge labels. This is slightly more tooling than standalone HTML, but prevents layout drift and makes page-count/overflow checks practical.
+Handout prose uses **Markdown with YAML front matter** because it is readable in pull-request diffs and approachable for volunteers. Small, documented HTML classes provide print-specific patterns that Markdown alone cannot express reliably. A pinned Puppeteer/Chrome build applies one shared HTML shell and CSS, so volunteers do not hand-edit repeated headers, footers, page numbers, or edge labels. This is slightly more tooling than standalone HTML, but prevents layout drift and makes page-count/overflow checks practical.
 
 ## Review and publication
 

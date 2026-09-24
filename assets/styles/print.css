@@ -1,7 +1,9 @@
+@font-face { font-family:'Binder Sans'; src:url('./fonts/DejaVuSans.ttf') format('truetype'); font-style:normal; font-weight:400; font-display:block; }
+@font-face { font-family:'Binder Sans'; src:url('./fonts/DejaVuSans-Bold.ttf') format('truetype'); font-style:normal; font-weight:700 900; font-display:block; }
 @page { size: Letter portrait; margin: 0; }
 :root { --ink:#202b32; --muted:#56636b; --accent:#a64618; --accent-light:#f7e9df; --line:#aeb8bd; }
 * { box-sizing: border-box; }
-html, body { margin:0; padding:0; color:var(--ink); font-family:Arial, Helvetica, sans-serif; }
+html, body { margin:0; padding:0; color:var(--ink); font-family:'Binder Sans', sans-serif; }
 body { background:#dfe4e7; }
 .sheet { width:8.5in; height:11in; position:relative; margin:12px auto; background:#fff; overflow:hidden; box-shadow:0 2px 12px #879198; break-after:page; page-break-after:always; }
 .sheet:last-child { break-after:auto; page-break-after:auto; }
