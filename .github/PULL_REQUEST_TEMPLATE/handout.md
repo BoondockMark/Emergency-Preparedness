@@ -5,26 +5,37 @@ title: "[CODE] Short description"
 
 ## Change
 
-<!-- Identify handouts, codes, and whether text is sample, reviewed guidance, or verified local fact. -->
+<!-- Identify handouts/codes and whether each change is editorial-only, substantial/material redesign, or another physical-proof trigger. Explain the classification using docs/publishing/PRINTING.md. -->
 
 ## Review record
 
-- [ ] Status is `draft` or `under-review` unless both reviews below are complete.
+- [ ] Status is `draft` or `under-review` unless both reviews and any required physical proof below are complete.
 - [ ] Editor: @________ — reviewed on YYYY-MM-DD
 - [ ] Subject-matter reviewer and qualification/role: @________ — reviewed on YYYY-MM-DD
-- [ ] Local facts (numbers, locations, frequencies, official language, endorsements) have a cited verifier, or remain `[VERIFY]` and unpublished.
+- [ ] Local facts have a cited verifier, or remain `[VERIFY]` and unpublished.
 - [ ] Sources and `lastReviewed` are current.
+- [ ] Editorial-only changes received editorial/subject-matter re-review and caused no wrapping, pagination, style, graphic, or geometry change.
 
-## Build and proof
+## Build and artifact
 
 - [ ] `npm ci`
 - [ ] `npm run check`
-- [ ] Every PDF and SVG proof inspected, including grayscale usability.
+- [ ] Every PDF and SVG proof was inspected, including grayscale usability.
 - [ ] Page count and edge-strip placement are correct.
-- [ ] Two-page handout physically printed duplex: **flip on long edge**.
-- [ ] Punch clearance tested on a sacrificial copy.
+- [ ] Exact candidate PDF: `docs/pdfs/________.pdf`
+- [ ] Source commit (full SHA): `________________________________________`
+- [ ] PDF SHA-256: `________________________________________________________________`
 
-Printer/model and duplex result:
+## Physical proof
+
+- [ ] I checked `docs/publishing/PRINTING.md` triggers (geometry/fonts/renderer, stock/printer/driver/settings, and substantial layout).
+- [ ] New proof is **required / not required** (delete one). Reason: ________
+- [ ] When required, calibration and exact handout PDF were printed at 100%; duplex pages used long-edge flip.
+- [ ] When required, grayscale, punch clearance, and measured front/back/outside-strip alignment passed.
+- [ ] Approved or materially redesigned handout references completed record: `docs/publishing/proofs/________.md`
+- [ ] Handout front matter `proofRecord` points to that record and its checksum matches the exact PDF above.
+
+Printer/model, driver/application, paper stock, and duplex result (or “see proof record”):
 
 ## Publication
 
