@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 660 235" role="img" aria-labelledby="t d">
+<title id="t">Fill, fold, and stack sandbags</title><desc id="d">Three panels show half filling a bag using a tube or by hand, folding the empty tail under a flat bag, and stacking crossed layers inside a pallet.</desc>
+<defs><marker id="a" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><path d="M1 1l6 3-6 3" fill="none" stroke="#000" stroke-width="1.4"/></marker></defs>
+<g fill="none" stroke="#000" stroke-width="2.3" stroke-linejoin="round" stroke-linecap="round">
+<rect x="4" y="4" width="208" height="225"/><rect x="226" y="4" width="208" height="225"/><rect x="448" y="4" width="208" height="225"/>
+<path d="M48 91h63v10H48zM59 101l4 71q16 8 32 0l4-71M65 102V45h28v57M65 45q14-8 28 0M59 142q20 8 40 0"/>
+<path d="M136 65q-17 11-15 34v60q12 14 40 0V99q2-23-15-34M122 129q19 8 39 0" stroke-dasharray="5 4"/>
+<path d="M247 141q12-15 42-13h79q23 1 37 16v23q-14 12-38 12h-74q-29-1-46-15zM369 128q-15 24-2 50M390 132v39" />
+<path d="M379 195v-13" marker-end="url(#a)"/>
+<path d="M472 186h160v14H472zM480 200v13h29v-13m86 0v13h28v-13M486 172q8-11 24-11h31q16 0 23 11v12h-78zM557 172q8-11 24-11h30q16 0 22 11v12h-76zM503 149q8-11 24-11h44q16 0 23 11v11h-91zM514 128q8-9 23-9h29q13 0 19 9v10h-71z"/>
+</g>
+<g font-family="sans-serif" fill="#000" text-anchor="middle">
+<text x="108" y="26" font-size="17" font-weight="bold">1  HALF FILL</text><text x="108" y="205" font-size="13">tube or hand-held bag</text>
+<text x="330" y="26" font-size="17" font-weight="bold">2  FOLD UNDER</text><text x="330" y="215" font-size="13">leave untied and flat</text>
+<text x="552" y="26" font-size="17" font-weight="bold">3  STACK FLAT</text><text x="552" y="210" font-size="13">cross layers; no overhang</text>
+</g></svg>
