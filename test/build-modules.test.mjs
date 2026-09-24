@@ -4,7 +4,7 @@ import os from 'node:os';
 import path from 'node:path';
 import test from 'node:test';
 import { validateAssetEntry } from '../scripts/lib/asset-validation.mjs';
-import { escapeHtml, renderMarkdown } from '../scripts/lib/content-rendering.mjs';
+import { escapeHtml, renderHandout, renderMarkdown } from '../scripts/lib/content-rendering.mjs';
 import { discoverDocuments } from '../scripts/lib/filesystem-discovery.mjs';
 import { generateBinderIndex } from '../scripts/lib/index-generation.mjs';
 import { loadDocument, MetadataError } from '../scripts/lib/metadata.mjs';
@@ -58,6 +58,17 @@ test('component markup is preserved while Markdown is rendered', () => {
   const markup = '<aside class="warning"><strong>Leave now</strong></aside>';
   assert.equal(renderMarkdown(markup), `${markup}\n`);
   assert.equal(renderMarkdown('**Bold**'), '<p><strong>Bold</strong></p>');
+});
+
+test('handout pages use the section-numbered outside-edge slot', () => {
+  const html = renderHandout('{{title}} {{cssPath}} {{pages}}', {
+    meta: {
+      code: 'TST-01', title: 'Fixture', section: 'Evacuation & Shelter', sectionNumber: 3,
+      status: 'draft', version: '1.0', lastReviewed: '2026-09-24', pageCount: 2
+    },
+    chunks: ['First page.', 'Second page.']
+  });
+  assert.equal((html.match(/style="--section-index: 2"/g) ?? []).length, 2);
 });
 
 test('approved content rejects unresolved approval placeholders', async () => {

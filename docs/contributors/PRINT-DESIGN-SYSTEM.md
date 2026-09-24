@@ -18,7 +18,7 @@ coordinates.
 | Rules | `--rule` separates content; `--rule-strong` defines controls, tables, and verified-information boundaries. A rule must support—not replace—a label. |
 | Grayscale | Primary and secondary ink remain readable on white. Soft and medium shades establish grouping. Meaningful diagrams use labels plus line style, pattern, or shape. |
 | Warnings | Caution, warning, and danger have distinct words, symbols, border styles, and contrast-safe fills. Color is redundant. |
-| Geometry | Pages are 8.5 × 11 in. Fronts reserve 0.86 in at the binding edge and 0.60 in outside; backs mirror those values. Top/bottom content limits are 0.55/0.52 in. |
+| Geometry | Pages are 8.5 × 11 in. Fronts reserve 0.86 in at the binding edge and 0.60 in outside; backs mirror those values. Top/bottom content limits are 0.55/0.52 in. The outside-edge section tab occupies the section's numbered 1 in vertical slot, measured from the top edge. |
 
 ## Component use
 

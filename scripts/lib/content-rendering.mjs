@@ -59,8 +59,8 @@ export function renderMarkdown(source) {
 export function renderHandout(template, document) {
   const { meta, chunks } = document;
   const pages = chunks.map((chunk, index) => `
-<article class="sheet ${index ? 'back' : 'front'}">
-  <div class="edge">${escapeHtml(meta.section.toUpperCase())} · ${String(meta.sectionNumber).padStart(2, '0')}</div>
+<article class="sheet ${index ? 'back' : 'front'}" style="--section-index: ${meta.sectionNumber - 1}">
+  <div class="edge" aria-label="Section ${String(meta.sectionNumber).padStart(2, '0')}: ${escapeHtml(meta.section)}">${String(meta.sectionNumber).padStart(2, '0')}</div>
   <main class="content">
     <header class="kicker">La Habra Heights Fire Watch · Emergency Preparedness Binder <span class="status">${escapeHtml(meta.status.toUpperCase())}</span></header>
     <h1>${escapeHtml(index ? `${meta.title} — continued` : meta.title)}</h1>
