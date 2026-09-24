@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 660 200" role="img" aria-labelledby="t d">
+<title id="t">Choose a safe sandbag route</title><desc id="d">A house at right is protected by a short diagonal bag line. Arrows from the uphill side follow the line toward an existing safe drainage path; an exit remains open.</desc>
+<defs><marker id="a" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M1 1l7 3.5L1 8" fill="none" stroke="#000" stroke-width="1.6"/></marker></defs>
+<g fill="none" stroke="#000" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+<path d="M419 24h203v130H419v-20m0-37V24M419 97v15" stroke-width="3"/>
+<path d="M414 111h25v24h-25" /><path d="M463 45h112v32H463zM462 95h112v31H462z" stroke-width="1.5"/>
+<path d="M195 29q36 31 71 50t85 26M191 62q35 33 64 47t61 27M90 65q40 20 69 35" marker-end="url(#a)"/>
+<path d="M115 131q105-34 188-20l62 28" stroke-width="13" stroke-dasharray="19 5" stroke-linecap="butt"/>
+<path d="M297 80q-24 24-25 47t-53 34" marker-end="url(#a)"/>
+<path d="M211 161q-41 14-88 7" marker-end="url(#a)"/>
+<path d="M444 164h120" stroke-dasharray="8 5" marker-end="url(#a)"/>
+</g>
+<g font-family="sans-serif" fill="#000" font-size="15">
+<text x="13" y="22" font-weight="bold">UPHILL RUNOFF</text><text x="34" y="191">EXISTING SAFE DRAINAGE PATH</text>
+<text x="342" y="185">SHORT BAG LINE</text><text x="548" y="65" font-weight="bold">HOUSE</text><text x="453" y="145">door</text><text x="494" y="188">KEEP EXIT OPEN</text>
+</g></svg>

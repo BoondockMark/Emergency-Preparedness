@@ -12,7 +12,7 @@ import { renderHandout } from './content-rendering.mjs';
 import { generateBinderIndex, generateMoodleIndex } from './index-generation.mjs';
 import { inspectSheetGeometry, formatLayoutIssue } from './layout-validation.mjs';
 import { validateImages, validateLocalLinks } from './page-validation.mjs';
-import { getPdfPageCount, inspectEmbeddedFonts } from './pdf-validation.mjs';
+import { getPdfPageCount, inspectEmbeddedFonts, normalizePdfDates } from './pdf-validation.mjs';
 import { compareFixture, VISUAL_TOLERANCE } from './visual-regression.mjs';
 
 const PRINT_PPI = 200;
@@ -155,7 +155,7 @@ async function validateRenderedPage(page, code, pageCount, diagnostics) {
 }
 
 async function createPdfAndPreviews(page, outputRoot, meta) {
-  const pdf = await page.pdf({
+  const pdf = normalizePdfDates(await page.pdf({
     width: '8.5in',
     height: '11in',
     margin: { top: 0, right: 0, bottom: 0, left: 0 },
@@ -163,7 +163,7 @@ async function createPdfAndPreviews(page, outputRoot, meta) {
     preferCSSPageSize: true,
     tagged: false,
     outline: false
-  });
+  }));
   await fs.writeFile(path.join(outputRoot, 'pdfs', `${meta.code}.pdf`), pdf);
   const count = await getPdfPageCount(pdf);
   if (count !== meta.pageCount) throw Error(`${meta.code}: PDF page count ${count}, expected ${meta.pageCount}`);
