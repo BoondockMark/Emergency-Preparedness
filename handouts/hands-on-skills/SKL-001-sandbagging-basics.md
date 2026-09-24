@@ -62,7 +62,7 @@ sources:
 
 ## 1. Pick the route
 
-<p>Find the incoming water, a safe outlet, and the lowest opening to protect. Set bags on firm ground <strong>uphill of the opening</strong>. Lead water toward an existing drainage path on your property—never toward a neighbor, road, or another doorway. Keep drains and your exit open; watch for pooling behind the line.</p>
+<p>Find where water arrives and a safe outlet. Set bags on firm ground <strong>uphill of the opening</strong>. Lead water to an existing drain path on your property—never toward a neighbor, road, or another doorway. Keep drains and your exit open; watch for pooling behind the line.</p>
 
 <figure class="figure figure--full figure--diagram figure--contain" aria-labelledby="site-caption">
   <img src="../assets/handouts/SKL-001/site-route.svg" style="height: 1.55in" alt="Plan view: runoff approaches a house from the uphill side; a short angled sandbag line steers it toward an existing safe drainage path, leaving the doorway and exit clear.">
@@ -84,4 +84,4 @@ sources:
 
 <p><strong>Recheck from safe ground:</strong> check for water around the ends, through gaps, or pooling behind the line. Bags redirect shallow water but do not form a watertight seal. Leave if conditions worsen.</p>
 
-<div class="sources">U.S. Army Corps of Engineers, <em>Flood Fight Handbook</em> (2022), §2.2–2.3: www.mvp.usace.army.mil/Portals/57/MVP%20Flood%20Fight%20Handbook%202022.pdf. Accessed 2026-09-24.</div>
+<div class="sources">USACE, <em>Flood Fight Handbook</em> (2022), §2.2–2.3: www.mvp.usace.army.mil/Portals/57/MVP%20Flood%20Fight%20Handbook%202022.pdf.</div>
