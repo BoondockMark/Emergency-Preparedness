@@ -1,0 +1,28 @@
+name: Build and check handouts
+on:
+  pull_request:
+  push:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run check
+      - name: Confirm generated files are committed
+        run: git diff --exit-code -- BINDER_INDEX.md docs/moodle-index.html docs/pdfs docs/previews
+      - uses: actions/upload-artifact@v4
+        with:
+          name: handout-proofs-${{ github.sha }}
+          path: |
+            docs/pdfs/*.pdf
+            docs/previews/*.svg
+          if-no-files-found: error
+# Deliberately no deployment job: reviewed files are handed to Moodle manually.
