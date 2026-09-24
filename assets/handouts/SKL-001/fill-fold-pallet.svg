@@ -1,16 +1,65 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 660 235" role="img" aria-labelledby="t d">
-<title id="t">Fill, fold, and stack sandbags</title><desc id="d">Three panels show half filling a bag using a tube or by hand, folding the empty tail under a flat bag, and stacking crossed layers inside a pallet.</desc>
-<defs><marker id="a" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><path d="M1 1l6 3-6 3" fill="none" stroke="#000" stroke-width="1.4"/></marker></defs>
-<g fill="none" stroke="#000" stroke-width="2.3" stroke-linejoin="round" stroke-linecap="round">
-<rect x="4" y="4" width="208" height="225"/><rect x="226" y="4" width="208" height="225"/><rect x="448" y="4" width="208" height="225"/>
-<path d="M48 91h63v10H48zM59 101l4 71q16 8 32 0l4-71M65 102V45h28v57M65 45q14-8 28 0M59 142q20 8 40 0"/>
-<path d="M136 65q-17 11-15 34v60q12 14 40 0V99q2-23-15-34M122 129q19 8 39 0" stroke-dasharray="5 4"/>
-<path d="M247 141q12-15 42-13h79q23 1 37 16v23q-14 12-38 12h-74q-29-1-46-15zM369 128q-15 24-2 50M390 132v39" />
-<path d="M379 195v-13" marker-end="url(#a)"/>
-<path d="M472 186h160v14H472zM480 200v13h29v-13m86 0v13h28v-13M486 172q8-11 24-11h31q16 0 23 11v12h-78zM557 172q8-11 24-11h30q16 0 22 11v12h-76zM503 149q8-11 24-11h44q16 0 23 11v11h-91zM514 128q8-9 23-9h29q13 0 19 9v10h-71z"/>
-</g>
-<g font-family="sans-serif" fill="#000" text-anchor="middle">
-<text x="108" y="26" font-size="17" font-weight="bold">1  HALF FILL</text><text x="108" y="205" font-size="13">tube or hand-held bag</text>
-<text x="330" y="26" font-size="17" font-weight="bold">2  FOLD UNDER</text><text x="330" y="215" font-size="13">leave untied and flat</text>
-<text x="552" y="26" font-size="17" font-weight="bold">3  STACK FLAT</text>
-</g></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 660 235" role="img" aria-labelledby="title description">
+  <title id="title">Fill, fold, and stack sandbags</title>
+  <desc id="description">Three polished line drawings show a bag supported in a filling stand and filled halfway, a flattened bag with its empty tail folded underneath, and a low interlocked stack centered on a pallet.</desc>
+  <defs>
+    <marker id="arrow" markerWidth="8" markerHeight="8" refX="6.5" refY="4" orient="auto">
+      <path d="M1 1l6 3-6 3" fill="none" stroke="#111" stroke-width="1.4"/>
+    </marker>
+    <pattern id="sand" width="10" height="8" patternUnits="userSpaceOnUse">
+      <circle cx="2" cy="2" r=".8" fill="#111"/><circle cx="7" cy="5" r=".7" fill="#111"/>
+    </pattern>
+  </defs>
+
+  <g fill="#fff" stroke="#111" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round">
+    <rect x="2" y="2" width="210" height="231" rx="3"/>
+    <rect x="225" y="2" width="210" height="231" rx="3"/>
+    <rect x="448" y="2" width="210" height="231" rx="3"/>
+  </g>
+
+  <!-- Step 1: supported bag with a clearly marked half-fill line. -->
+  <g stroke="#111" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M72 61h56l-5 9H77z" fill="#fff" stroke-width="2"/>
+    <path d="M79 69l5 100q16 10 32 0l5-100" fill="#fff" stroke-width="2.2"/>
+    <path d="M83 121q17 5 35 0l-2 48q-16 10-32 0z" fill="url(#sand)" stroke-width="1.8"/>
+    <path d="M82 121h37" fill="none" stroke-width="1.6" stroke-dasharray="4 3"/>
+    <path d="M62 71v61m76-61v61M54 71h92M58 132h84" fill="none" stroke-width="2.2"/>
+    <path d="M62 71l-8 8m84-8 8 8M58 132l-5-7m89 7 5-7" fill="none" stroke-width="1.5"/>
+    <path d="M151 121h29" fill="none" stroke-width="1.4"/>
+  </g>
+
+  <!-- Step 2: filled body, folded tail, and a directional fold cue. -->
+  <g fill="#fff" stroke="#111" stroke-width="2" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M251 132q13-17 39-17h83q21 1 34 17v31q-15 15-39 15h-79q-25-1-38-16z"/>
+    <path d="M373 115q-11 16-11 31t10 31"/>
+    <path d="M389 121l18 11v31l-18 9q-7-25 0-51z" fill="#f4f4f4"/>
+    <path d="M399 189q0-19-12-27" fill="none" marker-end="url(#arrow)"/>
+  </g>
+  <path d="M278 153q38 8 76 0" fill="none" stroke="#111" stroke-width="1" stroke-dasharray="3 4" opacity=".65"/>
+
+  <!-- Step 3: alternating courses with visible seams on a pallet. -->
+  <g fill="#fff" stroke="#111" stroke-width="2" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M468 189h170v13H468zM477 202v17h29v-17m95 0v17h28v-17"/>
+    <path d="M481 174q4-14 20-17h45q15 2 20 17v14h-85z"/>
+    <path d="M553 174q4-14 20-17h42q15 2 19 17v14h-81z"/>
+    <path d="M503 145q5-14 21-16h58q16 2 21 16v12H503z"/>
+    <path d="M518 117q4-12 18-14h34q14 2 18 14v12h-70z"/>
+    <path d="M524 129h58M523 157h73M500 188h121" stroke-width="1" stroke-dasharray="3 4" opacity=".65"/>
+  </g>
+
+  <g fill="#111" font-family="Arial, sans-serif">
+    <g font-size="13" font-weight="700">
+      <circle cx="18" cy="19" r="10" fill="#111"/><text x="18" y="24" fill="#fff" text-anchor="middle">1</text>
+      <text x="34" y="24">HALF FILL</text>
+      <circle cx="241" cy="19" r="10" fill="#111"/><text x="241" y="24" fill="#fff" text-anchor="middle">2</text>
+      <text x="257" y="24">FOLD UNDER</text>
+      <circle cx="464" cy="19" r="10" fill="#111"/><text x="464" y="24" fill="#fff" text-anchor="middle">3</text>
+      <text x="480" y="24">STACK FLAT</text>
+    </g>
+    <g font-size="11.5">
+      <text x="166" y="117" font-weight="700" text-anchor="middle">½ FULL</text>
+      <text x="107" y="211" text-anchor="middle">Support the bag; do not pack it full.</text>
+      <text x="330" y="211" text-anchor="middle">Tuck the empty tail beneath the bag.</text>
+      <text x="553" y="230" font-size="10" text-anchor="middle">Keep each course low and centered.</text>
+    </g>
+  </g>
+</svg>
