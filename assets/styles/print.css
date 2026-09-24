@@ -91,10 +91,10 @@ body { background: var(--screen-canvas); }
 .sheet.back .content { left: var(--page-outer); right: var(--page-inner); }
 .edge {
   position: absolute;
-  top: .48in;
-  bottom: .48in;
+  top: calc(var(--section-index, 0) * 1in);
   right: var(--edge-offset);
   width: var(--edge-width);
+  height: 1in;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -108,12 +108,13 @@ body { background: var(--screen-canvas); }
   font-size: 9pt;
   letter-spacing: .10em;
   padding: .12in 0;
+  transform: rotate(180deg);
 }
-.sheet.back .edge { right: auto; left: var(--edge-offset); transform: rotate(180deg); }
+.sheet.back .edge { right: auto; left: var(--edge-offset); transform: none; }
 
-.kicker { color: var(--warning-ink); font-size: var(--type-small); font-weight: 800; text-transform: uppercase; letter-spacing: .07em; }
-.status { float: right; border: 1px solid currentColor; padding: var(--space-1) .06in; }
-h1 { clear: both; font-size: var(--type-title); line-height: 1.06; margin: .12in 0; letter-spacing: -.02em; }
+.kicker { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: var(--space-4); align-items: start; color: var(--warning-ink); font-size: var(--type-small); font-weight: 800; line-height: 1.25; text-transform: uppercase; letter-spacing: .07em; }
+.status { border: 1px solid currentColor; padding: var(--space-1) .06in; white-space: nowrap; }
+h1 { font-size: var(--type-title); line-height: 1.06; margin: .12in 0; letter-spacing: -.02em; }
 h1.title--compact { font-size: var(--type-title-compact); line-height: var(--leading-tight); }
 .lede { font-size: var(--type-lede); line-height: 1.35; margin: 0 0 .18in; color: #34434b; }
 h2 { font-size: var(--type-h2); margin: .17in 0 .06in; border-bottom: 1px solid var(--rule); padding-bottom: .035in; text-transform: uppercase; letter-spacing: .03em; }
