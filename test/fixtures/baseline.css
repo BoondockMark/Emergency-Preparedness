@@ -108,9 +108,9 @@ body { background: var(--screen-canvas); }
   font-size: 9pt;
   letter-spacing: .10em;
   padding: .12in 0;
-  transform: rotate(180deg);
+  transform: none;
 }
-.sheet.back .edge { right: auto; left: var(--edge-offset); transform: none; }
+.sheet.back .edge { right: auto; left: var(--edge-offset); transform: rotate(180deg); }
 
 .kicker { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: var(--space-4); align-items: start; color: var(--warning-ink); font-size: var(--type-small); font-weight: 800; line-height: 1.25; text-transform: uppercase; letter-spacing: .07em; }
 .status { border: 1px solid currentColor; padding: var(--space-1) .06in; white-space: nowrap; }
