@@ -85,4 +85,5 @@ Each `assets/handouts/<CODE>/` directory has a `manifest.json`. The build checks
 the manifest even if an asset is not yet referenced, verifies referenced files
 exist, and requires the HTML `alt` text to match. See
 [`PRINT-DESIGN-SYSTEM.md`](PRINT-DESIGN-SYSTEM.md) and
-[`CONTRIBUTING.md`](CONTRIBUTING.md) for asset and print rules.
+[`ASSETS.md`](ASSETS.md) for the complete asset workflow, and
+[`CONTRIBUTING.md`](CONTRIBUTING.md) for the authoring and print rules.
