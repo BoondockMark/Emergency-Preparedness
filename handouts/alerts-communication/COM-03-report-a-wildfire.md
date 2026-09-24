@@ -11,7 +11,11 @@ reviewers:
   editor: unassigned
   subjectMatter: unassigned
 sources:
-  - "PLACEHOLDER: Add current agency guidance and access date before review."
+  - type: web
+    title: "PLACEHOLDER: Add current agency guidance before review."
+    organization: unassigned
+    url: https://example.invalid/
+    accessDate: 2026-09-24
 ---
 <p class="lede"><strong>SAMPLE TEXT — NOT APPROVED ADVICE.</strong> This page demonstrates layout and must receive editorial and subject-matter review before use.</p>
 
