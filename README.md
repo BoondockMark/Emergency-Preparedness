@@ -8,6 +8,7 @@ GitHub is the editable source of record for print-ready US Letter handouts. Mood
 
 ```text
 assets/styles/           Shared print CSS
+assets/handouts/<CODE>/  Handout graphics, editable sources, and asset manifests
 templates/               Generated-page HTML shell
 handouts/<section>/      Markdown source and YAML metadata
 scripts/                 Build, validation, and preview tools
@@ -71,4 +72,4 @@ Handout prose uses **Markdown with YAML front matter** because it is readable in
 5. Record both reviewers, the review date, and sources; change status to `approved` only after both reviews.
 6. Rebuild, inspect every proof, merge, then follow the [Moodle handoff](docs/publishing/MOODLE.md).
 
-See [contributor guidance](docs/contributors/CONTRIBUTING.md), [metadata reference](docs/contributors/METADATA.md), the [binder index](BINDER_INDEX.md), and [duplex proof instructions](docs/publishing/PRINTING.md).
+See [contributor guidance](docs/contributors/CONTRIBUTING.md), the [graphics and assets guide](docs/contributors/ASSETS.md), [metadata reference](docs/contributors/METADATA.md), the [binder index](BINDER_INDEX.md), and [duplex proof instructions](docs/publishing/PRINTING.md).

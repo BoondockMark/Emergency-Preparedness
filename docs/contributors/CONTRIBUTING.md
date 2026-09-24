@@ -16,6 +16,10 @@ The component specimen is a test fixture and must never be published.
 
 ## Images and diagrams
 
+See the [graphics and assets guide](ASSETS.md) for the complete directory,
+manifest, markup, accessibility, resolution, and proofing workflow. The rules
+below are the quick reference.
+
 Use the stable asset convention `assets/handouts/<CODE>/` (for example,
 `assets/handouts/COM-001/smoke-column.jpg`). Keep editable source files there too,
 but do not reference those source files from a handout or list them as published
