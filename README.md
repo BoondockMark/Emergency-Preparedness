@@ -53,10 +53,10 @@ npm run check
 Build first, then run:
 
 ```bash
-npm run preview -- COM-03
+npm run preview -- COM-001
 ```
 
-Open the printed URL. For an immediate visual proof, open `docs/previews/COM-03-page-1.png`. Use the browser print dialog only for spot checks; committed PDFs are produced by the reproducible build.
+Open the printed URL. For an immediate visual proof, open `docs/previews/COM-001-page-1.png`. Use the browser print dialog only for spot checks; committed PDFs are produced by the reproducible build.
 
 ## Source choice
 

@@ -1,5 +1,5 @@
 ---
-code: COM-03
+code: COM-001
 title: Report a Wildfire Sighting
 section: Alerts & Communication
 sectionNumber: 2

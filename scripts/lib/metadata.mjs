@@ -1,4 +1,5 @@
 const SECTIONS = ['Start Here', 'Alerts & Communication', 'Evacuation & Shelter', 'Water, Food & Cooking', 'Home & Utilities', 'Hands-On Skills', 'Hazard Guides', 'Plans & Records'];
+const SECTION_CODES = ['STH', 'COM', 'EVS', 'WFC', 'HUT', 'SKL', 'HZD', 'PRP'];
 const STATUSES = ['draft', 'under-review', 'approved'];
 const SOURCE_TYPES = ['web', 'non-web', 'interview', 'local'];
 const REQUIRED = ['code', 'title', 'section', 'sectionNumber', 'status', 'version', 'lastReviewed', 'pageCount', 'reviewers', 'sources'];
@@ -80,11 +81,13 @@ function requireText(value, sourcePath, field) {
 export function validateMetadata(meta, body, sourcePath) {
   for (const field of REQUIRED) if (meta[field] === undefined || meta[field] === null || meta[field] === '') fail(sourcePath, field, 'is required');
   requireText(meta.title, sourcePath, 'title');
-  if (!/^[A-Z]{3}-\d{2}$/.test(meta.code)) fail(sourcePath, 'code', 'must match ABC-01');
+  if (!/^[A-Z]{3}-\d{3}$/.test(meta.code)) fail(sourcePath, 'code', 'must match ABC-001');
   if (!/^\d+\.\d+$/.test(String(meta.version))) fail(sourcePath, 'version', 'must match MAJOR.MINOR');
   if (!isoDate(meta.lastReviewed)) fail(sourcePath, 'lastReviewed', 'must be a valid ISO calendar date (YYYY-MM-DD)');
   if (!SECTIONS.includes(meta.section)) fail(sourcePath, 'section', 'is not a recognized binder section');
   if (meta.sectionNumber !== SECTIONS.indexOf(meta.section) + 1) fail(sourcePath, 'sectionNumber', 'does not match section');
+  const expectedCode = SECTION_CODES[meta.sectionNumber - 1];
+  if (!meta.code.startsWith(`${expectedCode}-`)) fail(sourcePath, 'code', `must use the ${expectedCode} prefix for ${meta.section}`);
   if (!STATUSES.includes(meta.status)) fail(sourcePath, 'status', `must be one of ${STATUSES.join(', ')}`);
   if (![1, 2].includes(meta.pageCount)) fail(sourcePath, 'pageCount', 'must be 1 or 2');
   if (!meta.reviewers || typeof meta.reviewers !== 'object' || Array.isArray(meta.reviewers)) fail(sourcePath, 'reviewers', 'must record editor and subjectMatter roles');
@@ -137,4 +140,4 @@ export function loadDocument(raw, sourcePath) {
   return { data: metadata, content: match[2] };
 }
 
-export { SECTIONS };
+export { SECTIONS, SECTION_CODES };

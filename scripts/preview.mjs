@@ -2,7 +2,7 @@ import path from 'node:path';
 import fs from 'node:fs/promises';
 import { spawn } from 'node:child_process';
 const code=(process.argv[2]||'').toUpperCase();
-if(!code){ console.error('Usage: npm run preview -- COM-03'); process.exit(2); }
+if(!code){ console.error('Usage: npm run preview -- COM-001'); process.exit(2); }
 const root=path.resolve(import.meta.dirname,'..');
 const file=path.join(root,'build/html',`${code}.html`);
 try{await fs.access(file)}catch{console.error(`Missing ${file}. Run npm run build first.`);process.exit(1)}
