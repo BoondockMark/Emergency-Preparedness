@@ -8,7 +8,7 @@
     "check": "node scripts/build.mjs --check",
     "test:visual:update": "node scripts/build.mjs --update-visuals",
     "preview": "node scripts/preview.mjs",
-    "test": "node --test test/metadata.test.mjs"
+    "test": "node --test"
   },
   "engines": {
     "node": ">=20"
