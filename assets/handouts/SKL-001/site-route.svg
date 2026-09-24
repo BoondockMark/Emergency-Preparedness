@@ -1,16 +1,59 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 660 200" role="img" aria-labelledby="t d">
-<title id="t">Choose a safe sandbag route</title><desc id="d">A house at right is protected by a short diagonal bag line. Arrows from the uphill side follow the line toward an existing safe drainage path; an exit remains open.</desc>
-<defs><marker id="a" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M1 1l7 3.5L1 8" fill="none" stroke="#000" stroke-width="1.6"/></marker></defs>
-<g fill="none" stroke="#000" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-<path d="M419 24h203v130H419v-20m0-37V24M419 97v15" stroke-width="3"/>
-<path d="M414 111h25v24h-25" /><path d="M463 45h112v32H463zM462 95h112v31H462z" stroke-width="1.5"/>
-<path d="M195 29q36 31 71 50t85 26M191 62q35 33 64 47t61 27M90 65q40 20 69 35" marker-end="url(#a)"/>
-<path d="M115 131q105-34 188-20l62 28" stroke-width="13" stroke-dasharray="19 5" stroke-linecap="butt"/>
-<path d="M297 80q-24 24-25 47t-53 34" marker-end="url(#a)"/>
-<path d="M211 161q-41 14-88 7" marker-end="url(#a)"/>
-<path d="M444 164h120" stroke-dasharray="8 5" marker-end="url(#a)"/>
-</g>
-<g font-family="sans-serif" fill="#000" font-size="15">
-<text x="13" y="22" font-weight="bold">UPHILL RUNOFF</text><text x="34" y="191">EXISTING SAFE DRAINAGE PATH</text>
-<text x="342" y="185">SHORT BAG LINE</text><text x="548" y="65" font-weight="bold">HOUSE</text><text x="453" y="145">door</text><text x="494" y="188">KEEP EXIT OPEN</text>
-</g></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 660 200" role="img" aria-labelledby="title description">
+  <title id="title">Choose a safe sandbag route</title>
+  <desc id="description">A plan view shows contour lines and runoff arrows approaching from uphill. A curved line of individual sandbags redirects water toward an existing safe drainage path while a house doorway and a dashed exit route remain clear.</desc>
+  <defs>
+    <marker id="arrow" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto">
+      <path d="M1 1l7 3.5L1 8" fill="none" stroke="#111" stroke-width="1.5"/>
+    </marker>
+    <pattern id="hatch" width="7" height="7" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+      <line x1="0" y1="0" x2="0" y2="7" stroke="#111" stroke-width="1"/>
+    </pattern>
+  </defs>
+
+  <!-- Terrain contours make the uphill/downhill relationship immediately legible. -->
+  <g fill="none" stroke="#777" stroke-width="1" stroke-linecap="round">
+    <path d="M28 42q88-31 177 0t174 2"/><path d="M16 68q92-30 184 1t177 3"/><path d="M24 178q99 19 193-8t164-12"/>
+  </g>
+
+  <!-- House footprint, roof hatch, doorway, and open egress. -->
+  <g stroke="#111" stroke-linejoin="round">
+    <path d="M434 24h197v132H434v-22h18v-28h-18z" fill="#fff" stroke-width="2.5"/>
+    <path d="M471 45h121v31H471z" fill="url(#hatch)" stroke-width="1.5"/>
+    <path d="M470 91h121v33H470z" fill="#fff" stroke-width="1.5"/>
+    <path d="M431 106h22v28h-22" fill="#fff" stroke-width="1.7"/>
+    <path d="M453 107a27 27 0 0 1 27 27" fill="none" stroke-width="1" stroke-dasharray="3 3"/>
+  </g>
+
+  <!-- Flow approaches, turns along the barrier, then reaches the safe drain. -->
+  <g fill="none" stroke="#111" stroke-linecap="round" marker-end="url(#arrow)">
+    <path d="M132 25q28 30 65 49" stroke-width="1.8"/>
+    <path d="M205 22q27 37 67 57" stroke-width="1.8"/>
+    <path d="M279 28q24 31 63 50" stroke-width="1.8"/>
+    <path d="M343 61q-16 31-52 48t-74 29" stroke-width="2"/>
+    <path d="M211 139q-47 22-101 20" stroke-width="2"/>
+  </g>
+
+  <!-- Each rounded unit is a bag rather than an ambiguous dashed stroke. -->
+  <g fill="#111">
+    <rect x="184" y="104" width="24" height="11" rx="3" transform="rotate(-12 196 109.5)"/>
+    <rect x="211" y="98" width="24" height="11" rx="3" transform="rotate(-9 223 103.5)"/>
+    <rect x="238" y="94" width="24" height="11" rx="3" transform="rotate(-6 250 99.5)"/>
+    <rect x="265" y="92" width="24" height="11" rx="3" transform="rotate(-2 277 97.5)"/>
+    <rect x="292" y="92" width="24" height="11" rx="3" transform="rotate(4 304 97.5)"/>
+    <rect x="319" y="96" width="24" height="11" rx="3" transform="rotate(10 331 101.5)"/>
+    <rect x="346" y="102" width="24" height="11" rx="3" transform="rotate(15 358 107.5)"/>
+    <rect x="372" y="110" width="24" height="11" rx="3" transform="rotate(19 384 115.5)"/>
+  </g>
+  <path d="M462 168h112" fill="none" stroke="#111" stroke-width="1.8" stroke-dasharray="7 5" marker-end="url(#arrow)"/>
+
+  <g fill="#111" font-family="Arial, sans-serif">
+    <text x="16" y="16" font-size="12" font-weight="700">UPHILL</text>
+    <text x="16" y="29" font-size="11">runoff approaches</text>
+    <text x="465" y="19" font-size="12" font-weight="700">HOUSE</text>
+    <text x="510" y="65" font-size="11" font-weight="700">vulnerable opening</text>
+    <text x="454" y="101" font-size="10">door</text>
+    <text x="266" y="130" font-size="11" font-weight="700">SHORT, CURVED BAG LINE</text>
+    <text x="30" y="193" font-size="11" font-weight="700">EXISTING SAFE DRAINAGE PATH</text>
+    <text x="478" y="188" font-size="11" font-weight="700">KEEP EXIT OPEN</text>
+  </g>
+</svg>
