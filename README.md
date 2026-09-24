@@ -30,7 +30,15 @@ npm ci
 npm run build
 ```
 
-`npm run build` validates metadata and local links, creates each handout from `templates/handout.html` and `assets/styles/print.css`, and loads that file in the Chrome for Testing revision pinned by the exact `puppeteer` dependency. That single browser page produces both the US Letter PDF and its 816×1056 PNG proofs, so warnings, checklists, procedures, grids, diagrams, mirrored binding margins, and outside-edge strips do not pass through a second renderer. The build rejects overflowing pages, verifies PDF page counts, and regenerates the binder and Moodle indexes. Generated browser HTML is temporary in `build/`; PDFs and proofs are versioned for review.
+`npm run build` validates metadata and local links, creates each handout from `templates/handout.html` and `assets/styles/print.css`, and loads that file in the Chrome for Testing revision pinned by the exact `puppeteer` dependency. That single browser page produces both the US Letter PDF and its 816×1056 PNG proofs, so warnings, checklists, procedures, grids, diagrams, mirrored binding margins, and outside-edge strips do not pass through a second renderer. For every `.sheet`, the build measures every rendered element against the printable content box and rejects clipping, horizontal or vertical overflow, content outside that box, and footer collisions. Failures identify the handout, page, selector, element bounds, and limiting region in both the log and `build/diagnostics`. PDF counts come from parsing the document catalog's page tree rather than scanning PDF text. Generated browser HTML is temporary in `build/`; PDFs and proofs are versioned for review.
+
+The build also renders `test/fixtures/components.html` twice: once with the live stylesheet and once with the reviewed `test/fixtures/baseline.css`. It compares the resulting RGBA page images with a per-channel threshold of `0.1`; at most `0.1%` of pixels may differ. On failure, actual, expected, and magenta diff images are written to `build/diagnostics` and uploaded by CI. After intentionally reviewing a shared-style change, refresh the frozen fixture stylesheet and rerun all checks with:
+
+```bash
+npm run test:visual:update
+```
+
+Commit the updated baseline stylesheet in the same pull request so its CSS diff makes the accepted visual change explicit.
 
 For reproducibility, the renderer blocks HTTP(S) requests, decodes the repository's text-encoded fixed Binder Sans font assets, forces UTC and `en-US`, fixes the viewport and device scale, enables background graphics, and supplies explicit 8.5 × 11 inch PDF dimensions. Do not substitute a system browser or run `npm update` when producing committed artifacts; dependency and browser upgrades must update the package manifest and lockfile and regenerate all CI proof artifacts for review. Font binaries are stored as gzip-compressed Base64 text because this repository's pull-request path does not accept binary additions; the build decodes them only into the ignored `build/` directory.
 

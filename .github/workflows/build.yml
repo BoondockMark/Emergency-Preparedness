@@ -23,11 +23,14 @@ jobs:
           PUPPETEER_CACHE_DIR: ${{ runner.temp }}/puppeteer
       - name: Confirm generated files are committed
         run: git diff --exit-code -- BINDER_INDEX.md docs/moodle-index.html docs/pdfs docs/previews
-      - uses: actions/upload-artifact@v4
+      - name: Upload proofs and failure diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
         with:
           name: handout-proofs-${{ github.sha }}
           path: |
             docs/pdfs/*.pdf
             docs/previews/*.png
-          if-no-files-found: error
+            build/diagnostics/**
+          if-no-files-found: warn
 # Deliberately no deployment job: reviewed files are handed to Moodle manually.

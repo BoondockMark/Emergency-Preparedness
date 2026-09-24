@@ -6,6 +6,7 @@
   "scripts": {
     "build": "node scripts/build.mjs",
     "check": "node scripts/build.mjs --check",
+    "test:visual:update": "node scripts/build.mjs --update-visuals",
     "preview": "node scripts/preview.mjs"
   },
   "engines": {
