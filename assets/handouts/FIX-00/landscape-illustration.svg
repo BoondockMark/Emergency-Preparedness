@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 600" role="img" aria-labelledby="title desc">
+  <title id="title">Hillside landscape illustration fixture</title>
+  <desc id="desc">Layered hills beneath a pale sky demonstrate controlled image cropping.</desc>
+  <rect width="1200" height="600" fill="#dce8eb"/>
+  <path d="M0 390 170 260 330 370 500 210 720 390 900 250 1200 400V600H0Z" fill="#81968b"/>
+  <path d="M0 455 210 350 410 470 650 330 850 460 1030 350 1200 420V600H0Z" fill="#536b5c"/>
+  <g fill="#202b32"><circle cx="175" cy="205" r="28"/><rect x="167" y="230" width="16" height="95"/><circle cx="1005" cy="285" r="34"/><rect x="996" y="315" width="18" height="110"/></g>
+</svg>

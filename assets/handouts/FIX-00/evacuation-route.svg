@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 240" role="img" aria-labelledby="title desc">
+<title id="title">Evacuation route diagram fixture</title><desc id="desc">A solid route leads from Home to Meeting place; a dashed route leads to Alternate.</desc>
+<rect width="900" height="240" fill="white"/><g fill="none" stroke="#202b32" stroke-width="8"><path d="M145 120H450L700 55"/><path d="M450 120L700 190" stroke-dasharray="18 12"/></g>
+<g fill="white" stroke="#202b32" stroke-width="5"><rect x="30" y="70" width="120" height="100"/><circle cx="750" cy="50" r="35"/><rect x="700" y="155" width="110" height="70"/></g>
+<g fill="#202b32" font-family="sans-serif" font-size="28" font-weight="bold"><text x="48" y="130">HOME</text><text x="680" y="115">MEETING PLACE</text><text x="650" y="220">ALTERNATE (DASHED)</text></g>
+</svg>
