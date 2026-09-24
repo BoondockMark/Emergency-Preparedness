@@ -17,7 +17,7 @@ The component specimen is a test fixture and must never be published.
 ## Images and diagrams
 
 Use the stable asset convention `assets/handouts/<CODE>/` (for example,
-`assets/handouts/COM-03/smoke-column.jpg`). Keep editable source files there too,
+`assets/handouts/COM-001/smoke-column.jpg`). Keep editable source files there too,
 but do not reference those source files from a handout or list them as published
 assets in the manifest. Use clear, lower-case file names. Do not use absolute
 paths, `file:` URLs, remote `http(s):` URLs, or data URLs. Published formats are
@@ -35,7 +35,7 @@ substitute for manifest metadata:
 
 ```html
 <figure class="figure figure--full figure--crop-3x2" style="--crop-position: 50% 35%">
-<img src="../assets/handouts/COM-03/smoke-column.jpg" alt="A narrow smoke column rising behind a dry hillside.">
+<img src="../assets/handouts/COM-001/smoke-column.jpg" alt="A narrow smoke column rising behind a dry hillside.">
 <figcaption>Smoke may be visible before flames. <span class="credit">Photo: A. Example / Example Agency, used with permission.</span></figcaption>
 </figure>
 ```

@@ -14,8 +14,16 @@ const fixture = name => fs.readFile(new URL(`./unit-fixtures/${name}`, import.me
 
 test('front matter fixture is loaded separately from content', async () => {
   const document = loadDocument(await fixture('front-matter.md'), 'front-matter.md');
-  assert.equal(document.data.code, 'TST-01');
+  assert.equal(document.data.code, 'STH-001');
   assert.equal(document.content.trim(), 'Fixture body.');
+});
+
+test('handout code prefix must identify its binder section', async () => {
+  const source = (await fixture('front-matter.md')).replace('code: STH-001', 'code: COM-001');
+  assert.throws(
+    () => loadDocument(source, 'wrong-section-code.md'),
+    error => error instanceof MetadataError && /code: must use the STH prefix/.test(error.message)
+  );
 });
 
 test('page break fixture produces two chunks during discovery', async t => {
@@ -36,7 +44,7 @@ test('duplicate handout codes are rejected', async t => {
   await fs.mkdir(path.join(root, 'handouts'));
   const source = await fixture('front-matter.md');
   await Promise.all(['one.md', 'two.md'].map(name => fs.writeFile(path.join(root, 'handouts', name), source)));
-  await assert.rejects(discoverDocuments(root, new Map()), /code: duplicates TST-01/);
+  await assert.rejects(discoverDocuments(root, new Map()), /code: duplicates STH-001/);
 });
 
 test('local link fixture accepts existing files and rejects missing files', async t => {
@@ -45,8 +53,8 @@ test('local link fixture accepts existing files and rejects missing files', asyn
   const htmlFile = path.join(root, 'page.html');
   const html = await fixture('local-links.html');
   await fs.writeFile(path.join(root, 'target.txt'), 'target');
-  await validateLocalLinks(html, htmlFile, 'TST-01');
-  await assert.rejects(validateLocalLinks('<a href="missing.txt">x</a>', htmlFile, 'TST-01'), /broken local link/);
+  await validateLocalLinks(html, htmlFile, 'STH-001');
+  await assert.rejects(validateLocalLinks('<a href="missing.txt">x</a>', htmlFile, 'STH-001'), /broken local link/);
 });
 
 test('HTML escaping fixture covers publication-sensitive characters', async () => {
@@ -60,15 +68,17 @@ test('component markup is preserved while Markdown is rendered', () => {
   assert.equal(renderMarkdown('**Bold**'), '<p><strong>Bold</strong></p>');
 });
 
-test('handout pages use the section-numbered outside-edge slot', () => {
+test('handout pages use their section slot and show the document code', () => {
   const html = renderHandout('{{title}} {{cssPath}} {{pages}}', {
     meta: {
-      code: 'TST-01', title: 'Fixture', section: 'Evacuation & Shelter', sectionNumber: 3,
+      code: 'EVS-001', title: 'Fixture', section: 'Evacuation & Shelter', sectionNumber: 3,
       status: 'draft', version: '1.0', lastReviewed: '2026-09-24', pageCount: 2
     },
     chunks: ['First page.', 'Second page.']
   });
   assert.equal((html.match(/style="--section-index: 2"/g) ?? []).length, 2);
+  assert.equal((html.match(/>EVS-001<\/div>/g) ?? []).length, 2);
+  assert.equal((html.match(/aria-label="EVS-001: Evacuation &amp; Shelter"/g) ?? []).length, 2);
 });
 
 test('approved content rejects unresolved approval placeholders', async () => {
@@ -84,9 +94,9 @@ test('approved content rejects unresolved approval placeholders', async () => {
 });
 
 test('image metadata fixture validates and image markup requires alt text', async () => {
-  validateAssetEntry(JSON.parse(await fixture('image-metadata.json')), 'TST-01');
-  assert.deepEqual(imageReferences('<img src="x.svg" alt="Route">', 'TST-01'), [{ src: 'x.svg', alt: 'Route' }]);
-  assert.throws(() => imageReferences('<img src="x.svg">', 'TST-01'), /must have alt/);
+  validateAssetEntry(JSON.parse(await fixture('image-metadata.json')), 'STH-001');
+  assert.deepEqual(imageReferences('<img src="x.svg" alt="Route">', 'STH-001'), [{ src: 'x.svg', alt: 'Route' }]);
+  assert.throws(() => imageReferences('<img src="x.svg">', 'STH-001'), /must have alt/);
 });
 
 test('generated binder index orders codes consistently', () => {
@@ -99,6 +109,6 @@ test('generated binder index orders codes consistently', () => {
     lastReviewed: '2026-01-01',
     pageCount: 1
   });
-  const index = generateBinderIndex([{ meta: meta('TST-20') }, { meta: meta('TST-03') }]);
-  assert.ok(index.indexOf('| TST-03 |') < index.indexOf('| TST-20 |'));
+  const index = generateBinderIndex([{ meta: meta('STH-020') }, { meta: meta('STH-003') }]);
+  assert.ok(index.indexOf('| STH-003 |') < index.indexOf('| STH-020 |'));
 });

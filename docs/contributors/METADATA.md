@@ -10,7 +10,7 @@ Errors use the form `source/path.md: field.name: concise explanation`.
 
 | Field | Type and rule |
 |---|---|
-| `code` | Unique string matching `ABC-01` (three uppercase letters, hyphen, two digits). |
+| `code` | Unique section code and three-digit document index, such as `COM-001`. |
 | `title` | Resident-facing title. |
 | `section` / `sectionNumber` | Exact binder section and matching number, 1–8. |
 | `status` | `draft`, `under-review`, or `approved`. |
@@ -24,6 +24,13 @@ Errors use the form `source/path.md: field.name: concise explanation`.
 Section numbering is: 1 Start Here; 2 Alerts & Communication; 3 Evacuation &
 Shelter; 4 Water, Food & Cooking; 5 Home & Utilities; 6 Hands-On Skills; 7
 Hazard Guides; 8 Plans & Records.
+
+Document-code prefixes are: `STH` Start Here; `COM` Alerts & Communication;
+`EVS` Evacuation & Shelter; `WFC` Water, Food & Cooking; `HUT` Home &
+Utilities; `SKL` Hands-On Skills; `HZD` Hazard Guides; and `PRP` Plans &
+Records. Assign indexes sequentially within each section and retain all three
+digits (for example, `COM-001`, `COM-002`). The complete code appears on the
+outside-edge tab so a filed handout identifies both its section and its index.
 
 ## Structured sources
 

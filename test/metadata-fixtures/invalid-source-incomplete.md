@@ -1,5 +1,5 @@
 ---
-code: SAF-01
+code: STH-001
 title: Fixture
 section: Start Here
 sectionNumber: 1
@@ -16,6 +16,6 @@ sources:
     organization: Example Agency
     url: https://example.gov/guidance
     publicationDate: 2026-08-01
-proofRecord: docs/publishing/proofs/SAF-01.yml
+proofRecord: docs/publishing/proofs/STH-001.yml
 ---
 Verified fixture content.

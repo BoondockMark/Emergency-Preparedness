@@ -1,5 +1,5 @@
 ---
-code: SKL-04
+code: SKL-001
 title: Sandbagging Basics
 section: Hands-On Skills
 sectionNumber: 6
