@@ -27,7 +27,7 @@ export async function inspectAccessibility(page, documentCode) {
       if (!element.textContent.trim()) continue;
       const style = getComputedStyle(element);
       const points = parseFloat(style.fontSize) * .75;
-      const ancillary = element.matches('figcaption,.credit,.kicker,.footer');
+      const ancillary = element.matches('caption,figcaption,.credit,.kicker,.footer');
       const minimum = ancillary ? minimumTextPt : minimumBodyPt;
       if (points + .01 < minimum) add('minimum-text-size', element, `${points.toFixed(2)}pt is below ${minimum}pt`);
       const ratio = contrast(style.color, background(element));
