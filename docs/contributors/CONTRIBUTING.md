@@ -1,5 +1,9 @@
 # Contributing and review
 
+Use the approved typography, component intent, warning severity, accessibility
+criteria, and page geometry in [PRINT-DESIGN-SYSTEM.md](PRINT-DESIGN-SYSTEM.md).
+The component specimen is a test fixture and must never be published.
+
 ## Add or edit a handout
 
 1. Create or edit a `.md` file in the matching `handouts/<section>/` folder. Use `CODE-short-title.md` and never recycle a code after publication.

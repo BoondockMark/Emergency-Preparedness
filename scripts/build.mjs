@@ -1,11 +1,13 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import process from 'node:process';
+import { createHash } from 'node:crypto';
 import { pathToFileURL } from 'node:url';
 import { gunzipSync } from 'node:zlib';
 import puppeteer from 'puppeteer';
 import { inspectSheetGeometry, formatLayoutIssue } from './lib/layout-validation.mjs';
-import { getPdfPageCount } from './lib/pdf-validation.mjs';
+import { inspectAccessibility, formatAccessibilityIssue } from './lib/accessibility-validation.mjs';
+import { getPdfPageCount, inspectEmbeddedFonts } from './lib/pdf-validation.mjs';
 import { compareFixture, VISUAL_TOLERANCE } from './lib/visual-regression.mjs';
 const root=path.resolve(import.meta.dirname,'..');
 const updateVisuals=process.argv.includes('--update-visuals');
@@ -14,6 +16,10 @@ const sections=['Start Here','Alerts & Communication','Evacuation & Shelter','Wa
 const statuses=['draft','under-review','approved'];
 const required=['code','title','section','sectionNumber','status','version','lastReviewed','pageCount','reviewers','sources'];
 const PRINT_PPI=200;
+const FONT_HASHES={
+  'DejaVuSans.ttf':'ae7b7855e115a5966d8b1b3f80f254ccc117ec86f9965e202ee2940453837280',
+  'DejaVuSans-Bold.ttf':'5c1247acef7f2b8522a31742c76d6adcb5569bacc0be7ceaa4dc39dd252ce895'
+};
 const assetRoot=path.join(root,'assets/handouts');
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 async function walk(d){return (await Promise.all((await fs.readdir(d,{withFileTypes:true})).map(e=>e.isDirectory()?walk(path.join(d,e.name)):[path.join(d,e.name)]))).flat()}
@@ -33,7 +39,7 @@ await fs.rm(path.join(root,'build'),{recursive:true,force:true});for(const d of 
 await fs.copyFile(path.join(root,'assets/styles/print.css'),path.join(root,'build/assets/print.css'));
 await fs.mkdir(path.join(root,'build/assets/handouts'),{recursive:true});
 for(const [code,entries] of manifests){const destination=path.join(root,'build/assets/handouts',code);await fs.mkdir(destination,{recursive:true});for(const file of entries.keys()){const source=path.join(assetRoot,code,file),target=path.join(destination,file);if(path.extname(file).toLowerCase()==='.svg')await fs.writeFile(target,sanitizeSvg(await fs.readFile(source,'utf8'),`${code}/${file}`));else await fs.copyFile(source,target)}}
-for(const font of ['DejaVuSans.ttf','DejaVuSans-Bold.ttf']){const encoded=await fs.readFile(path.join(root,'assets/fonts',font+'.gz.base64'),'ascii');await fs.writeFile(path.join(root,'build/assets/fonts',font),gunzipSync(Buffer.from(encoded.replace(/\s/g,''),'base64')));}
+for(const [font,expectedHash] of Object.entries(FONT_HASHES)){const encoded=await fs.readFile(path.join(root,'assets/fonts',font+'.gz.base64'),'ascii');const decoded=gunzipSync(Buffer.from(encoded.replace(/\s/g,''),'base64'));const actualHash=createHash('sha256').update(decoded).digest('hex');if(actualHash!==expectedHash)throw Error(`${font}: decoded font hash ${actualHash} does not match the reviewed font ${expectedHash}`);await fs.writeFile(path.join(root,'build/assets/fonts',font),decoded);}
 const tpl=await fs.readFile(path.join(root,'templates/handout.html'),'utf8');for(const {meta:m,chunks} of docs){const pages=chunks.map((c,i)=>`<article class="sheet ${i?'back':'front'}"><div class="edge">${esc(m.section.toUpperCase())} · ${String(m.sectionNumber).padStart(2,'0')}</div><main class="content"><header class="kicker">La Habra Heights Fire Watch · Emergency Preparedness Binder <span class="status">${esc(m.status.toUpperCase())}</span></header><h1>${esc(i?m.title+' — continued':m.title)}</h1>${markdown(c)}<footer class="footer"><span>${m.code} · v${m.version}</span><span>Last reviewed: ${m.lastReviewed}</span><span>${i+1} of ${m.pageCount}</span></footer></main></article>`).join('');const html=tpl.replace('{{title}}',esc(m.title)).replace('{{cssPath}}','../assets/print.css').replace('{{pages}}',pages);for(const x of html.matchAll(/(?:href|src)="([^"]+)"/g)){if(/^(https?:|#|mailto:|data:)/.test(x[1]))continue;try{await fs.access(path.resolve(root,'build/html',x[1]))}catch{throw Error(`${m.code}: broken local link ${x[1]}`)}}await fs.writeFile(path.join(root,'build/html',m.code+'.html'),html);}
 const fixtureSource=await fs.readFile(path.join(root,'test/fixtures/components.html'),'utf8');
 for(const attrs of imageReferences(fixtureSource,'FIX-00')){const ref=safeAssetPath(attrs.src,'FIX-00'),entry=manifests.get(ref.code)?.get(ref.file);if(!entry)throw Error(`FIX-00: ${ref.file} is not declared in its asset manifest`);if(attrs.alt!==entry.alt)throw Error(`FIX-00/${ref.file}: HTML alt text must exactly match manifest alt text`)}
@@ -63,10 +69,15 @@ try{
       await page.screenshot({path:path.join(root,'build/diagnostics',`${m.code}-layout.png`),fullPage:true});
       throw Error(`Layout validation failed:\n${layoutIssues.map(formatLayoutIssue).join('\n')}`);
     }
+    const accessibilityIssues=await inspectAccessibility(page,m.code);
+    if(accessibilityIssues.length)throw Error(`Accessibility validation failed:\n${accessibilityIssues.map(formatAccessibilityIssue).join('\n')}`);
     const pdf=await page.pdf({width:'8.5in',height:'11in',margin:{top:0,right:0,bottom:0,left:0},printBackground:true,preferCSSPageSize:true,tagged:false,outline:false});
     await fs.writeFile(path.join(root,'docs/pdfs',m.code+'.pdf'),pdf);
     const count=await getPdfPageCount(pdf);
     if(count!==m.pageCount)throw Error(`${m.code}: PDF page count ${count}, expected ${m.pageCount}`);
+    const fonts=inspectEmbeddedFonts(pdf);
+    if(!fonts.embeddedPrograms)throw Error(`${m.code}: generated PDF has no embedded font program (${fonts.fontNames.join(', ')||'no fonts found'})`);
+    if(!fonts.fontNames.some(name=>name.includes('DejaVuSans')))throw Error(`${m.code}: generated PDF does not identify the bundled DejaVu Sans family (${fonts.fontNames.join(', ')||'no fonts found'})`);
     const sheets=await page.$$('.sheet');
     for(let i=0;i<sheets.length;i++)await sheets[i].screenshot({path:path.join(root,'docs/previews',`${m.code}-page-${i+1}.png`),type:'png',omitBackground:false});
     await page.close();
@@ -80,15 +91,17 @@ try{
   if(fixtureLowResolution.length)throw Error(`FIX-00: raster image below ${PRINT_PPI} PPI: ${fixtureLowResolution.join(', ')}`);
   const fixtureIssues=await inspectSheetGeometry(fixturePage,'FIX-00');
   if(fixtureIssues.length)throw Error(`Component fixture layout failed:\n${fixtureIssues.map(formatLayoutIssue).join('\n')}`);
+  const fixtureAccessibilityIssues=await inspectAccessibility(fixturePage,'FIX-00');
+  if(fixtureAccessibilityIssues.length)throw Error(`Component fixture accessibility failed:\n${fixtureAccessibilityIssues.map(formatAccessibilityIssue).join('\n')}`);
   const fixtureActual=path.join(root,'build/diagnostics/components-actual.png');
-  await (await fixturePage.$('.sheet')).screenshot({path:fixtureActual,type:'png',omitBackground:false});
+  await fixturePage.screenshot({path:fixtureActual,type:'png',omitBackground:false,fullPage:true});
   const baselinePage=await browser.newPage();
   await baselinePage.setViewport({width:816,height:1056,deviceScaleFactor:1});
   await baselinePage.emulateMediaType('print');
   await baselinePage.goto(pathToFileURL(path.join(root,'build/html/components-baseline.html')).href,{waitUntil:'load'});
   await baselinePage.evaluate(async()=>document.fonts.ready);
   const fixtureBaseline=path.join(root,'build/diagnostics/components-baseline.png');
-  await (await baselinePage.$('.sheet')).screenshot({path:fixtureBaseline,type:'png',omitBackground:false});
+  await baselinePage.screenshot({path:fixtureBaseline,type:'png',omitBackground:false,fullPage:true});
   await compareFixture(fixturePage,fixtureActual,fixtureBaseline,path.join(root,'build/diagnostics'));
   await baselinePage.close();
   await fixturePage.close();
