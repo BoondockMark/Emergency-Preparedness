@@ -65,7 +65,7 @@ sources:
 <p>Find where water arrives and a safe outlet. Set bags on firm ground <strong>uphill of the opening</strong>. Lead water to an existing drain path on your property—never toward a neighbor, road, or another doorway. Keep drains and your exit open; watch for pooling behind the line.</p>
 
 <figure class="figure figure--full figure--diagram figure--contain" aria-labelledby="site-caption">
-  <img src="../assets/handouts/SKL-001/site-route.svg" style="height: 1.55in" alt="Plan view: runoff approaches a house from the uphill side; a short angled sandbag line steers it toward an existing safe drainage path, leaving the doorway and exit clear.">
+  <img src="../assets/handouts/SKL-001/site-route.svg" style="height: 1.3in" alt="Plan view: runoff approaches a house from the uphill side; a short angled sandbag line steers it toward an existing safe drainage path, leaving the doorway and exit clear.">
   <figcaption id="site-caption"><strong>Plan view.</strong> Trace the water's entire path before placing a bag. <span class="credit">Original Fire Watch diagram, adapted to a hillside home.</span></figcaption>
 </figure>
 
