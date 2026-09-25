@@ -100,6 +100,8 @@ In the cleaner-air room and the rest of the home:
 
 <div class="warning"><strong>Carbon monoxide cannot be seen or smelled.</strong> Keep working CO alarms in the home. Headache, dizziness, weakness, nausea, vomiting, chest pain, or confusion can indicate CO poisoning. Get everyone into fresh air and call 911 immediately; do not re-enter until responders say it is safe.</div>
 
+<!-- pagebreak -->
+
 ## 6. Keep checking conditions
 
 <div class="checklist"><ul>

@@ -85,6 +85,8 @@ Backup driver/service: __________________________ Phone or contact method: _____
 
 See **EVS-004** for route planning and **EVS-005** for transportation planning.
 
+<!-- pagebreak -->
+
 ### 4. Go-bags, medicines, documents, and equipment ready
 
 <div class="checklist"><ul>
@@ -113,6 +115,8 @@ Person/animal: __________________ Need: __________________ Primary helper: _____
 Backup helper/contact: __________________________________________________________________
 
 See **EVS-006** for children and animals and **EVS-010** for access needs and support networks.
+
+<!-- pagebreak -->
 
 ## Only when leaving—and only if time permits
 
