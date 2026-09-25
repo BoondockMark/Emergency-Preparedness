@@ -26,16 +26,27 @@ test('handout code prefix must identify its binder section', async () => {
   );
 });
 
-test('page break fixture produces two chunks during discovery', async t => {
+test('page break fixture produces all chunks during discovery', async t => {
   const root = await fs.mkdtemp(path.join(os.tmpdir(), 'discovery-test-'));
   t.after(() => fs.rm(root, { recursive: true, force: true }));
   await fs.mkdir(path.join(root, 'handouts'));
   const metadata = (await fixture('front-matter.md'))
-    .replace('pageCount: 1', 'pageCount: 2')
+    .replace('pageCount: 1', 'pageCount: 3')
     .replace('Fixture body.\n', await fixture('page-breaks.md'));
   await fs.writeFile(path.join(root, 'handouts/example.md'), metadata);
   const [document] = await discoverDocuments(root, new Map());
-  assert.deepEqual(document.chunks.map(chunk => chunk.trim()), ['First page.', 'Second page.']);
+  assert.deepEqual(document.chunks.map(chunk => chunk.trim()), ['First page.', 'Second page.', 'Third page.']);
+});
+
+test('pageCount must be a positive integer but may exceed two', async () => {
+  const source = await fixture('front-matter.md');
+  assert.equal(loadDocument(source.replace('pageCount: 1', 'pageCount: 3'), 'three-pages.md').data.pageCount, 3);
+  for (const invalid of ['0', '-1', '1.5']) {
+    assert.throws(
+      () => loadDocument(source.replace('pageCount: 1', `pageCount: ${invalid}`), 'invalid-page-count.md'),
+      error => error instanceof MetadataError && /pageCount: must be a positive integer/.test(error.message)
+    );
+  }
 });
 
 test('duplicate handout codes are rejected', async t => {
@@ -85,13 +96,16 @@ test('continued handout pages use compact headings with fully escaped titles', (
   const html = renderHandout('{{title}} {{cssPath}} {{pages}}', {
     meta: {
       code: 'EVS-001', title: 'Prepare & <Leave>', section: 'Evacuation & Shelter', sectionNumber: 3,
-      status: 'draft', version: '1.0', lastReviewed: '2026-09-24', pageCount: 2
+      status: 'draft', version: '1.0', lastReviewed: '2026-09-24', pageCount: 4
     },
-    chunks: ['First page.', 'Second page.']
+    chunks: ['First page.', 'Second page.', 'Third page.', 'Fourth page.']
   });
   assert.match(html, /<h1>Prepare &amp; &lt;Leave&gt;<\/h1>/);
-  assert.match(html, /<h1 class="title--compact">Prepare &amp; &lt;Leave&gt; — continued<\/h1>/);
-  assert.equal((html.match(/<h1 class=/g) ?? []).length, 1);
+  assert.equal((html.match(/<h1 class="title--compact">Prepare &amp; &lt;Leave&gt; — continued<\/h1>/g) ?? []).length, 3);
+  assert.equal((html.match(/<article class="sheet front"/g) ?? []).length, 2);
+  assert.equal((html.match(/<article class="sheet back"/g) ?? []).length, 2);
+  assert.match(html, /<article class="sheet front"[\s\S]*?<span>3 of 4<\/span>/);
+  assert.match(html, /<span>1 of 4<\/span>[\s\S]*?<article class="sheet back"[\s\S]*?<span>2 of 4<\/span>[\s\S]*?<article class="sheet front"[\s\S]*?<span>3 of 4<\/span>[\s\S]*?<article class="sheet back"[\s\S]*?<span>4 of 4<\/span>/);
 });
 
 test('approved content rejects unresolved approval placeholders', async () => {

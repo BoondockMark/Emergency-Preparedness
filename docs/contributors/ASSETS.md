@@ -170,7 +170,7 @@ Then inspect every affected `docs/previews/<CODE>-page-<N>.png` and
 - Check crops, captions, credits, labels, and reading order.
 - Confirm that no content clips, overflows, or enters the binding margin.
 - Confirm diagrams remain understandable without color.
-- For two-page handouts, complete the physical duplex test in
+- For multi-page handouts, complete the physical duplex test on every sheet in
   [PRINTING.md](../publishing/PRINTING.md).
 
 Commit the source graphic, manifest, handout source, and regenerated tracked
