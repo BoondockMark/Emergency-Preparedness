@@ -16,7 +16,7 @@ Errors use the form `source/path.md: field.name: concise explanation`.
 | `status` | `draft`, `under-review`, or `approved`. |
 | `version` | String or number in `MAJOR.MINOR` form, such as `1.0`. |
 | `lastReviewed` | A real ISO calendar date (`YYYY-MM-DD`), not merely text in that shape. For drafts, it is the date the draft was last assessed and is not an approval claim. |
-| `pageCount` | Integer `1` or `2`, checked against source page breaks and the PDF. |
+| `pageCount` | Positive integer equal to the number of source page chunks and generated PDF pages. Separate chunks with `<!-- pagebreak -->`; an N-page handout therefore has N−1 markers. |
 | `reviewers.editor` | Name of the editor, or `unassigned` before approval. |
 | `reviewers.subjectMatter` | Name of the qualified technical reviewer, or `unassigned` before approval. |
 | `sources` | Non-empty list of structured source records described below. |

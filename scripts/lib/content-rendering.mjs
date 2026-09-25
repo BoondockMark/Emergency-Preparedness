@@ -59,7 +59,7 @@ export function renderMarkdown(source) {
 export function renderHandout(template, document) {
   const { meta, chunks } = document;
   const pages = chunks.map((chunk, index) => `
-<article class="sheet ${index ? 'back' : 'front'}" style="--section-index: ${meta.sectionNumber - 1}">
+<article class="sheet ${index % 2 === 0 ? 'front' : 'back'}" style="--section-index: ${meta.sectionNumber - 1}">
   <div class="edge" aria-label="${escapeHtml(meta.code)}: ${escapeHtml(meta.section)}">${escapeHtml(meta.code)}</div>
   <main class="content">
     <header class="kicker">La Habra Heights Fire Watch · Emergency Preparedness Binder <span class="status">${escapeHtml(meta.status.toUpperCase())}</span></header>

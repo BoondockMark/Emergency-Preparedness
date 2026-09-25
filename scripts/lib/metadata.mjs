@@ -89,7 +89,7 @@ export function validateMetadata(meta, body, sourcePath) {
   const expectedCode = SECTION_CODES[meta.sectionNumber - 1];
   if (!meta.code.startsWith(`${expectedCode}-`)) fail(sourcePath, 'code', `must use the ${expectedCode} prefix for ${meta.section}`);
   if (!STATUSES.includes(meta.status)) fail(sourcePath, 'status', `must be one of ${STATUSES.join(', ')}`);
-  if (![1, 2].includes(meta.pageCount)) fail(sourcePath, 'pageCount', 'must be 1 or 2');
+  if (!Number.isInteger(meta.pageCount) || meta.pageCount < 1) fail(sourcePath, 'pageCount', 'must be a positive integer');
   if (!meta.reviewers || typeof meta.reviewers !== 'object' || Array.isArray(meta.reviewers)) fail(sourcePath, 'reviewers', 'must record editor and subjectMatter roles');
   for (const role of ['editor', 'subjectMatter']) requireText(meta.reviewers?.[role], sourcePath, `reviewers.${role}`);
   if (!Array.isArray(meta.sources) || !meta.sources.length) fail(sourcePath, 'sources', 'must contain at least one structured source');

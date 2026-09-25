@@ -75,7 +75,9 @@ Markdown headings, lists, and emphasis are supported. These HTML wrappers are in
 - `<div class="local-info">…</div>` — locally specific facts requiring verification.
 - `<div class="sources">…</div>` — visible citations on the handout.
 - `<div class="grid">…</div>` — two-column content.
-- `<!-- pagebreak -->` — exactly one break in a two-page handout.
+- `<!-- pagebreak -->` — starts the next page chunk. Use one marker between
+  each pair of pages (N−1 markers for an N-page handout), and set `pageCount`
+  to the resulting number of chunks.
 
 ## Required review path
 
@@ -88,4 +90,9 @@ The PR records reviewer names and outcomes. The source metadata is then updated 
 
 ## Print review
 
-Check color and grayscale proofs, legibility, clipping, and blank punch space. For two-page documents, perform the physical duplex test in [PRINTING.md](../publishing/PRINTING.md). Automated checks cannot confirm a specific printer's feed direction or alignment.
+Check color and grayscale proofs, legibility, clipping, and blank punch space.
+For every multi-page document, perform the physical duplex test in
+[PRINTING.md](../publishing/PRINTING.md). Pages alternate front/back beginning
+with page 1 as a front, so inspect every physical sheet, including a final
+unpaired front when the page count is odd. Automated checks cannot confirm a
+specific printer's feed direction or alignment.

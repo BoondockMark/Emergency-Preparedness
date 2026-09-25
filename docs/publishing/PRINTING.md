@@ -1,6 +1,6 @@
 # Print qualification and proof records
 
-The handout PDFs are US Letter (8.5 × 11 inches), with content inset for ordinary printer margins. Front pages reserve extra blank space at the left (punch/binding edge) and carry the section strip at right. Back pages mirror this: extra space and strip are at right and left respectively, so the strip stays on the outside edge after turning the sheet.
+The handout PDFs are US Letter (8.5 × 11 inches), with content inset for ordinary printer margins. Odd-numbered pages are fronts: they reserve extra blank space at the left (punch/binding edge) and carry the section strip at right. Even-numbered pages are backs and mirror this, with extra space at right and the strip at left, so the strip stays on the outside edge after turning each sheet. This front/back alternation repeats for every sheet in a longer handout; an odd final page is an unpaired front.
 
 ## Qualify a printer or print vendor
 
@@ -21,8 +21,8 @@ The calibration sheet characterizes the print path. It does **not** replace phys
 
 1. Build from the candidate source commit and do not modify the PDF afterward.
 2. Run `sha256sum docs/pdfs/<CODE>.pdf` (or `shasum -a 256` on macOS).
-3. Print that exact PDF with the qualified settings. For a two-page PDF use long-edge duplex. Inspect every page, outside-edge strips, grayscale information, minimum type, and clipping.
-4. Punch a sacrificial copy and measure front/back and strip alignment. Record horizontal and vertical offsets (and ruler measurements where used), not only “looks aligned.”
+3. Print that exact PDF with the qualified settings. For every multi-page PDF use long-edge duplex; do not reorder pages or insert blank backs. Inspect every page and every physical sheet, including an unpaired final front, for correct front/back margins, outside-edge strips, grayscale information, minimum type, and clipping.
+4. Punch a sacrificial copy and measure front/back and strip alignment on every sheet. Record the greatest horizontal and vertical offsets (and ruler measurements where used), not only “looks aligned.”
 5. Copy [`PROOF_RECORD_TEMPLATE.md`](PROOF_RECORD_TEMPLATE.md) to `docs/publishing/proofs/<CODE>-<YYYY-MM-DD>.md`, complete every field, and commit it. Set the handout's `proofRecord` front-matter value to that repository-relative path.
 
 A completed record ties the handout code and source commit to the **exact PDF bytes** through `pdfPath` and `pdfSha256`, and captures printer model, driver/application, paper, scaling, duplex, reviewer/date, grayscale and punch-clearance outcomes, and measured alignment. The build rejects an `approved` handout with no record, a mismatched code/path/checksum, incomplete physical fields, or outcomes that do not begin with `PASS`.
