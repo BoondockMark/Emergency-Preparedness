@@ -6,7 +6,6 @@ sectionNumber: 6
 status: draft
 version: 0.2
 lastReviewed: 2026-09-24
-pageCount: 2
 reviewers:
   editor: unassigned
   subjectMatter: unassigned

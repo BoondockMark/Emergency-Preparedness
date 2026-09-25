@@ -71,7 +71,8 @@ try {
         path.join(outputRoot, 'pdfs', `${meta.code}.pdf`),
         path.join(root, 'docs/pdfs', `${meta.code}.pdf`)
       );
-      for (let page = 1; page <= meta.pageCount; page++) {
+      const derivedPageCount = meta.pageCount;
+      for (let page = 1; page <= derivedPageCount; page++) {
         await fs.copyFile(
           path.join(outputRoot, 'previews', `${meta.code}-page-${page}.png`),
           path.join(root, 'docs/previews', `${meta.code}-page-${page}.png`)
@@ -80,7 +81,7 @@ try {
     }
   }
 
-  const pages = documents.reduce((total, document) => total + document.meta.pageCount, 0);
+  const pages = documents.reduce((total, { meta }) => total + meta.pageCount, 0);
   console.log(
     `${checkOnly ? 'Checked' : 'Built and checked'} ${documents.length} handouts / ${pages} PDF pages. `
     + `Visual fixture tolerance: ${tolerance.maxDifferentPixelRatio * 100}%.`

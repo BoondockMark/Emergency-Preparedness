@@ -6,7 +6,10 @@ export function generateBinderIndex(documents) {
     const rows = documents
       .filter(document => document.meta.section === section)
       .sort((a, b) => a.meta.code.localeCompare(b.meta.code))
-      .map(({ meta }) => `| ${meta.code} | ${meta.title} | ${meta.status} | ${meta.version} | ${meta.lastReviewed} | ${meta.pageCount} |`)
+      .map(({ meta }) => {
+        const { code, title, status, version, lastReviewed, pageCount } = meta;
+        return `| ${code} | ${title} | ${status} | ${version} | ${lastReviewed} | ${pageCount} |`;
+      })
       .join('\n');
     return `## ${index + 1}. ${section}\n\n| Code | Title | Status | Version | Last reviewed | Pages |\n|---|---|---|---|---|---:|\n${rows || '| — | _No handouts yet_ | — | — | — | — |'}`;
   });

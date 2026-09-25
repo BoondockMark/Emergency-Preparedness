@@ -31,9 +31,12 @@ export async function discoverDocuments(root, manifests) {
       chunkStartLines.push(cursor);
       cursor += (chunk.match(/\n/g) ?? []).length + 2;
     }
-    if (chunks.length !== meta.pageCount) {
-      throw Error(`${sourcePath}: pageCount: expected ${chunks.length}`);
+    const declaredPageCount = meta.pageCount;
+    const derivedPageCount = chunks.length;
+    if (declaredPageCount !== undefined && declaredPageCount !== derivedPageCount) {
+      throw Error(`${sourcePath}: pageCount: declared ${declaredPageCount}, derived ${derivedPageCount} from page chunks`);
     }
+    meta.pageCount = derivedPageCount;
     validateImages(content, meta.code, manifests);
     documents.push({ meta, chunks, chunkStartLines, sourcePath });
   }

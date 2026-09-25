@@ -76,8 +76,9 @@ Markdown headings, lists, and emphasis are supported. These HTML wrappers are in
 - `<div class="sources">…</div>` — visible citations on the handout.
 - `<div class="grid">…</div>` — two-column content.
 - `<!-- pagebreak -->` — starts the next page chunk. Use one marker between
-  each pair of pages (N−1 markers for an N-page handout), and set `pageCount`
-  to the resulting number of chunks.
+  each pair of pages (N−1 markers for an N-page handout). The build derives the
+  page count from these chunks, so adding a page requires only inserting a
+  marker and its new content.
 
 ## Required review path
 
@@ -98,7 +99,8 @@ printable region, or a footer overlap, its error identifies the source as
 points to line 42 rather than only to the generated HTML selector. Horizontal
 errors commonly come from a long unbroken URL or other text: break or shorten
 the text, or reduce the element width. For vertical errors and footer overlaps,
-shorten the content or insert `<!-- pagebreak -->` and update `pageCount`.
+shorten the content or insert `<!-- pagebreak -->`; the build updates the
+derived page count automatically.
 
 For every multi-page document, perform the physical duplex test in
 [PRINTING.md](../publishing/PRINTING.md). Pages alternate front/back beginning
