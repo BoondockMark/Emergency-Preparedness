@@ -106,4 +106,4 @@ sources:
 <li>Label firsthand observations clearly, and keep checking as conditions change.</li>
 </ul></div>
 
-<div class="sources">Sources: FEMA, “Rumor Response”; Ready.gov, “Alerts and Warnings.” Accessed September 25, 2026. Local entries intentionally remain blank pending responsible-agency verification.</div>
+<div class="sources">Sources: FEMA, “Rumor Response”; Ready.gov, “Alerts and Warnings.” Accessed September 25, 2026.</div>
