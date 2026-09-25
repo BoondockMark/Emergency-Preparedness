@@ -164,7 +164,8 @@ export function loadDocument(raw, sourcePath) {
   if (!match) fail(sourcePath, 'frontMatter', 'missing opening or closing --- delimiter');
   const metadata = parseMetadataYaml(match[1], sourcePath);
   validateMetadata(metadata, match[2], sourcePath);
-  return { data: metadata, content: match[2] };
+  const contentStartLine = `---\n${match[1]}\n---\n`.split('\n').length;
+  return { data: metadata, content: match[2], contentStartLine };
 }
 
 export { SECTIONS, SECTION_CODES };

@@ -91,6 +91,15 @@ The PR records reviewer names and outcomes. The source metadata is then updated 
 ## Print review
 
 Check color and grayscale proofs, legibility, clipping, and blank punch space.
+When the automated layout check finds overflow, clipping, content outside the
+printable region, or a footer overlap, its error identifies the source as
+`handouts/<section>/<file>.md:<line>` when available. For example,
+`EVS-001 page 1 (handouts/evacuation/EVS-001-example.md:42): horizontal-overflow …`
+points to line 42 rather than only to the generated HTML selector. Horizontal
+errors commonly come from a long unbroken URL or other text: break or shorten
+the text, or reduce the element width. For vertical errors and footer overlaps,
+shorten the content or insert `<!-- pagebreak -->` and update `pageCount`.
+
 For every multi-page document, perform the physical duplex test in
 [PRINTING.md](../publishing/PRINTING.md). Pages alternate front/back beginning
 with page 1 as a front, so inspect every physical sheet, including a final
