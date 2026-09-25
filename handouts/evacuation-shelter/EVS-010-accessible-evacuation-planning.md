@@ -249,6 +249,8 @@ Ask each person first. A confirmation means the person understands and accepts t
 
 ____________________________________________________________________________________
 
+<!-- pagebreak -->
+
 ## 9. Practice and ask-for-help triggers
 
 Practice communication, check-in, route, loading, equipment, destination, and reunification parts separately if a full exercise would be unsafe. Never interrupt essential power, medicine, oxygen, or care to test this plan without appropriate professional guidance.
