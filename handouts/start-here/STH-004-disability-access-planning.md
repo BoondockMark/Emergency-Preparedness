@@ -1,6 +1,6 @@
 ---
 code: STH-004
-title: Preparedness for Older Adults and People with Disabilities
+title: Disability & Access Planning
 section: Start Here
 sectionNumber: 1
 status: under-review
@@ -209,7 +209,7 @@ Written instructions should be specific to you and the exact product or support.
 
 ## Related Start Here handouts
 
-Continue with <a id="sth-001" href="#sth-001">STH-001 — Emergency Preparedness Quick Start</a>, <a id="sth-002" href="#sth-002">STH-002 — Preparedness Kit Checklist</a>, <a id="sth-003" href="#sth-003">STH-003</a>, and <a id="sth-007" href="#sth-007">STH-007</a>. Check the binder index for availability; handouts still in development may not yet appear there.
+Continue with <a id="sth-001" href="#sth-001">STH-001 — Emergency Preparedness Quick Start</a>, <a id="sth-002" href="#sth-002">STH-002 — Build a Two-Week Preparedness Kit</a>, <a id="sth-003" href="#sth-003">STH-003 — Know Your Local Hazards</a>, and <a id="sth-007" href="#sth-007">STH-007 — Annual Binder & Kit Review</a>.
 
 <div class="sources"><strong>Sources and further planning tools</strong><br>
 U.S. Department of Homeland Security, Ready.gov, <a href="https://www.ready.gov/disability">“Individuals with Disabilities”</a>.<br>

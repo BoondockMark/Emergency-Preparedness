@@ -1,6 +1,6 @@
 ---
 code: COM-006
-title: Neighborhood Emergency Coordination
+title: Neighborhood Communication and Check-Ins
 section: Alerts & Communication
 sectionNumber: 2
 status: draft
@@ -10,70 +10,79 @@ reviewers:
   editor: unassigned
   subjectMatter: unassigned
 sources:
-  - type: local
-    title: "PLACEHOLDER: Reviewed neighborhood coordination plan"
-    provider: unassigned
-    location: "PLACEHOLDER: durable record identifier"
-    receivedDate: 2026-09-25
+  - type: web
+    title: Community Emergency Response Team Basic Training Participant Manual
+    organization: Federal Emergency Management Agency
+    url: https://www.ready.gov/cert
+    accessDate: 2026-09-25
+  - type: web
+    title: Make a Plan
+    organization: Ready.gov
+    url: https://www.ready.gov/plan
+    accessDate: 2026-09-25
 ---
-<p class="lede"><strong>SAMPLE TEXT — NOT APPROVED ADVICE.</strong> Agree on a simple way for neighbors to check in and pass confirmed observations without competing with official communications.</p>
+<p class="lede">Build a voluntary neighbor network that relays verified information and checks on people without acting as an emergency authority.</p>
 
-<div class="warning"><strong>Neighborhood coordination is not an official warning system.</strong> It cannot issue evacuation orders, declare roads safe, authorize re-entry, dispatch responders, or override instructions from public authorities.</div>
+<div class="warning"><strong>Neighborhood messages are not official emergency instructions.</strong> Only an authorized public-safety agency can issue an official evacuation, shelter, or access instruction. Never delay calling 911, leaving danger, or following an official alert while waiting for a coordinator.</div>
 
-## Keep the roles separate
+## Agree on boundaries before an emergency
 
 <div class="grid">
 <div>
-<h2>Official emergency instructions</h2>
+<h3>Neighbors can</h3>
 <ul>
-<li>Come from the responsible public agency</li>
-<li>Direct evacuation, shelter, closures, and re-entry</li>
-<li>Take priority over this plan and neighborhood messages</li>
+<li>Relay an official message with its issuer and time</li>
+<li>Ask whether help is requested</li>
+<li>Share firsthand observations, clearly labeled</li>
+<li>Report unmet needs through the proper channel</li>
+<li>Protect private household information</li>
 </ul>
 </div>
 <div>
-<h2>Neighborhood coordination</h2>
+<h3>Neighbors must not</h3>
 <ul>
-<li>Checks whether neighbors need help</li>
-<li>Shares direct observations and official messages with attribution</li>
-<li>Does not make safety declarations or promise response</li>
+<li>Issue or cancel an evacuation order</li>
+<li>Enter a closed, burning, flooded, or unsafe area</li>
+<li>Self-deploy or impersonate responders</li>
+<li>Share rumors or sensitive medical details</li>
+<li>Promise rescue, transport, or radio coverage</li>
 </ul>
 </div>
 </div>
 
-## Our coordination record
-
-<div class="local-info">
-<p><strong>Coordinator name:</strong> ______________________________________<br>
-<strong>Primary contact method:</strong> ___________________________________<br>
-<strong>Backup contact method:</strong> ____________________________________<br>
-<strong>Check-in point (only when safe):</strong> ___________________________</p>
-<p><strong>Neighborhood radio channel/frequency:</strong> ___________________<br>
-<strong>Call sign or identifier:</strong> __________________________________<br>
-<strong>Responsible organization:</strong> _________________________________<br>
-<strong>Authorization verified by / date:</strong> ______________ / __________</p>
-</div>
-
-<p>Leave radio fields blank until the frequency, channel, call sign, license or authorization, and responsible organization have all been verified. Never transmit on an unknown or unauthorized channel.</p>
-
-## Send a useful check-in
+## Use a disciplined message
 
 <ol class="procedure">
-<li><strong>Listen</strong> for official instructions and act on them first.</li>
-<li><strong>State</strong> your name or agreed identifier and current location.</li>
-<li><strong>Report</strong> only what you directly observed, including the time.</li>
-<li><strong>Name</strong> the official agency and issue time when relaying an alert.</li>
-<li><strong>Request</strong> a check-in or practical neighbor assistance; use the official emergency reporting method for emergencies.</li>
-<li><strong>Protect</strong> private medical, access, and absence information.</li>
+<li><strong>Label the source:</strong> “Official message from [agency]” or “Neighbor observation—not an official instruction.”</li>
+<li><strong>Add time and place.</strong> State when and where the information applies.</li>
+<li><strong>Repeat exactly.</strong> Do not strengthen, soften, or interpret an official instruction.</li>
+<li><strong>Name the next step.</strong> Give the agency's source so recipients can verify updates themselves.</li>
+<li><strong>Close the loop.</strong> Mark whether the person received the message or requested assistance; pass needs to the appropriate service without broadcasting private details.</li>
 </ol>
 
-## Neighbors who agreed to check in
+<!-- pagebreak -->
 
-<div class="checklist"><ul>
-<li>Name/identifier: ____________________ Contact: ____________________</li>
-<li>Name/identifier: ____________________ Contact: ____________________</li>
-<li>Name/identifier: ____________________ Contact: ____________________</li>
-<li>Person who may need assistance: ______________ Plan stored at: __________</li>
-</ul></div>
+## Our voluntary check-in network
 
-<div class="sources">PLACEHOLDER: Before publication, document review of the coordination plan and verification of every radio setting, call sign, authorization, contact method, and responsible organization.</div>
+| Area / household | Primary contact and method | Backup contact and method | Assistance requested? |
+|---|---|---|---|
+| __________________ | __________________________ | __________________________ | __________________ |
+| __________________ | __________________________ | __________________________ | __________________ |
+| __________________ | __________________________ | __________________________ | __________________ |
+| __________________ | __________________________ | __________________________ | __________________ |
+
+<p><strong>Coordinator:</strong> ____________________ &nbsp; <strong>Backup:</strong> ____________________ &nbsp; <strong>Review date:</strong> __________</p>
+
+## Verify local communication details before use
+
+| Item | Verified entry | Responsible agency / owner | Verified by and date |
+|---|---|---|---|
+| Official alert system and enrollment URL | __________________ | __________________ | __________________ |
+| Official information phone | __________________ | __________________ | __________________ |
+| Neighborhood channel / group | __________________ | Neighborhood network | __________________ |
+| Radio frequency / channel | __________________ | __________________ | __________________ |
+| Assigned call sign(s) | __________________ | __________________ | __________________ |
+
+<div class="local-info"><p><strong>Required publication check:</strong> An authorized representative of the named agency must verify every official local entry. The neighborhood owner verifies coordination details. Blank, expired, secondhand, or unverified entries must not be published.</p><p><strong>Agency representative and role:</strong> ______________________________<br><strong>Direct verification method:</strong> ____________________ &nbsp; <strong>Date:</strong> __________<br><strong>Binder reviewer initials:</strong> __________</p></div>
+
+<div class="sources">Sources: FEMA, “Community Emergency Response Team Basic Training Participant Manual”; Ready.gov, “Make a Plan.” Accessed September 25, 2026. This worksheet assigns no response authority and intentionally contains no unverified local operational details.</div>
