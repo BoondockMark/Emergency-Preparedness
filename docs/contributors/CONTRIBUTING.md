@@ -14,6 +14,19 @@ The component specimen is a test fixture and must never be published.
 6. Run `npm run build`; inspect each SVG and PDF page at normal size and in grayscale.
 7. Submit a pull request using the checklist.
 
+### Alerts and communication facts
+
+Before an Alerts & Communication handout can be published, the subject-matter
+reviewer must verify every local alert system, enrollment URL, phone number,
+radio channel or frequency, call sign, and responsible agency against a current
+official source. Follow an enrollment link from the responsible agency's own
+site rather than trusting a search result or forwarded message. Record the
+source and access date in metadata; remove a local detail if it cannot be
+verified. Clearly label neighborhood check-ins, radio nets, and group messages
+as coordination—not official emergency instructions. Provide blank printable
+fields when a resident must supply household-specific contacts or plan details;
+never commit private resident information.
+
 ## Images and diagrams
 
 See the [graphics and assets guide](ASSETS.md) for the complete directory,
