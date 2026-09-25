@@ -69,8 +69,7 @@ sources:
 
 <ol class="procedure">
 <li><strong>Do not amplify it.</strong> Repeating a false claim—even to criticize it—can spread it farther.</li>
-<li><strong>Save what matters.</strong> Note the exact claim, where it appeared, and its timestamp without posting it publicly.</li>
-<li><strong>Check the likely authority.</strong> Match the topic to the responsible agency: evacuation and incident instructions, roads, utilities, schools, or public health.</li>
+<li><strong>Save and route it.</strong> Note the exact claim, source, and timestamp without reposting it. Match the topic to the responsible agency: incident instructions, roads, utilities, schools, or public health.</li>
 <li><strong>Ask safely.</strong> Use the agency's published non-emergency contact or rumor-reporting channel. Keep 911 free for immediate threats to life or property.</li>
 <li><strong>Correct with evidence.</strong> Share the current official information and link. Avoid shaming the person who sent the claim.</li>
 <li><strong>Update the same audience.</strong> If you shared information that became wrong or outdated, clearly correct it wherever you posted it.</li>
@@ -83,21 +82,18 @@ sources:
 <tbody>
 <tr><td>Exact claim</td><td>________________________________________</td></tr>
 <tr><td>Original source / link</td><td>________________________________________</td></tr>
-<tr><td>Date, issue time, and place</td><td>________________________________________</td></tr>
-<tr><td>Responsible agency</td><td>________________________________________</td></tr>
-<tr><td>Official source checked</td><td>________________________________________</td></tr>
-<tr><td>Latest update time</td><td>________________________________________</td></tr>
+<tr><td>Issue time, update time, and place</td><td>________________________________________</td></tr>
+<tr><td>Responsible agency / source checked</td><td>________________________________________</td></tr>
 <tr><td>Result</td><td>☐ Confirmed &nbsp; ☐ False &nbsp; ☐ Outdated &nbsp; ☐ Unconfirmed</td></tr>
 </tbody>
 </table>
 
 <div class="local-info">
 <p><strong>COMPLETE ONLY AFTER LOCAL VERIFICATION</strong></p>
-<p><strong>Emergency authority / official website:</strong> ______________________________<br>
-<strong>Official alerts or incident page:</strong> _____________________________________<br>
+<p><strong>Emergency authority / alerts page:</strong> _________________________________<br>
 <strong>Official non-emergency information line:</strong> _______________________________<br>
-<strong>Local rumor-control or correction page, if provided:</strong> ____________________<br>
-<strong>Verified directly with agency by / date:</strong> __________________ / __________</p>
+<strong>Rumor-control page, if provided:</strong> _____________________________________<br>
+<strong>Verified by / date:</strong> _____________________________ / __________________</p>
 </div>
 
 ## Protect people while checking
@@ -106,8 +102,7 @@ sources:
 <li>Keep names, home addresses, medical details, and absence information private.</li>
 <li>Do not call a number or open a link supplied only in the questionable message.</li>
 <li>Do not travel into a closed or dangerous area to confirm a report.</li>
-<li>Describe firsthand observations as observations—not as causes, forecasts, or orders.</li>
-<li>Keep checking: accurate information can become outdated as conditions change.</li>
+<li>Label firsthand observations clearly, and keep checking as conditions change.</li>
 </ul></div>
 
 <div class="sources">Sources: FEMA, “Rumor Response”; Ready.gov, “Alerts and Warnings.” Accessed September 25, 2026. Local entries intentionally remain blank pending responsible-agency verification.</div>
