@@ -164,6 +164,6 @@ Review after any use and whenever needs, seasons, routes, or household members c
 
 Next full review: ____ / ____ / ______ &nbsp; &nbsp; Reviewed by: ____________________
 
-<p><strong>Continue the plan:</strong> See <strong>EVS-001</strong> for evacuation planning, <strong>EVS-005</strong> for transportation, <strong>EVS-006</strong> for shelter planning, and <strong>EVS-010</strong> for evacuation practice and broader planning.</p>
+<p><strong>Continue the plan:</strong> See <strong>EVS-001</strong> for the readiness checklist, <strong>EVS-005</strong> for transportation, <strong>EVS-007</strong> for shelter-in-place planning, and <strong>EVS-010</strong> for accessible evacuation planning.</p>
 
 <div class="sources">Sources: Ready.gov, “Build A Kit,” “Individuals with Disabilities,” “Emergency Financial First Aid Kit,” and “Pets and Animals”; U.S. Food and Drug Administration, “Prepare for Emergencies”; Federal Aviation Administration, “Lithium Battery Safety.” Accessed 2026-09-25.</div>

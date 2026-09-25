@@ -126,7 +126,7 @@ sources:
 
 <p><strong>Last verification date:</strong> ______________ <strong>Verified with/by:</strong> ______________________________</p>
 
-<p><strong>Use related handouts instead of duplicating their worksheets:</strong> EVS-004 for evacuation routes and destinations; EVS-006 for shelter planning; and EVS-010 for animal evacuation details.</p>
+<p><strong>Use related handouts instead of duplicating their worksheets:</strong> EVS-004 for evacuation routes and destinations; EVS-006 for children and animals; EVS-007 for shelter-in-place planning; and EVS-010 for accessible evacuation planning.</p>
 
 <div class="sources"><strong>Sources:</strong> Ready.gov, “Evacuation” and “Individuals with Disabilities” (accessed 2026-09-25); National Highway Traffic Safety Administration, “Vehicle Safety” (accessed 2026-09-25); National Weather Service, “Turn Around Don't Drown” (accessed 2026-09-25).<br>
 https://www.ready.gov/evacuation<br>

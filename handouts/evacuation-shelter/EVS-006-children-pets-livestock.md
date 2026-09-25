@@ -119,8 +119,8 @@ sources:
 
 ## Use with the rest of the plan
 
-* Use **STH-005 — Access, Medical, and Support Needs** for medicines, equipment, communication, transportation, and caregiver support.
-* Use **STH-006 — Animal Emergency Plan** for the detailed animal inventory, supplies, handling notes, and backup transport plan.
-* Use **EVS-003** for household evacuation routes and decision points, **EVS-005** for shelter and destination planning, and **EVS-010** for reunification and return. Follow current official instructions if a worksheet conflicts with incident direction.
+* Use **STH-005 — Child & Caregiver Planning** for medicines, equipment, communication, transportation, and caregiver support.
+* Use **STH-006 — Animal Planning** for the detailed animal inventory, supplies, handling notes, and backup transport plan.
+* Use **EVS-003** for leave-early decision points, **EVS-004** for routes and destinations, **EVS-005** for transportation, **EVS-007** for shelter-in-place planning, and **EVS-009** for return. Follow current official instructions if a worksheet conflicts with incident direction.
 
 <div class="sources"><strong>Sources:</strong> Ready Kids, “Make a Plan”; Ready.gov, “Pets and Animals”; U.S. Department of Justice Civil Rights Division, “Frequently Asked Questions about Service Animals and the ADA”; and USDA APHIS, “Animal Health Emergency Management.” Accessed 2026-09-25. Confirm school, childcare, shelter, transport, livestock, and evacuation procedures with the responsible local organizations.</div>

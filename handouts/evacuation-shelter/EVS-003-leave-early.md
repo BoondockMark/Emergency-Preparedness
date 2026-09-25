@@ -94,8 +94,8 @@ Conditions may worsen or officials may recommend that you prepare. Treat the tim
 
 ## Continue your plan
 
-* **EVS-001:** use your household evacuation plan, routes, destinations, and transportation arrangements.
-* **EVS-004:** use the shelter and safe-destination guidance.
-* **EVS-005:** follow the reunification plan instead of entering an unsafe area to search for someone.
+* **EVS-001:** use the readiness checklist to confirm that your household plan and essential supplies are ready.
+* **EVS-004:** use your two planned routes and destinations, unless officials direct otherwise.
+* **EVS-005:** use your primary or backup transportation arrangement; never enter an unsafe area to search for someone.
 
 <div class="sources">Sources: Ready.gov, “Evacuation” and “Alerts and Warnings”; FEMA, “Wireless Emergency Alerts” and “Planning Considerations for Evacuation and Shelter-in-Place”; CAL FIRE, “Ready, Set, Go!” Accessed September 25, 2026. Local details above intentionally remain unverified.</div>

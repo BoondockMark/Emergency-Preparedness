@@ -283,7 +283,7 @@ Review it after every practice, move, change in support, medicine or equipment c
 
 ## Related handouts
 
-Use this worksheet with <a id="sth-004" href="#sth-004">STH-004 — Preparedness for Older Adults and People with Disabilities</a> and <a id="sth-005" href="#sth-005">STH-005 — Access, Medical, and Support Needs</a>. For the broader evacuation sequence, routes, transportation, shelter planning, and reunification, see <a id="evs-002" href="#evs-002">EVS-002</a>, <a id="evs-004" href="#evs-004">EVS-004</a>, <a id="evs-005" href="#evs-005">EVS-005</a>, and <a id="evs-006" href="#evs-006">EVS-006</a>. Check the binder index for availability; handouts still in development may not yet appear there.
+Use this worksheet with <a id="sth-004" href="#sth-004">STH-004 — Disability &amp; Access Planning</a>; caregivers may also use <a id="sth-005" href="#sth-005">STH-005 — Child &amp; Caregiver Planning</a>. For readiness, go-bags, leave-early decisions, routes, transportation, and children or animals, see <a id="evs-001" href="#evs-001">EVS-001</a>, <a id="evs-002" href="#evs-002">EVS-002</a>, <a id="evs-003" href="#evs-003">EVS-003</a>, <a id="evs-004" href="#evs-004">EVS-004</a>, <a id="evs-005" href="#evs-005">EVS-005</a>, and <a id="evs-006" href="#evs-006">EVS-006</a>. Check the binder index for availability; handouts still in development may not yet appear there.
 
 <div class="sources"><strong>Sources and further planning guidance</strong><br>
 U.S. Department of Homeland Security, Ready.gov, <a href="https://www.ready.gov/disability">“Individuals with Disabilities.”</a><br>

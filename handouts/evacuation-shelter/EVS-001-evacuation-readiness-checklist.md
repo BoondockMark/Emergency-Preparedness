@@ -54,7 +54,7 @@ sources:
 <li>We will use official information rather than rumors and will not enter a closed area until authorities permit re-entry.</li>
 </ul></div>
 
-See **EVS-002** for evacuation levels and terminology.
+See **EVS-003** for evacuation timing, levels, and locally verified terminology.
 
 ### 2. Contacts, meeting places, and destinations selected
 
@@ -83,7 +83,7 @@ Primary destination: ______________________________ Backup: ____________________
 Primary route: _________________________________ Alternate route: _________________________<br>
 Backup driver/service: __________________________ Phone or contact method: _________________
 
-See **EVS-003** for route and transportation planning.
+See **EVS-004** for route planning and **EVS-005** for transportation planning.
 
 ### 4. Go-bags, medicines, documents, and equipment ready
 
@@ -96,7 +96,7 @@ See **EVS-003** for route and transportation planning.
 <li>Supplies are checked on this schedule: __________________ and after every use.</li>
 </ul></div>
 
-See **EVS-004** for go-bags and documents and **EVS-005** for medicines, power, and necessary equipment.
+See **EVS-002** for go-bags, documents, medicines, power, and necessary equipment; use **EVS-010** for a detailed accessible-equipment plan.
 
 ### 5. Children, animals, access needs, and neighbors accounted for
 
@@ -112,7 +112,7 @@ See **EVS-004** for go-bags and documents and **EVS-005** for medicines, power, 
 Person/animal: __________________ Need: __________________ Primary helper: _________________<br>
 Backup helper/contact: __________________________________________________________________
 
-See **EVS-006** for children, animals, access needs, and support networks.
+See **EVS-006** for children and animals and **EVS-010** for access needs and support networks.
 
 ## Only when leaving—and only if time permits
 
@@ -128,7 +128,7 @@ Do these only if officials allow time, conditions are safe, and the task does no
 <li>Use the route and transportation officials direct; stay alert for changing instructions.</li>
 </ul></div>
 
-<div class="warning warning--caution"><strong>Skip any unsafe task.</strong> Never search for belongings, take a hazardous route, or handle a suspected leak, fire, downed line, or damaged equipment. See <strong>EVS-010</strong> for the detailed home-departure procedure.</div>
+<div class="warning warning--caution"><strong>Skip any unsafe task.</strong> Never search for belongings, take a hazardous route, or handle a suspected leak, fire, downed line, or damaged equipment. See <strong>EVS-003</strong> for leave-now actions.</div>
 
 ## 7. Final “leave now” check
 
