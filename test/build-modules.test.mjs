@@ -31,7 +31,7 @@ test('discovery derives canonical metadata for one-, two-, and three-page source
   const root = await fs.mkdtemp(path.join(os.tmpdir(), 'discovery-test-'));
   t.after(() => fs.rm(root, { recursive: true, force: true }));
   await fs.mkdir(path.join(root, 'handouts'));
-  const base = (await fixture('front-matter.md')).replace('pageCount: 1\n', '');
+  const base = (await fixture('front-matter.md')).replace(/^pageCount: 1\r?\n/m, '');
   for (const count of [1, 2, 3]) {
     const body = Array.from({ length: count }, (_, index) => `Page ${index + 1}.`).join('\n<!-- pagebreak -->\n');
     const source = base
