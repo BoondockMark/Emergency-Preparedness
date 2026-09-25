@@ -49,6 +49,27 @@ To validate sources and confirm every tracked index and PDF is current without m
 npm run check
 ```
 
+### Fast layout lint while editing
+
+Use the browser-backed layout lint before the full build. It uses the same pinned
+font, print media mode, and element geometry checks as `npm run build`, but skips
+PDFs, preview images, approval records, and visual-regression comparison. It also
+checks every handout before exiting, so one overflow does not hide problems in
+later handouts:
+
+```bash
+npm run lint:layout
+```
+
+For the quickest edit/check cycle, pass one or more handout codes. Failures still
+include the Markdown source line when available, and JSON plus screenshot
+diagnostics are written under `build/diagnostics/`.
+
+```bash
+npm run lint:layout -- COM-001
+npm run lint:layout -- COM-001 EVS-001
+```
+
 ## Preview one handout
 
 Build first, then run:

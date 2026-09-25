@@ -220,6 +220,62 @@ async function renderArtifacts(root, outputRoot, documents) {
   }
 }
 
+/**
+ * Run the browser's real print layout engine without paying the cost of PDF,
+ * preview, approval, or visual-regression generation. Unlike the full build,
+ * this deliberately visits every requested handout before failing so authors
+ * can fix a complete batch of layout problems in one editing cycle.
+ */
+export async function lintLayouts({ root, outputRoot, documents, manifests }) {
+  await prepareDirectories(root, outputRoot);
+  await copyAssets(root, outputRoot, manifests);
+  await renderSources(root, outputRoot, documents, manifests);
+
+  const browser = await puppeteer.launch(browserOptions());
+  const failures = [];
+  try {
+    for (const { meta } of documents) {
+      let page;
+      try {
+        page = await openPrintPage(browser, path.join(outputRoot, 'html', `${meta.code}.html`));
+        const fontReady = await page.evaluate(() => document.fonts.check('12px "Binder Sans"'));
+        if (!fontReady) throw Error('pinned Binder Sans font did not load');
+
+        const sheetCount = await page.$$eval('.sheet', sheets => sheets.length);
+        if (sheetCount !== meta.pageCount) {
+          failures.push(`${meta.code}: HTML page count ${sheetCount}, expected ${meta.pageCount}`);
+        }
+
+        const issues = await inspectSheetGeometry(page, meta.code);
+        if (issues.length) {
+          await fs.writeFile(
+            path.join(outputRoot, 'diagnostics', `${meta.code}-layout.json`),
+            JSON.stringify(issues, null, 2)
+          );
+          await page.screenshot({
+            path: path.join(outputRoot, 'diagnostics', `${meta.code}-layout.png`),
+            fullPage: true
+          });
+          failures.push(...issues.map(formatLayoutIssue));
+        }
+      } catch (error) {
+        failures.push(`${meta.code}: layout lint could not render the handout (${error.message})`);
+      } finally {
+        await page?.close();
+      }
+    }
+  } finally {
+    await browser.close();
+  }
+
+  if (failures.length) {
+    throw Error(
+      `Layout lint found ${failures.length} problem${failures.length === 1 ? '' : 's'} across `
+      + `${documents.length} handout${documents.length === 1 ? '' : 's'}:\n${failures.join('\n')}`
+    );
+  }
+}
+
 async function validateApprovals(root, outputRoot, documents) {
   for (const { meta } of documents) {
     if (meta.status !== 'approved') continue;
