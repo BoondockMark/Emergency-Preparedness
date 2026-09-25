@@ -8,6 +8,7 @@ import { escapeHtml, renderHandout, renderMarkdown } from '../scripts/lib/conten
 import { discoverDocuments } from '../scripts/lib/filesystem-discovery.mjs';
 import { generateBinderIndex } from '../scripts/lib/index-generation.mjs';
 import { loadDocument, MetadataError } from '../scripts/lib/metadata.mjs';
+import { formatLayoutIssue } from '../scripts/lib/layout-validation.mjs';
 import { imageReferences, validateLocalLinks } from '../scripts/lib/page-validation.mjs';
 
 const fixture = name => fs.readFile(new URL(`./unit-fixtures/${name}`, import.meta.url), 'utf8');
@@ -36,6 +37,7 @@ test('page break fixture produces all chunks during discovery', async t => {
   await fs.writeFile(path.join(root, 'handouts/example.md'), metadata);
   const [document] = await discoverDocuments(root, new Map());
   assert.deepEqual(document.chunks.map(chunk => chunk.trim()), ['First page.', 'Second page.', 'Third page.']);
+  assert.deepEqual(document.chunkStartLines, [20, 22, 24]);
 });
 
 test('pageCount must be a positive integer but may exceed two', async () => {
@@ -77,6 +79,33 @@ test('component markup is preserved while Markdown is rendered', () => {
   const markup = '<aside class="warning"><strong>Leave now</strong></aside>';
   assert.equal(renderMarkdown(markup), `${markup}\n`);
   assert.equal(renderMarkdown('**Bold**'), '<p><strong>Bold</strong></p>');
+});
+
+test('overflow diagnostics identify Markdown and raw HTML source lines', () => {
+  const markdown = renderMarkdown('AReallyLongUnbrokenValueThatCannotFit', {
+    sourcePath: 'handouts/test.md', startLine: 17
+  });
+  const rawHtml = renderMarkdown('<div class="too-wide">Raw HTML</div>', {
+    sourcePath: 'handouts/test.md', startLine: 24
+  });
+  assert.match(markdown, /<p data-source-path="handouts\/test\.md" data-source-line="17">/);
+  assert.match(rawHtml, /<div data-source-path="handouts\/test\.md" data-source-line="24" class="too-wide">/);
+  const issue = sourceLine => ({
+    code: 'TST-001', page: 1, type: 'horizontal-overflow', selector: 'p',
+    bounds: {}, region: {}, sourcePath: 'handouts/test.md', sourceLine
+  });
+  const markdownIssue = issue(17);
+  const rawHtmlIssue = issue(24);
+  assert.match(formatLayoutIssue(markdownIssue), /handouts\/test\.md:17.*long unbroken text/);
+  assert.match(formatLayoutIssue(rawHtmlIssue), /handouts\/test\.md:24.*long unbroken text/);
+});
+
+test('vertical layout remediation recommends shortening content or a page break', () => {
+  const message = formatLayoutIssue({
+    code: 'TST-001', page: 1, type: 'footer-overlap', selector: 'p',
+    bounds: {}, region: {}, sourcePath: 'handouts/test.md', sourceLine: 31
+  });
+  assert.match(message, /handouts\/test\.md:31.*Shorten the content or add a page break/);
 });
 
 test('handout pages use their section slot and show the document code', () => {

@@ -34,7 +34,29 @@ export async function inspectSheetGeometry(page, handoutCode) {
       const contentBox = rect(content);
       const footer = content.querySelector(':scope > .footer');
       const footerBox = footer ? rect(footer) : null;
-      const add = (type, element, measured, region, detail) => issues.push({ code, page: pageIndex + 1, type, selector: selector(element), bounds: measured, region, detail });
+      const overflowSource = axis => [...content.querySelectorAll('[data-source-path][data-source-line]')]
+        .reduce((candidate, element) => {
+          if (!candidate) return element;
+          const current = rect(element);
+          const previous = rect(candidate);
+          return (axis === 'horizontal' ? current.right > previous.right : current.bottom > previous.bottom) ? element : candidate;
+        }, null);
+      const add = (type, element, measured, region, detail) => {
+        const axis = type === 'horizontal-overflow' ? 'horizontal'
+          : type === 'vertical-overflow' ? 'vertical'
+          : measured.right > region.right + tolerance || measured.left < region.left - tolerance
+          ? 'horizontal'
+          : measured.bottom > region.bottom + tolerance || measured.top < region.top - tolerance
+            ? 'vertical'
+            : undefined;
+        const source = element.closest?.('[data-source-path][data-source-line]')
+          ?? (element === sheet && axis ? overflowSource(axis) : element.querySelector?.('[data-source-path][data-source-line]'));
+        issues.push({
+          code, page: pageIndex + 1, type, selector: selector(element), bounds: measured, region, detail, axis,
+          sourcePath: source?.dataset.sourcePath,
+          sourceLine: source?.dataset.sourceLine ? Number(source.dataset.sourceLine) : undefined
+        });
+      };
 
       if (sheet.scrollWidth > sheet.clientWidth + tolerance) add('horizontal-overflow', sheet, sheetBox, sheetBox, `scrollWidth ${sheet.scrollWidth}px exceeds clientWidth ${sheet.clientWidth}px`);
       if (sheet.scrollHeight > sheet.clientHeight + tolerance) add('vertical-overflow', sheet, sheetBox, sheetBox, `scrollHeight ${sheet.scrollHeight}px exceeds clientHeight ${sheet.clientHeight}px`);
@@ -65,5 +87,10 @@ export async function inspectSheetGeometry(page, handoutCode) {
 }
 
 export function formatLayoutIssue(issue) {
-  return `${issue.code} page ${issue.page}: ${issue.type} at ${issue.selector}; bounds=${JSON.stringify(issue.bounds)} region=${JSON.stringify(issue.region)}${issue.detail ? ` (${issue.detail})` : ''}`;
+  const location = issue.sourcePath && issue.sourceLine ? ` (${issue.sourcePath}:${issue.sourceLine})` : '';
+  const horizontal = issue.type === 'horizontal-overflow' || issue.axis === 'horizontal';
+  const remediation = horizontal
+    ? 'Break or shorten long unbroken text, or reduce the element width.'
+    : 'Shorten the content or add a page break.';
+  return `${issue.code} page ${issue.page}${location}: ${issue.type} at ${issue.selector}; bounds=${JSON.stringify(issue.bounds)} region=${JSON.stringify(issue.region)}${issue.detail ? ` (${issue.detail})` : ''} Remedy: ${remediation}`;
 }
