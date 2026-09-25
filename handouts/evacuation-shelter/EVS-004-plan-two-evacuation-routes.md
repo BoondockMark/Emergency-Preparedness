@@ -107,7 +107,7 @@ sources:
 | Road closures / transportation agency | __________________________________________ | ____________ |
 | Fire, law enforcement, or emergency management agency | __________________________________________ | ____________ |
 
-<div class="local-info"><p><strong>Our evacuation zone:</strong> ____________________ &nbsp; <strong>Map edition / date:</strong> ____________________</p><p><strong>Who will monitor official updates:</strong> ____________________ &nbsp; <strong>Backup:</strong> ____________________</p><p>Local names and links remain blank until the household verifies them with the responsible agency.</p></div>
+<div class="local-info"><p><strong>LOCAL INFORMATION — VERIFY BEFORE USE</strong></p><p><strong>Our evacuation zone:</strong> ____________________ &nbsp; <strong>Map edition / date:</strong> ____________________</p><p><strong>Who will monitor official updates:</strong> ____________________ &nbsp; <strong>Backup:</strong> ____________________</p><p>Local names and links remain blank until the household verifies them with the responsible agency.</p></div>
 
 ## Transportation and fuel assumptions
 
