@@ -19,6 +19,7 @@ title: "[CODE] Short description"
 ## Build and artifact
 
 - [ ] `npm ci`
+- [ ] `npm run lint:layout -- CODE` while editing (repeat `CODE` for each changed handout)
 - [ ] `npm run check`
 - [ ] Every PDF and SVG proof was inspected, including grayscale usability.
 - [ ] Page count and edge-strip placement are correct.
