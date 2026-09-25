@@ -5,6 +5,22 @@ const SOURCE_TYPES = ['web', 'non-web', 'interview', 'local'];
 const REQUIRED = ['code', 'title', 'section', 'sectionNumber', 'status', 'version', 'lastReviewed', 'pageCount', 'reviewers', 'sources'];
 const MARKER = /PLACEHOLDER|\[VERIFY(?:[^\]]*)?\]|SAMPLE[ -]TEXT|REQUIRES? VERIFICATION|NOT APPROVED ADVICE/i;
 
+// These values protect the fixed/repeated page furniture, not YAML storage. The
+// title allowance reserves room for the rendered " — continued" suffix in the
+// compact heading; the other allowances fit the edge label, status, and footer
+// columns. Browser geometry validation remains the final, font-aware defense.
+export const METADATA_LENGTH_LIMITS = Object.freeze({
+  code: 7,
+  title: 72,
+  section: 22,
+  status: 12,
+  version: 9,
+  lastReviewed: 10,
+  pageCount: 3
+});
+
+const RENDERED_TEXT_FIELDS = ['code', 'title', 'section', 'status', 'version', 'lastReviewed'];
+
 export class MetadataError extends Error {}
 
 function fail(sourcePath, field, message) {
@@ -78,8 +94,19 @@ function requireText(value, sourcePath, field) {
   if (typeof value !== 'string' || !value.trim()) fail(sourcePath, field, 'is required');
 }
 
+function normalizeAndValidateFurniture(meta, sourcePath) {
+  for (const field of RENDERED_TEXT_FIELDS) {
+    if (typeof meta[field] === 'string') meta[field] = meta[field].trim();
+  }
+  for (const [field, maximum] of Object.entries(METADATA_LENGTH_LIMITS)) {
+    const actual = [...String(meta[field])].length;
+    if (actual > maximum) fail(sourcePath, field, `length ${actual} exceeds allowed maximum ${maximum} Unicode code points`);
+  }
+}
+
 export function validateMetadata(meta, body, sourcePath) {
   for (const field of REQUIRED) if (meta[field] === undefined || meta[field] === null || meta[field] === '') fail(sourcePath, field, 'is required');
+  normalizeAndValidateFurniture(meta, sourcePath);
   requireText(meta.title, sourcePath, 'title');
   if (!/^[A-Z]{3}-\d{3}$/.test(meta.code)) fail(sourcePath, 'code', 'must match ABC-001');
   if (!/^\d+\.\d+$/.test(String(meta.version))) fail(sourcePath, 'version', 'must match MAJOR.MINOR');

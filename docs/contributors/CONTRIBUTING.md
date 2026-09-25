@@ -7,7 +7,7 @@ The component specimen is a test fixture and must never be published.
 ## Add or edit a handout
 
 1. Create or edit a `.md` file in the matching `handouts/<section>/` folder. Use `CODE-short-title.md` and never recycle a code after publication.
-2. Copy the front matter from an existing source and consult [METADATA.md](METADATA.md).
+2. Copy the front matter from an existing source and consult [METADATA.md](METADATA.md). Keep titles concise—about 50 Unicode code points or fewer is recommended—and never exceed the documented 72-code-point title or 9-code-point version limits. The title maximum includes room for the continuation suffix.
 3. Mark unverified prose **SAMPLE TEXT — NOT APPROVED ADVICE**. Put unverified local details in a `local-info` block and use `[VERIFY]`; never guess emergency numbers, radio frequencies, sandbag sites, endorsements, or official instructions.
 4. Add source title, issuing body, URL, publication/update date where available, and access date. Paraphrase rather than copying long passages.
 5. Put every visual and its editable source in `assets/handouts/<CODE>/`, add it to that directory's `manifest.json`, and follow the image workflow below.
