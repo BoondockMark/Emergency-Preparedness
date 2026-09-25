@@ -27,28 +27,46 @@ test('handout code prefix must identify its binder section', async () => {
   );
 });
 
-test('page break fixture produces all chunks during discovery', async t => {
+test('discovery derives canonical metadata for one-, two-, and three-page sources', async t => {
   const root = await fs.mkdtemp(path.join(os.tmpdir(), 'discovery-test-'));
   t.after(() => fs.rm(root, { recursive: true, force: true }));
   await fs.mkdir(path.join(root, 'handouts'));
-  const metadata = (await fixture('front-matter.md'))
-    .replace('pageCount: 1', 'pageCount: 3')
-    .replace('Fixture body.\n', await fixture('page-breaks.md'));
-  await fs.writeFile(path.join(root, 'handouts/example.md'), metadata);
-  const [document] = await discoverDocuments(root, new Map());
-  assert.deepEqual(document.chunks.map(chunk => chunk.trim()), ['First page.', 'Second page.', 'Third page.']);
-  assert.deepEqual(document.chunkStartLines, [20, 22, 24]);
+  const base = (await fixture('front-matter.md')).replace('pageCount: 1\n', '');
+  for (const count of [1, 2, 3]) {
+    const body = Array.from({ length: count }, (_, index) => `Page ${index + 1}.`).join('\n<!-- pagebreak -->\n');
+    const source = base
+      .replace('code: STH-001', `code: STH-00${count}`)
+      .replace('Fixture body.', body);
+    await fs.writeFile(path.join(root, 'handouts', `${count}-pages.md`), source);
+  }
+  const documents = await discoverDocuments(root, new Map());
+  assert.deepEqual(documents.map(({ meta }) => meta.pageCount), [1, 2, 3]);
+  assert.deepEqual(documents[2].chunks.map(chunk => chunk.trim()), ['Page 1.', 'Page 2.', 'Page 3.']);
+  assert.deepEqual(documents[2].chunkStartLines, [19, 21, 23]);
 });
 
-test('pageCount must be a positive integer but may exceed two', async () => {
+test('an optional declared pageCount must be a positive integer', async () => {
   const source = await fixture('front-matter.md');
   assert.equal(loadDocument(source.replace('pageCount: 1', 'pageCount: 3'), 'three-pages.md').data.pageCount, 3);
   for (const invalid of ['0', '-1', '1.5']) {
     assert.throws(
       () => loadDocument(source.replace('pageCount: 1', `pageCount: ${invalid}`), 'invalid-page-count.md'),
-      error => error instanceof MetadataError && /pageCount: must be a positive integer/.test(error.message)
+      error => error instanceof MetadataError && /pageCount: must be a positive integer when declared/.test(error.message)
     );
   }
+});
+
+test('a declared pageCount mismatch reports declared and derived values', async t => {
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), 'page-count-test-'));
+  t.after(() => fs.rm(root, { recursive: true, force: true }));
+  await fs.mkdir(path.join(root, 'handouts'));
+  const source = (await fixture('front-matter.md'))
+    .replace('pageCount: 1', 'pageCount: 2');
+  await fs.writeFile(path.join(root, 'handouts/example.md'), source);
+  await assert.rejects(
+    discoverDocuments(root, new Map()),
+    /pageCount: declared 2, derived 1 from page chunks/
+  );
 });
 
 test('duplicate handout codes are rejected', async t => {

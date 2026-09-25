@@ -2,7 +2,7 @@ const SECTIONS = ['Start Here', 'Alerts & Communication', 'Evacuation & Shelter'
 const SECTION_CODES = ['STH', 'COM', 'EVS', 'WFC', 'HUT', 'SKL', 'HZD', 'PRP'];
 const STATUSES = ['draft', 'under-review', 'approved'];
 const SOURCE_TYPES = ['web', 'non-web', 'interview', 'local'];
-const REQUIRED = ['code', 'title', 'section', 'sectionNumber', 'status', 'version', 'lastReviewed', 'pageCount', 'reviewers', 'sources'];
+const REQUIRED = ['code', 'title', 'section', 'sectionNumber', 'status', 'version', 'lastReviewed', 'reviewers', 'sources'];
 const MARKER = /PLACEHOLDER|\[VERIFY(?:[^\]]*)?\]|SAMPLE[ -]TEXT|REQUIRES? VERIFICATION|NOT APPROVED ADVICE/i;
 
 // These values protect the fixed/repeated page furniture, not YAML storage. The
@@ -15,8 +15,7 @@ export const METADATA_LENGTH_LIMITS = Object.freeze({
   section: 22,
   status: 12,
   version: 9,
-  lastReviewed: 10,
-  pageCount: 3
+  lastReviewed: 10
 });
 
 const RENDERED_TEXT_FIELDS = ['code', 'title', 'section', 'status', 'version', 'lastReviewed'];
@@ -116,7 +115,9 @@ export function validateMetadata(meta, body, sourcePath) {
   const expectedCode = SECTION_CODES[meta.sectionNumber - 1];
   if (!meta.code.startsWith(`${expectedCode}-`)) fail(sourcePath, 'code', `must use the ${expectedCode} prefix for ${meta.section}`);
   if (!STATUSES.includes(meta.status)) fail(sourcePath, 'status', `must be one of ${STATUSES.join(', ')}`);
-  if (!Number.isInteger(meta.pageCount) || meta.pageCount < 1) fail(sourcePath, 'pageCount', 'must be a positive integer');
+  if (meta.pageCount !== undefined && (!Number.isInteger(meta.pageCount) || meta.pageCount < 1)) {
+    fail(sourcePath, 'pageCount', 'must be a positive integer when declared');
+  }
   if (!meta.reviewers || typeof meta.reviewers !== 'object' || Array.isArray(meta.reviewers)) fail(sourcePath, 'reviewers', 'must record editor and subjectMatter roles');
   for (const role of ['editor', 'subjectMatter']) requireText(meta.reviewers?.[role], sourcePath, `reviewers.${role}`);
   if (!Array.isArray(meta.sources) || !meta.sources.length) fail(sourcePath, 'sources', 'must contain at least one structured source');

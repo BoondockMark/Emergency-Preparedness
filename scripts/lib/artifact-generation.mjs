@@ -154,7 +154,7 @@ async function validateRenderedPage(page, code, pageCount, diagnostics) {
   }
 }
 
-async function createPdfAndPreviews(page, outputRoot, meta) {
+async function createPdfAndPreviews(page, outputRoot, meta, derivedPageCount) {
   const pdf = normalizePdfDates(await page.pdf({
     width: '8.5in',
     height: '11in',
@@ -166,7 +166,7 @@ async function createPdfAndPreviews(page, outputRoot, meta) {
   }));
   await fs.writeFile(path.join(outputRoot, 'pdfs', `${meta.code}.pdf`), pdf);
   const count = await getPdfPageCount(pdf);
-  if (count !== meta.pageCount) throw Error(`${meta.code}: PDF page count ${count}, expected ${meta.pageCount}`);
+  if (count !== derivedPageCount) throw Error(`${meta.code}: PDF page count ${count}, expected ${derivedPageCount}`);
   const fonts = inspectEmbeddedFonts(pdf);
   if (!fonts.embeddedPrograms) {
     throw Error(`${meta.code}: generated PDF has no embedded font program (${fonts.fontNames.join(', ') || 'no fonts found'})`);
@@ -193,9 +193,10 @@ async function renderArtifacts(root, outputRoot, documents) {
       throw Error('Printer calibration PDF must contain exactly two pages');
     }
     for (const { meta } of documents) {
+      const derivedPageCount = meta.pageCount;
       const page = await openPrintPage(browser, path.join(outputRoot, 'html', `${meta.code}.html`));
-      await validateRenderedPage(page, meta.code, meta.pageCount, path.join(outputRoot, 'diagnostics'));
-      await createPdfAndPreviews(page, outputRoot, meta);
+      await validateRenderedPage(page, meta.code, derivedPageCount, path.join(outputRoot, 'diagnostics'));
+      await createPdfAndPreviews(page, outputRoot, meta, derivedPageCount);
       await page.close();
     }
 
