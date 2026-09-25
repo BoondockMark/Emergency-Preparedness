@@ -63,7 +63,7 @@ export function renderHandout(template, document) {
   <div class="edge" aria-label="${escapeHtml(meta.code)}: ${escapeHtml(meta.section)}">${escapeHtml(meta.code)}</div>
   <main class="content">
     <header class="kicker">La Habra Heights Fire Watch · Emergency Preparedness Binder <span class="status">${escapeHtml(meta.status.toUpperCase())}</span></header>
-    <h1>${escapeHtml(index ? `${meta.title} — continued` : meta.title)}</h1>
+    <h1${index ? ' class="title--compact"' : ''}>${escapeHtml(index ? `${meta.title} — continued` : meta.title)}</h1>
     ${renderMarkdown(chunk)}
     <footer class="footer">
       <span>${escapeHtml(meta.code)} · v${escapeHtml(meta.version)}</span>
