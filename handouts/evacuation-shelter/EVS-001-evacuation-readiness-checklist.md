@@ -70,6 +70,8 @@ Near-home meeting place: _______________________________________________________
 Outside-neighborhood meeting place: ___________________________________________________<br>
 Primary destination: ______________________________ Backup: ______________________________
 
+<!-- pagebreak -->
+
 ### 3. Two routes and backup transportation planned
 
 <div class="checklist"><ul>
@@ -85,8 +87,6 @@ Backup driver/service: __________________________ Phone or contact method: _____
 
 See **EVS-004** for route planning and **EVS-005** for transportation planning.
 
-<!-- pagebreak -->
-
 ### 4. Go-bags, medicines, documents, and equipment ready
 
 <div class="checklist"><ul>
@@ -99,6 +99,8 @@ See **EVS-004** for route planning and **EVS-005** for transportation planning.
 </ul></div>
 
 See **EVS-002** for go-bags, documents, medicines, power, and necessary equipment; use **EVS-010** for a detailed accessible-equipment plan.
+
+<!-- pagebreak -->
 
 ### 5. Children, animals, access needs, and neighbors accounted for
 
