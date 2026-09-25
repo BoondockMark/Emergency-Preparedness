@@ -132,4 +132,4 @@ sources:
 
 <p><strong>Do not leave silently.</strong> Ask to check out or report a radio change. Note final instructions. After duty, report problems, recharge, and do not alter Heights 6.</p>
 
-<div class="sources">La Habra Heights Fire Watch operational brief, received September 24, 2026. Draft pending editorial, radio-system, and BTECH documentation review.</div>
+<div class="sources">Fire Watch operational brief, received September 24, 2026. Draft; verify against current BTECH documentation.</div>
