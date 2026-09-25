@@ -78,7 +78,8 @@ sources:
 ## Quick verification record
 
 <table>
-<thead><tr><th>Check</th><th>What I found</th></tr></thead>
+<caption>Emergency information verification record</caption>
+<thead><tr><th scope="col">Check</th><th scope="col">What I found</th></tr></thead>
 <tbody>
 <tr><td>Exact claim</td><td>________________________________________</td></tr>
 <tr><td>Original source / link</td><td>________________________________________</td></tr>
