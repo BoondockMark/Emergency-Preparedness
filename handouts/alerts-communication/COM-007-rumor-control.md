@@ -1,5 +1,5 @@
 ---
-code: COM-009
+code: COM-007
 title: Rumor Control and Verifying Emergency Information
 section: Alerts & Communication
 sectionNumber: 2

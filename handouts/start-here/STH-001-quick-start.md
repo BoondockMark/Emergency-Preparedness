@@ -85,8 +85,8 @@ sources:
 <li>Practice one part of the plan, then update names, routes, and needs.</li>
 </ul></div>
 
-<p><strong>Build supplies next:</strong> use <strong>STH-002 — Preparedness Kit Checklist</strong>. Store what your household can safely carry and use.</p>
+<p><strong>Build supplies next:</strong> use <strong>STH-002 — Build a Two-Week Preparedness Kit</strong>. Store what your household can safely carry and use.</p>
 
-<p><strong>Keep the plan usable:</strong> use <strong>STH-007 — Annual Binder Review</strong> every year and after a household change, move, drill, or emergency. Replace expired supplies and update contacts, routes, equipment, medications, and care needs when they change.</p>
+<p><strong>Keep the plan usable:</strong> use <strong>STH-007 — Annual Binder & Kit Review</strong> every year and after a household change, move, drill, or emergency. Replace expired supplies and update contacts, routes, equipment, medications, and care needs when they change.</p>
 
 <div class="sources">Sources: Ready.gov, “Make a Plan,” “Alerts & Warnings,” “Evacuation,” “Build A Kit,” “Individuals with Disabilities,” “Prepare Your Family,” “Pets and Animals,” and “Get Tech Ready.” Accessed 2026-09-25.</div>

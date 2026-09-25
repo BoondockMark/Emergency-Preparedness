@@ -1,6 +1,6 @@
 ---
 code: STH-006
-title: Pet and Livestock Preparedness
+title: Animal Planning
 section: Start Here
 sectionNumber: 1
 status: under-review
@@ -100,7 +100,7 @@ Agricultural-extension contact and livestock guidance: [VERIFY] ______________<b
 Veterinarian / emergency veterinary service: [VERIFY] ________________________<br>
 Transporter and backup transporter: [VERIFY] _________________________________</div>
 
-<p><strong>Related handouts:</strong> use <strong>STH-001 — Emergency Preparedness Quick Start</strong> for the household plan; <strong>STH-002 — Preparedness Kit Checklist</strong> for shared supplies; <strong>STH-003</strong> for household communication and contacts; and <strong>STH-007</strong> for evacuation planning. Follow the detailed animal plan on this handout when the general checklists differ.</p>
+<p><strong>Related handouts:</strong> use <strong>STH-001 — Emergency Preparedness Quick Start</strong> for immediate priorities; <strong>STH-002 — Build a Two-Week Preparedness Kit</strong> for shared supplies; <strong>STH-003 — Know Your Local Hazards</strong> for local alerts and protective actions; and <strong>STH-007 — Annual Binder & Kit Review</strong> to keep this plan current. Follow the detailed animal plan on this handout when a general checklist differs.</p>
 
 <!-- pagebreak -->
 
