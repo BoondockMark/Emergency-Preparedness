@@ -11,10 +11,10 @@ Errors use the form `source/path.md: field.name: concise explanation`.
 | Field | Type and rule |
 |---|---|
 | `code` | Unique section code and three-digit document index, such as `COM-001`. |
-| `title` | Resident-facing title. |
+| `title` | Resident-facing title, at most **72 Unicode code points** after surrounding whitespace is trimmed. Prefer a concise title of about 50 code points or fewer. |
 | `section` / `sectionNumber` | Exact binder section and matching number, 1–8. |
 | `status` | `draft`, `under-review`, or `approved`. |
-| `version` | String or number in `MAJOR.MINOR` form, such as `1.0`. |
+| `version` | String in `MAJOR.MINOR` form, such as `1.0`, at most **9 Unicode code points** after trimming. |
 | `lastReviewed` | A real ISO calendar date (`YYYY-MM-DD`), not merely text in that shape. For drafts, it is the date the draft was last assessed and is not an approval claim. |
 | `pageCount` | Positive integer equal to the number of source page chunks and generated PDF pages. Separate chunks with `<!-- pagebreak -->`; an N-page handout therefore has N−1 markers. |
 | `reviewers.editor` | Name of the editor, or `unassigned` before approval. |
@@ -31,6 +31,31 @@ Utilities; `SKL` Hands-On Skills; `HZD` Hazard Guides; and `PRP` Plans &
 Records. Assign indexes sequentially within each section and retain all three
 digits (for example, `COM-001`, `COM-002`). The complete code appears on the
 outside-edge tab so a filed handout identifies both its section and its index.
+
+## Page-furniture length limits
+
+Length limits come from the printable geometry of the first-page heading, the
+smaller continuation heading, the edge label, status badge, and three-column
+footer—not from a general YAML restriction. The 72-code-point title limit was
+established with the additional ` — continued` suffix present in the compact
+heading. Use a shorter title (ideally about 50 code points or fewer) whenever it
+can remain specific and resident-facing; the maximum is a safety boundary, not
+a writing target.
+
+All author-controlled values used in fixed or repeated furniture are trimmed
+before validation and rendering. Their centralized limits in
+`scripts/lib/metadata.mjs` are: `code` 7, `title` 72, `section` 22, `status` 12,
+`version` 9, `lastReviewed` 10, and the rendered `pageCount` 3 code points.
+Lengths count Unicode code points, so a character outside the Basic
+Multilingual Plane counts once rather than as two UTF-16 units. An error names
+the field, its actual length, and its allowed maximum. Existing format, enum,
+and matching-section rules still apply.
+
+These character limits cannot predict every glyph width or line break. The
+rendered geometry checks in `scripts/lib/layout-validation.mjs` therefore remain
+the final defense against font- and content-dependent clipping, printable-region
+overflow, and footer overlap. The component fixture renders the maximum accepted
+title and version on both front and back pages as a build-time stress case.
 
 ## Structured sources
 
