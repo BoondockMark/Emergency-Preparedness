@@ -81,6 +81,19 @@ test('handout pages use their section slot and show the document code', () => {
   assert.equal((html.match(/aria-label="EVS-001: Evacuation &amp; Shelter"/g) ?? []).length, 2);
 });
 
+test('continued handout pages use compact headings with fully escaped titles', () => {
+  const html = renderHandout('{{title}} {{cssPath}} {{pages}}', {
+    meta: {
+      code: 'EVS-001', title: 'Prepare & <Leave>', section: 'Evacuation & Shelter', sectionNumber: 3,
+      status: 'draft', version: '1.0', lastReviewed: '2026-09-24', pageCount: 2
+    },
+    chunks: ['First page.', 'Second page.']
+  });
+  assert.match(html, /<h1>Prepare &amp; &lt;Leave&gt;<\/h1>/);
+  assert.match(html, /<h1 class="title--compact">Prepare &amp; &lt;Leave&gt; — continued<\/h1>/);
+  assert.equal((html.match(/<h1 class=/g) ?? []).length, 1);
+});
+
 test('approved content rejects unresolved approval placeholders', async () => {
   const approved = (await fixture('front-matter.md'))
     .replace('status: draft', 'status: approved')
