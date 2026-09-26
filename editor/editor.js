@@ -7,6 +7,7 @@ const state = document.querySelector('#state');
 const message = document.querySelector('#message');
 const issues = document.querySelector('#issues');
 const validationState = document.querySelector('#validation-state');
+const validationPanel = document.querySelector('#validation');
 const cursorStatus = document.querySelector('#cursor-status');
 const draftRecovery = document.querySelector('#draft-recovery');
 const imageDialog = document.querySelector('#image-dialog');
@@ -16,6 +17,7 @@ let selectedAsset = '';
 let previewTimer;
 let validationTimer;
 let validationSequence = 0;
+let latestSyntaxResult;
 let renderSequence = 0;
 let renderController;
 const session = crypto.randomUUID();
@@ -83,11 +85,16 @@ function selectIssue(issue) {
     if (element) { element.dataset.validationOutline = 'true'; element.style.outline = '3px solid #dc2626'; element.style.outlineOffset = '2px'; element.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
   }
 }
+async function validateSyntax(snapshot) {
+  const result = await request('/api/validate', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ ...snapshot, phase: 'syntax' }) });
+  latestSyntaxResult = { path: snapshot.path, source: snapshot.source, result };
+  return result;
+}
 async function validate() {
   const sequence = ++validationSequence;
   const payload = { path: select.value, source: source.value, session, requestId: sequence };
   try {
-    const syntax = await request('/api/validate', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ ...payload, phase: 'syntax' }) });
+    const syntax = await validateSyntax(payload);
     if (sequence !== validationSequence) return;
     showIssues(syntax.issues);
     if (!syntax.valid) { validationState.textContent = 'Fix syntax / metadata'; validationState.className = ''; return; }
@@ -128,8 +135,27 @@ async function openHandout({ discardCurrentDraft = false } = {}) {
 }
 async function save() {
   try {
-    const result = await request('/api/save', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ path: select.value, source: source.value, revision: opened.revision }) });
-    opened = { ...opened, path: select.value, source: source.value, revision: result.revision }; clearDraft(); dirty(); message.textContent = 'Saved atomically.'; return true;
+    clearTimeout(validationTimer);
+    let snapshot;
+    let syntax;
+    do {
+      snapshot = { path: select.value, source: source.value };
+      syntax = latestSyntaxResult?.path === snapshot.path && latestSyntaxResult.source === snapshot.source
+        ? latestSyntaxResult.result
+        : await validateSyntax({ ...snapshot, session, requestId: ++validationSequence });
+    } while (snapshot.path !== select.value || snapshot.source !== source.value);
+    if (!syntax.valid) {
+      showIssues(syntax.issues);
+      validationState.textContent = 'Fix syntax / metadata';
+      validationState.className = '';
+      validationPanel.focus();
+      if (!confirm('Syntax or metadata errors remain. Save this incomplete draft anyway?')) {
+        message.textContent = 'Save canceled. Review the Validation panel.';
+        return false;
+      }
+    }
+    const result = await request('/api/save', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ ...snapshot, revision: opened.revision }) });
+    opened = { ...opened, ...snapshot, revision: result.revision }; clearDraft(); dirty(); message.textContent = 'Saved atomically.'; return true;
   } catch (error) { message.textContent = `Not saved: ${error.message}`; return false; }
 }
 function insert(button) {
