@@ -127,6 +127,65 @@ test('editor open/save round trip is atomic and stale writes are rejected', asyn
   assert.deepEqual((await fs.readdir(path.dirname(file))).filter(name => name.endsWith('.tmp')), []);
 });
 
+test('browser editor validates valid buffers before saving', { timeout: 45_000 }, async t => {
+  const { page, file } = await openEditor(t);
+  await appendSource(page, '\nA valid saved change.');
+  await page.click('#save');
+  await waitForText(page, '#message', 'Saved atomically.');
+  assert.match(await fs.readFile(file, 'utf8'), /A valid saved change\.$/);
+});
+
+test('browser editor saves invalid drafts only after explicit confirmation', { timeout: 45_000 }, async t => {
+  const { page, file } = await openEditor(t);
+  await replaceSource(page, 'not valid front matter');
+  const confirmation = new Promise(resolve => page.once('dialog', async dialog => {
+    assert.match(dialog.message(), /Save this incomplete draft anyway/);
+    await dialog.accept();
+    resolve();
+  }));
+  await page.click('#save');
+  await confirmation;
+  await waitForText(page, '#message', 'Saved atomically.');
+  assert.equal(await fs.readFile(file, 'utf8'), 'not valid front matter');
+});
+
+test('browser editor cancels invalid saves and focuses Validation', { timeout: 45_000 }, async t => {
+  const { page, file, source: original } = await openEditor(t);
+  await replaceSource(page, 'not valid front matter');
+  page.once('dialog', dialog => dialog.dismiss());
+  await page.click('#save');
+  await waitForText(page, '#message', 'Save canceled');
+  assert.equal(await page.evaluate(() => document.activeElement.id), 'validation');
+  assert.equal(await fs.readFile(file, 'utf8'), original);
+});
+
+test('browser editor validates edits made while an older validation is pending', { timeout: 45_000 }, async t => {
+  const { page, file, source: original } = await openEditor(t);
+  await page.evaluate(() => {
+    const actualFetch = window.fetch.bind(window);
+    let release;
+    window.releaseDelayedValidation = () => release?.();
+    window.fetch = (url, options) => {
+      const body = options?.body && JSON.parse(options.body);
+      if (url === '/api/validate' && body?.phase === 'syntax' && body.source.includes('delayed validation')) {
+        window.delayedValidationStarted = true;
+        return new Promise(resolve => { release = () => resolve(actualFetch(url, options)); });
+      }
+      return actualFetch(url, options);
+    };
+  });
+  await appendSource(page, '\ndelayed validation');
+  await page.waitForFunction(() => window.delayedValidationStarted);
+  await replaceSource(page, 'new invalid buffer');
+  page.once('dialog', dialog => dialog.dismiss());
+  await page.click('#save');
+  await waitForText(page, '#message', 'Save canceled');
+  await page.evaluate(() => window.releaseDelayedValidation());
+  await new Promise(resolve => setTimeout(resolve, 100));
+  assert.match(await text(page, '#validation-state'), /Fix syntax \/ metadata/);
+  assert.equal(await fs.readFile(file, 'utf8'), original);
+});
+
 test('front matter, custom HTML, and page breaks survive the canonical editor parse', async () => {
   const source = (await fixture()).replace('Fixture body.', '<widget data-x="1">Raw</widget>\n<!-- pagebreak -->\nNext.').replace('pageCount: 1', 'pageCount: 2');
   const document = parseHandoutSource(source, 'handouts/example.md');
