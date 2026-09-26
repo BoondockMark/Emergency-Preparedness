@@ -95,6 +95,12 @@ to the loopback interface and lists only the Markdown files it discovered under
 and compare it with the debounced print-sized preview. **Save** (or Ctrl/Cmd+S)
 writes through a temporary file and rename. A save is refused if another program
 changed the file since it was opened; use **Revert** to load the disk version.
+Unsaved edits are also kept as a per-handout browser draft, so an accidental
+refresh or closed tab offers to restore the newer text without overwriting the
+file on disk. The source status reports the cursor location, selection size,
+word count, and character count. Tab and Shift+Tab indent or outdent every line
+in a selection, and list or heading tools apply their prefix to every selected
+line.
 
 The toolbar inserts the supported headings, emphasis, lists, component wrappers,
 and page breaks into source. It is deliberately not a generic visual editor:
