@@ -20,6 +20,31 @@ function inlineMarkdown(source) {
     .replace(/\*(.*?)\*/g, '<em>$1</em>');
 }
 
+function tableCells(line) {
+  const content = line.trim().replace(/^\|/, '').replace(/\|$/, '');
+  const cells = [];
+  let cell = '';
+  for (let index = 0; index < content.length; index += 1) {
+    if (content[index] === '\\' && content[index + 1] === '|') {
+      cell += '|';
+      index += 1;
+    } else if (content[index] === '|') {
+      cells.push(cell.trim());
+      cell = '';
+    } else {
+      cell += content[index];
+    }
+  }
+  cells.push(cell.trim());
+  return cells;
+}
+
+function isTableDivider(line, columns) {
+  if (!line?.includes('|')) return false;
+  const cells = tableCells(line);
+  return cells.length === columns && cells.every(cell => /^:?-{3,}:?$/.test(cell));
+}
+
 const sourceAttributes = (sourcePath, line) => sourcePath
   ? ` data-source-path="${escapeHtml(sourcePath)}" data-source-line="${line}"`
   : '';
@@ -32,8 +57,10 @@ function annotateAuthorHtml(rawLine, sourcePath, line) {
 export function renderMarkdown(source, { sourcePath, startLine = 1 } = {}) {
   let output = '';
   let list = null;
+  const lines = source.split('\n');
 
-  for (const [index, rawLine] of source.split('\n').entries()) {
+  for (let index = 0; index < lines.length; index += 1) {
+    const rawLine = lines[index];
     const sourceLine = startLine + index;
     const attributes = sourceAttributes(sourcePath, sourceLine);
     const line = rawLine.trim();
@@ -52,6 +79,25 @@ export function renderMarkdown(source, { sourcePath, startLine = 1 } = {}) {
       list = null;
       const level = heading[1].length;
       output += `<h${level}${attributes}>${inlineMarkdown(heading[2])}</h${level}>`;
+      continue;
+    }
+    const headerCells = line.includes('|') ? tableCells(line) : [];
+    if (headerCells.length > 1 && isTableDivider(lines[index + 1]?.trim(), headerCells.length)) {
+      if (list) output += `</${list}>`;
+      list = null;
+      output += `<table${attributes}><thead><tr>`;
+      output += headerCells.map(cell => `<th scope="col"${attributes}>${inlineMarkdown(cell)}</th>`).join('');
+      output += '</tr></thead><tbody>';
+      index += 2;
+      while (index < lines.length && lines[index].trim() && lines[index].includes('|')) {
+        const rowAttributes = sourceAttributes(sourcePath, startLine + index);
+        const cells = tableCells(lines[index]);
+        if (cells.length !== headerCells.length) break;
+        output += `<tr${rowAttributes}>${cells.map(cell => `<td${rowAttributes}>${inlineMarkdown(cell)}</td>`).join('')}</tr>`;
+        index += 1;
+      }
+      output += '</tbody></table>';
+      index -= 1;
       continue;
     }
     const item = line.match(/^[-*]\s+(.*)$/);

@@ -100,6 +100,21 @@ test('component markup is preserved while Markdown is rendered', () => {
   assert.equal(renderMarkdown('**Bold**'), '<p><strong>Bold</strong></p>');
 });
 
+test('pipe tables render with inline formatting, escaped pipes, and source locations', () => {
+  const markdown = renderMarkdown([
+    '| Route | **Status** | Notes |',
+    '|---|:---:|---|',
+    '| A | Open | Main \\| alternate |',
+    '| B | *Check* | Local advice |'
+  ].join('\n'), { sourcePath: 'handouts/routes.md', startLine: 20 });
+
+  assert.match(markdown, /^<table data-source-path="handouts\/routes\.md" data-source-line="20">/);
+  assert.match(markdown, /<th scope="col"[^>]*><strong>Status<\/strong><\/th>/);
+  assert.match(markdown, /<tr[^>]*data-source-line="22"[^>]*>.*<td[^>]*>Main \| alternate<\/td>/);
+  assert.match(markdown, /<tr[^>]*data-source-line="23"[^>]*>.*<em>Check<\/em>/);
+  assert.doesNotMatch(markdown, /<p[^>]*>\| Route/);
+});
+
 test('overflow diagnostics identify Markdown and raw HTML source lines', () => {
   const markdown = renderMarkdown('AReallyLongUnbrokenValueThatCannotFit', {
     sourcePath: 'handouts/test.md', startLine: 17
