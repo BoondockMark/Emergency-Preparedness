@@ -102,17 +102,25 @@ test('component markup is preserved while Markdown is rendered', () => {
 
 test('pipe tables render with inline formatting, escaped pipes, and source locations', () => {
   const markdown = renderMarkdown([
+    'Table: **Evacuation route status**',
     '| Route | **Status** | Notes |',
     '|---|:---:|---|',
     '| A | Open | Main \\| alternate |',
     '| B | *Check* | Local advice |'
   ].join('\n'), { sourcePath: 'handouts/routes.md', startLine: 20 });
 
-  assert.match(markdown, /^<table data-source-path="handouts\/routes\.md" data-source-line="20">/);
+  assert.match(markdown, /^<table data-source-path="handouts\/routes\.md" data-source-line="21">/);
+  assert.match(markdown, /<caption[^>]*data-source-line="20"[^>]*><strong>Evacuation route status<\/strong><\/caption>/);
   assert.match(markdown, /<th scope="col"[^>]*><strong>Status<\/strong><\/th>/);
-  assert.match(markdown, /<tr[^>]*data-source-line="22"[^>]*>.*<td[^>]*>Main \| alternate<\/td>/);
-  assert.match(markdown, /<tr[^>]*data-source-line="23"[^>]*>.*<em>Check<\/em>/);
+  assert.match(markdown, /<tr[^>]*data-source-line="23"[^>]*>.*<td[^>]*>Main \| alternate<\/td>/);
+  assert.match(markdown, /<tr[^>]*data-source-line="24"[^>]*>.*<em>Check<\/em>/);
   assert.doesNotMatch(markdown, /<p[^>]*>\| Route/);
+});
+
+test('pipe tables without a caption remain tables for accessibility validation', () => {
+  const markdown = renderMarkdown('| Item | Value |\n|---|---|\n| One | Two |');
+  assert.match(markdown, /^<table><thead>/);
+  assert.doesNotMatch(markdown, /<caption/);
 });
 
 test('overflow diagnostics identify Markdown and raw HTML source lines', () => {
