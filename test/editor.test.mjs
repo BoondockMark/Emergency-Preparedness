@@ -8,6 +8,7 @@ import { renderHandout, parseHandoutSource, renderHandoutSource } from '../scrip
 import { createEditorServer } from '../scripts/lib/editor-server.mjs';
 import { prepareDocumentValidation } from '../scripts/lib/artifact-generation.mjs';
 import { figureMarkup, safeAssetName } from '../scripts/lib/editor-support.mjs';
+import { indentSelection, prefixLines, selectionDetails } from '../editor/editor-model.js';
 
 const repository = path.resolve(import.meta.dirname, '..');
 const fixture = () => fs.readFile(path.join(repository, 'test/unit-fixtures/front-matter.md'), 'utf8');
@@ -19,7 +20,7 @@ async function setup(t) {
   const source = (await fixture()).replace('Fixture body.', '<div class="custom">Keep **raw** HTML</div>\n\nFirst page.\n<!-- pagebreak -->\nSecond page.').replace('pageCount: 1', 'pageCount: 2');
   await fs.writeFile(path.join(root, 'handouts/section/example.md'), source);
   await fs.copyFile(path.join(repository, 'templates/handout.html'), path.join(root, 'templates/handout.html'));
-  for (const name of ['index.html', 'editor.js', 'editor.css']) await fs.copyFile(path.join(repository, 'editor', name), path.join(root, 'editor', name));
+  for (const name of ['index.html', 'editor.js', 'editor.css', 'editor-model.js']) await fs.copyFile(path.join(repository, 'editor', name), path.join(root, 'editor', name));
   await fs.copyFile(path.join(repository, 'assets/styles/print.css'), path.join(root, 'assets/styles/print.css'));
   await fs.cp(path.join(repository, 'assets/fonts'), path.join(root, 'assets/fonts'), { recursive: true });
   const server = await createEditorServer({ root });
@@ -27,6 +28,17 @@ async function setup(t) {
   t.after(() => new Promise(resolve => server.close(resolve)));
   return { root, source, base: `http://127.0.0.1:${server.address().port}`, file: path.join(root, 'handouts/section/example.md') };
 }
+
+test('editor source helpers report position and transform complete line selections', () => {
+  assert.deepEqual(selectionDetails('one\ntwo words', 6, 9), { line: 2, column: 3, characters: 13, words: 3, selected: 3 });
+  assert.deepEqual(prefixLines('one\ntwo\nthree', 1, 6, '- '), {
+    start: 0, end: 7, replacement: '- one\n- two', selectionStart: 3, selectionEnd: 10
+  });
+  assert.deepEqual(indentSelection('one\n  two\nthree', 0, 9, true), {
+    start: 0, end: 9, replacement: 'one\ntwo', selectionStart: 0, selectionEnd: 7
+  });
+  assert.equal(prefixLines('one\ntwo\nthree', 0, 8, '- ').replacement, '- one\n- two');
+});
 
 test('editor rejects traversal and only opens discovered markdown paths', async t => {
   const { base } = await setup(t);

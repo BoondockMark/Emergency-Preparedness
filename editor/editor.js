@@ -1,3 +1,5 @@
+import { indentSelection, prefixLines, selectionDetails } from './editor-model.js';
+
 const select = document.querySelector('#handout');
 const source = document.querySelector('#source');
 const preview = document.querySelector('#preview');
@@ -5,6 +7,8 @@ const state = document.querySelector('#state');
 const message = document.querySelector('#message');
 const issues = document.querySelector('#issues');
 const validationState = document.querySelector('#validation-state');
+const cursorStatus = document.querySelector('#cursor-status');
+const draftRecovery = document.querySelector('#draft-recovery');
 const imageDialog = document.querySelector('#image-dialog');
 const assetList = document.querySelector('#asset-list');
 let opened = { source: '', revision: '' };
@@ -12,7 +16,27 @@ let selectedAsset = '';
 let previewTimer;
 let validationTimer;
 let validationSequence = 0;
+let renderSequence = 0;
+let renderController;
 const session = crypto.randomUUID();
+
+const draftKey = path => `handout-editor:draft:${path}`;
+function readDraft(path) {
+  try { return JSON.parse(localStorage.getItem(draftKey(path))); } catch { return null; }
+}
+function writeDraft() {
+  if (!opened.path || !dirty()) return;
+  try { localStorage.setItem(draftKey(opened.path), JSON.stringify({ source: source.value, revision: opened.revision, updatedAt: Date.now() })); } catch { /* Editing must continue if storage is unavailable. */ }
+}
+function clearDraft(path = opened.path) {
+  try { localStorage.removeItem(draftKey(path)); } catch { /* Storage may be disabled. */ }
+  draftRecovery.hidden = true;
+}
+function updateCursorStatus() {
+  const details = selectionDetails(source.value, source.selectionStart, source.selectionEnd);
+  const selection = details.selected ? ` · ${details.selected} selected` : '';
+  cursorStatus.textContent = `Line ${details.line}, column ${details.column} · ${details.words} words · ${details.characters} characters${selection}`;
+}
 
 async function request(url, options) {
   const response = await fetch(url, options);
@@ -28,7 +52,7 @@ function dirty() {
   return changed;
 }
 function renderSoon() {
-  dirty(); clearTimeout(previewTimer);
+  dirty(); writeDraft(); updateCursorStatus(); clearTimeout(previewTimer);
   previewTimer = setTimeout(render, 350);
   clearTimeout(validationTimer);
   validationTimer = setTimeout(validate, 100);
@@ -79,29 +103,44 @@ async function validate() {
   }
 }
 async function render() {
+  const sequence = ++renderSequence;
+  renderController?.abort();
+  renderController = new AbortController();
   try {
-    preview.srcdoc = await request('/api/render', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ path: select.value, source: source.value }) });
+    const html = await request('/api/render', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ path: select.value, source: source.value }), signal: renderController.signal });
+    if (sequence !== renderSequence) return;
+    preview.srcdoc = html;
     message.textContent = '';
-  } catch (error) { message.textContent = `Preview: ${error.message}`; }
+  } catch (error) { if (error.name !== 'AbortError' && sequence === renderSequence) message.textContent = `Preview: ${error.message}`; }
 }
-async function openHandout() {
+async function openHandout({ discardCurrentDraft = false } = {}) {
   if (dirty() && !confirm('Discard unsaved changes?')) { select.value = opened.path; return; }
   try {
+    if (discardCurrentDraft) clearDraft();
     opened = await request(`/api/handout?path=${encodeURIComponent(select.value)}`);
-    source.value = opened.source; selectedAsset = ''; showAssets(); dirty(); renderSoon(); source.focus();
+    source.value = opened.source; selectedAsset = ''; showAssets(); dirty();
+    const draft = readDraft(opened.path);
+    const canRestore = draft && typeof draft.source === 'string' && draft.source !== opened.source;
+    draftRecovery.hidden = !canRestore;
+    draftRecovery.dataset.path = canRestore ? opened.path : '';
+    renderSoon(); source.focus();
   } catch (error) { message.textContent = error.message; }
 }
 async function save() {
   try {
     const result = await request('/api/save', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ path: select.value, source: source.value, revision: opened.revision }) });
-    opened = { ...opened, path: select.value, source: source.value, revision: result.revision }; dirty(); message.textContent = 'Saved atomically.'; return true;
+    opened = { ...opened, path: select.value, source: source.value, revision: result.revision }; clearDraft(); dirty(); message.textContent = 'Saved atomically.'; return true;
   } catch (error) { message.textContent = `Not saved: ${error.message}`; return false; }
 }
 function insert(button) {
   const start = source.selectionStart; const end = source.selectionEnd; const selected = source.value.slice(start, end);
   let replacement;
   if (button.dataset.wrap) { const [before, after] = button.dataset.wrap.split('|'); replacement = before + selected + after; }
-  else if (button.dataset.before) replacement = button.dataset.before + selected;
+  else if (button.dataset.before && selected.includes('\n')) {
+    const change = prefixLines(source.value, start, end, button.dataset.before);
+    source.setRangeText(change.replacement, change.start, change.end, 'select');
+    source.setSelectionRange(change.selectionStart, change.selectionEnd); source.focus(); renderSoon(); return;
+  } else if (button.dataset.before) replacement = button.dataset.before + selected;
   else if (button.dataset.insert) replacement = button.dataset.insert;
   else {
     const kind = button.dataset.block;
@@ -202,8 +241,25 @@ document.querySelector('#delete-image').addEventListener('click', async () => {
 });
 document.querySelector('#toolbar').addEventListener('click', event => { if (event.target.matches('button:not(#images)')) insert(event.target); });
 document.querySelector('#save').addEventListener('click', save);
-document.querySelector('#revert').addEventListener('click', openHandout);
+document.querySelector('#revert').addEventListener('click', () => openHandout({ discardCurrentDraft: true }));
 select.addEventListener('change', openHandout); source.addEventListener('input', renderSoon);
+source.addEventListener('click', updateCursorStatus);
+source.addEventListener('keyup', updateCursorStatus);
+source.addEventListener('keydown', event => {
+  if (event.key !== 'Tab') return;
+  event.preventDefault();
+  const change = indentSelection(source.value, source.selectionStart, source.selectionEnd, event.shiftKey);
+  source.setRangeText(change.replacement, change.start, change.end, 'select');
+  source.setSelectionRange(change.selectionStart, change.selectionEnd);
+  renderSoon();
+});
+document.querySelector('#restore-draft').addEventListener('click', () => {
+  const draft = readDraft(opened.path);
+  if (!draft || draftRecovery.dataset.path !== opened.path) return;
+  source.value = draft.source; draftRecovery.hidden = true; renderSoon(); source.focus();
+  message.textContent = 'Browser draft restored. Review and save when ready.';
+});
+document.querySelector('#discard-draft').addEventListener('click', () => { clearDraft(); message.textContent = 'Browser draft discarded.'; });
 document.addEventListener('keydown', event => { if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 's') { event.preventDefault(); save(); } });
 window.addEventListener('beforeunload', event => { if (dirty()) event.preventDefault(); });
 

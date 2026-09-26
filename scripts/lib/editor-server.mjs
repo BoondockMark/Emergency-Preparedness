@@ -164,6 +164,7 @@ export async function createEditorServer({ root }) {
       }
       if (request.method === 'GET' && (url.pathname === '/' || url.pathname === '/index.html')) return serve(response, path.join(root, 'editor/index.html'), 'text/html; charset=utf-8');
       if (request.method === 'GET' && url.pathname === '/editor.js') return serve(response, path.join(root, 'editor/editor.js'), 'text/javascript; charset=utf-8');
+      if (request.method === 'GET' && url.pathname === '/editor-model.js') return serve(response, path.join(root, 'editor/editor-model.js'), 'text/javascript; charset=utf-8');
       if (request.method === 'GET' && url.pathname === '/editor.css') return serve(response, path.join(root, 'editor/editor.css'), 'text/css; charset=utf-8');
       if (request.method === 'GET' && url.pathname === '/assets/styles/print.css') return serve(response, path.join(root, 'assets/styles/print.css'), 'text/css; charset=utf-8');
       if (request.method === 'GET' && url.pathname.startsWith('/assets/handouts/')) {
