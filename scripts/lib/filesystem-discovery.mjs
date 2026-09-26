@@ -1,7 +1,6 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
-import { loadDocument } from './metadata.mjs';
-import { validateImages } from './page-validation.mjs';
+import { parseHandoutSource } from './content-rendering.mjs';
 
 async function walk(directory) {
   const entries = await fs.readdir(directory, { withFileTypes: true });
@@ -21,24 +20,11 @@ export async function discoverDocuments(root, manifests) {
 
   for (const file of files) {
     const sourcePath = path.relative(root, file);
-    const { data: meta, content, contentStartLine } = loadDocument(await fs.readFile(file, 'utf8'), sourcePath);
+    const document = parseHandoutSource(await fs.readFile(file, 'utf8'), sourcePath, manifests);
+    const { meta } = document;
     if (codes.has(meta.code)) throw Error(`${sourcePath}: code: duplicates ${meta.code}`);
     codes.add(meta.code);
-    const chunks = content.split(/\n<!--\s*pagebreak\s*-->\n/i);
-    const chunkStartLines = [];
-    let cursor = contentStartLine;
-    for (const chunk of chunks) {
-      chunkStartLines.push(cursor);
-      cursor += (chunk.match(/\n/g) ?? []).length + 2;
-    }
-    const declaredPageCount = meta.pageCount;
-    const derivedPageCount = chunks.length;
-    if (declaredPageCount !== undefined && declaredPageCount !== derivedPageCount) {
-      throw Error(`${sourcePath}: pageCount: declared ${declaredPageCount}, derived ${derivedPageCount} from page chunks`);
-    }
-    meta.pageCount = derivedPageCount;
-    validateImages(content, meta.code, manifests);
-    documents.push({ meta, chunks, chunkStartLines, sourcePath });
+    documents.push(document);
   }
   return documents;
 }
