@@ -9,7 +9,21 @@ export async function inspectAccessibility(page, documentCode) {
       if (element.id) return `#${CSS.escape(element.id)}`;
       return element.localName + (element.classList.length ? [...element.classList].map(name => `.${CSS.escape(name)}`).join('') : '');
     };
-    const add = (type, element, detail) => issues.push({ code, type, selector: describe(element), detail });
+    const add = (type, element, detail) => {
+      const sheet = element?.closest('.sheet');
+      const sheets = [...document.querySelectorAll('.sheet')];
+      const source = element?.closest('[data-source-path][data-source-line]')
+        ?? element?.querySelector?.('[data-source-path][data-source-line]');
+      issues.push({
+        code,
+        page: sheet ? sheets.indexOf(sheet) + 1 : undefined,
+        type,
+        selector: describe(element),
+        detail,
+        sourcePath: source?.dataset.sourcePath,
+        sourceLine: source?.dataset.sourceLine ? Number(source.dataset.sourceLine) : undefined
+      });
+    };
     const luminance = color => {
       const channels = color.match(/[\d.]+/g)?.slice(0, 3).map(Number) ?? [0, 0, 0];
       return channels.map(value => value / 255).map(value => value <= .04045 ? value / 12.92 : ((value + .055) / 1.055) ** 2.4).reduce((sum, value, index) => sum + value * [.2126, .7152, .0722][index], 0);
@@ -64,5 +78,7 @@ export async function inspectAccessibility(page, documentCode) {
 }
 
 export function formatAccessibilityIssue(issue) {
-  return `${issue.code}: ${issue.type} at ${issue.selector} (${issue.detail})`;
+  const page = issue.page ? ` page ${issue.page}` : '';
+  const location = issue.sourcePath && issue.sourceLine ? ` (${issue.sourcePath}:${issue.sourceLine})` : '';
+  return `${issue.code}${page}${location}: ${issue.type} at ${issue.selector} (${issue.detail})`;
 }
