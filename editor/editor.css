@@ -1,0 +1,15 @@
+:root { font: 14px system-ui, sans-serif; color-scheme: light; }
+* { box-sizing: border-box; }
+body { margin: 0; background: #e5e7eb; }
+header, nav { display: flex; align-items: center; gap: .5rem; padding: .6rem 1rem; background: #17202a; color: white; }
+header select { min-width: 24rem; } button, select { padding: .4rem .65rem; }
+nav { background: #34495e; flex-wrap: wrap; }
+nav button { font-family: ui-monospace, monospace; }
+#state.dirty { color: #ffd166; font-weight: bold; }
+main { height: calc(100vh - 114px); display: grid; grid-template-columns: minmax(25rem, 1fr) minmax(30rem, 1.15fr); gap: .75rem; padding: .75rem; }
+section { display: flex; flex-direction: column; gap: .3rem; min-width: 0; }
+textarea, iframe { width: 100%; flex: 1; border: 1px solid #9ca3af; background: white; }
+textarea { padding: 1rem; resize: none; font: 14px/1.5 ui-monospace, monospace; tab-size: 2; }
+iframe { transform-origin: top center; }
+#message { position: fixed; right: 1rem; bottom: 1rem; padding: .5rem; background: #fff; box-shadow: 0 1px 5px #777; }
+@media (max-width: 850px) { main { grid-template-columns: 1fr; height: auto; } textarea, iframe { height: 70vh; flex: none; } header select { min-width: 0; flex: 1; } }

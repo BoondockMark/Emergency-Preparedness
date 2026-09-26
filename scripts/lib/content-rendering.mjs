@@ -1,3 +1,6 @@
+import { loadDocument } from './metadata.mjs';
+import { validateImages } from './page-validation.mjs';
+
 export function escapeHtml(value) {
   return String(value).replace(
     /[&<>"']/g,
@@ -88,4 +91,27 @@ export function renderHandout(template, document) {
     .replace('{{title}}', escapeHtml(meta.title))
     .replace('{{cssPath}}', '../assets/print.css')
     .replace('{{pages}}', pages);
+}
+
+/** Parse a complete handout source exactly as the build does. */
+export function parseHandoutSource(source, sourcePath, manifests = new Map()) {
+  const { data: meta, content, contentStartLine } = loadDocument(source, sourcePath);
+  const chunks = content.split(/\n<!--\s*pagebreak\s*-->\n/i);
+  const chunkStartLines = [];
+  let cursor = contentStartLine;
+  for (const chunk of chunks) {
+    chunkStartLines.push(cursor);
+    cursor += (chunk.match(/\n/g) ?? []).length + 2;
+  }
+  const declaredPageCount = meta.pageCount;
+  if (declaredPageCount !== undefined && declaredPageCount !== chunks.length) {
+    throw Error(`${sourcePath}: pageCount: declared ${declaredPageCount}, derived ${chunks.length} from page chunks`);
+  }
+  meta.pageCount = chunks.length;
+  validateImages(content, meta.code, manifests);
+  return { meta, chunks, chunkStartLines, sourcePath };
+}
+
+export function renderHandoutSource(template, source, { sourcePath, manifests = new Map() } = {}) {
+  return renderHandout(template, parseHandoutSource(source, sourcePath, manifests));
 }

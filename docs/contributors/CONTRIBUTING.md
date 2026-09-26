@@ -6,6 +6,15 @@ The component specimen is a test fixture and must never be published.
 
 ## Add or edit a handout
 
+For a local side-by-side source and print preview, run `npm run editor` and open
+`http://127.0.0.1:4174`. Saving uses an atomic replacement and is rejected when
+the on-disk file has changed since it was opened, so revert and reconcile those
+changes rather than overwriting them. Ctrl/Cmd+S also saves. The toolbar inserts
+only repository-supported syntax; source text remains canonical. Front matter,
+arbitrary HTML, and unrecognized blocks have no visual editing mode and must be
+edited as source so the tool cannot perform a lossy conversion. Preview updates
+are debounced and use the exact build parser, template, and print stylesheet.
+
 1. Create or edit a `.md` file in the matching `handouts/<section>/` folder. Use `CODE-short-title.md` and never recycle a code after publication.
 2. Copy the front matter from an existing source and consult [METADATA.md](METADATA.md). Keep titles concise—about 50 Unicode code points or fewer is recommended—and never exceed the documented 72-code-point title or 9-code-point version limits. The title maximum includes room for the continuation suffix.
 3. Mark unverified prose **SAMPLE TEXT — NOT APPROVED ADVICE**. Put unverified local details in a `local-info` block and use `[VERIFY]`; never guess emergency numbers, radio frequencies, sandbag sites, endorsements, or official instructions.

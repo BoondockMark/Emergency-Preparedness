@@ -87,6 +87,22 @@ npm run preview -- COM-001
 
 Open the printed URL. For an immediate visual proof, open `docs/previews/COM-001-page-1.png`. Use the browser print dialog only for spot checks; committed PDFs are produced by the reproducible build.
 
+## Local handout editor
+
+Run `npm run editor`, then open **http://127.0.0.1:4174**. The server binds only
+to the loopback interface and lists only the Markdown files it discovered under
+`handouts/` at startup. Select a handout, edit its canonical Markdown/HTML source,
+and compare it with the debounced print-sized preview. **Save** (or Ctrl/Cmd+S)
+writes through a temporary file and rename. A save is refused if another program
+changed the file since it was opened; use **Revert** to load the disk version.
+
+The toolbar inserts the supported headings, emphasis, lists, component wrappers,
+and page breaks into source. It is deliberately not a generic visual editor:
+YAML front matter, arbitrary HTML, and unknown blocks remain source-only text and
+are never converted or normalized. Preview rendering uses the same parser,
+`templates/handout.html`, and `assets/styles/print.css` as the build. The editor
+is a local authoring aid; generated PDFs still require `npm run build`.
+
 ## Source choice
 
 Handout prose uses **Markdown with YAML front matter** because it is readable in pull-request diffs and approachable for volunteers. Small, documented HTML classes provide print-specific patterns that Markdown alone cannot express reliably. A pinned Puppeteer/Chrome build applies one shared HTML shell and CSS, so volunteers do not hand-edit repeated headers, footers, page numbers, or edge labels. This is slightly more tooling than standalone HTML, but prevents layout drift and makes page-count/overflow checks practical.
