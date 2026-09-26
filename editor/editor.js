@@ -3,8 +3,13 @@ const source = document.querySelector('#source');
 const preview = document.querySelector('#preview');
 const state = document.querySelector('#state');
 const message = document.querySelector('#message');
+const issues = document.querySelector('#issues');
+const validationState = document.querySelector('#validation-state');
 let opened = { source: '', revision: '' };
 let previewTimer;
+let validationTimer;
+let validationSequence = 0;
+const session = crypto.randomUUID();
 
 async function request(url, options) {
   const response = await fetch(url, options);
@@ -22,6 +27,53 @@ function dirty() {
 function renderSoon() {
   dirty(); clearTimeout(previewTimer);
   previewTimer = setTimeout(render, 350);
+  clearTimeout(validationTimer);
+  validationTimer = setTimeout(validate, 100);
+}
+function showIssues(findings) {
+  issues.replaceChildren(...findings.map(issue => {
+    const item = document.createElement('li');
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.textContent = `${issue.type}${issue.page ? ` · page ${issue.page}` : ''}: ${issue.message}`;
+    const help = document.createElement('small');
+    help.textContent = issue.remediation || 'Correct the reported source or metadata; no automatic change was made.';
+    button.append(help);
+    button.addEventListener('click', () => selectIssue(issue));
+    item.append(button); return item;
+  }));
+}
+function selectIssue(issue) {
+  if (issue.sourceLine) {
+    const lines = source.value.split('\n');
+    const start = lines.slice(0, issue.sourceLine - 1).reduce((length, line) => length + line.length + 1, 0);
+    source.focus(); source.setSelectionRange(start, start + (lines[issue.sourceLine - 1]?.length ?? 0));
+  }
+  const document = preview.contentDocument;
+  document?.querySelectorAll('[data-validation-outline]').forEach(element => { element.style.outline = ''; element.removeAttribute('data-validation-outline'); });
+  if (document && issue.sourcePath && issue.sourceLine) {
+    const element = [...document.querySelectorAll('[data-source-path][data-source-line]')].find(candidate => candidate.dataset.sourcePath === issue.sourcePath && Number(candidate.dataset.sourceLine) === issue.sourceLine);
+    if (element) { element.dataset.validationOutline = 'true'; element.style.outline = '3px solid #dc2626'; element.style.outlineOffset = '2px'; element.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
+  }
+}
+async function validate() {
+  const sequence = ++validationSequence;
+  const payload = { path: select.value, source: source.value, session, requestId: sequence };
+  try {
+    const syntax = await request('/api/validate', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ ...payload, phase: 'syntax' }) });
+    if (sequence !== validationSequence) return;
+    showIssues(syntax.issues);
+    if (!syntax.valid) { validationState.textContent = 'Fix syntax / metadata'; validationState.className = ''; return; }
+    validationState.textContent = 'Checking layout'; validationState.className = 'checking';
+    showIssues([]);
+    const layout = await request('/api/validate', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ ...payload, phase: 'layout' }) });
+    if (sequence !== validationSequence) return;
+    showIssues(layout.issues);
+    validationState.textContent = layout.valid ? 'No issues' : `${layout.issues.length} issue${layout.issues.length === 1 ? '' : 's'}`;
+    validationState.className = '';
+  } catch (error) {
+    if (sequence === validationSequence && !/superseded/i.test(error.message)) { validationState.textContent = `Validation unavailable: ${error.message}`; validationState.className = ''; }
+  }
 }
 async function render() {
   try {
