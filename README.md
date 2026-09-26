@@ -103,6 +103,13 @@ are never converted or normalized. Preview rendering uses the same parser,
 `templates/handout.html`, and `assets/styles/print.css` as the build. The editor
 is a local authoring aid; generated PDFs still require `npm run build`.
 
+The **Images** panel can upload a PNG, JPEG, or SVG, record its required manifest
+metadata, insert an existing asset, and adjust full/half width, left/right
+alignment, crop ratio, and crop focus. Cropping changes CSS positioning without
+altering the original file. Place the source cursor inside a figure to change or
+remove it. Permanent deletion is allowed only after every reference has been
+removed and the handout saved.
+
 ## Source choice
 
 Handout prose uses **Markdown with YAML front matter** because it is readable in pull-request diffs and approachable for volunteers. Small, documented HTML classes provide print-specific patterns that Markdown alone cannot express reliably. A pinned Puppeteer/Chrome build applies one shared HTML shell and CSS, so volunteers do not hand-edit repeated headers, footers, page numbers, or edge labels. This is slightly more tooling than standalone HTML, but prevents layout drift and makes page-count/overflow checks practical.

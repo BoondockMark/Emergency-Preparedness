@@ -5,7 +5,10 @@ const state = document.querySelector('#state');
 const message = document.querySelector('#message');
 const issues = document.querySelector('#issues');
 const validationState = document.querySelector('#validation-state');
+const imageDialog = document.querySelector('#image-dialog');
+const assetList = document.querySelector('#asset-list');
 let opened = { source: '', revision: '' };
+let selectedAsset = '';
 let previewTimer;
 let validationTimer;
 let validationSequence = 0;
@@ -85,14 +88,14 @@ async function openHandout() {
   if (dirty() && !confirm('Discard unsaved changes?')) { select.value = opened.path; return; }
   try {
     opened = await request(`/api/handout?path=${encodeURIComponent(select.value)}`);
-    source.value = opened.source; dirty(); renderSoon(); source.focus();
+    source.value = opened.source; selectedAsset = ''; showAssets(); dirty(); renderSoon(); source.focus();
   } catch (error) { message.textContent = error.message; }
 }
 async function save() {
   try {
     const result = await request('/api/save', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ path: select.value, source: source.value, revision: opened.revision }) });
-    opened = { path: select.value, source: source.value, revision: result.revision }; dirty(); message.textContent = 'Saved atomically.';
-  } catch (error) { message.textContent = `Not saved: ${error.message}`; }
+    opened = { ...opened, path: select.value, source: source.value, revision: result.revision }; dirty(); message.textContent = 'Saved atomically.'; return true;
+  } catch (error) { message.textContent = `Not saved: ${error.message}`; return false; }
 }
 function insert(button) {
   const start = source.selectionStart; const end = source.selectionEnd; const selected = source.value.slice(start, end);
@@ -109,7 +112,95 @@ function insert(button) {
   }
   source.setRangeText(replacement, start, end, 'end'); source.focus(); renderSoon();
 }
-document.querySelector('#toolbar').addEventListener('click', event => { if (event.target.matches('button')) insert(event.target); });
+function imageOptions() {
+  return {
+    width: document.querySelector('#image-width').value,
+    align: document.querySelector('#image-align').value,
+    crop: document.querySelector('#image-crop').value,
+    position: `${document.querySelector('#image-x').value}% ${document.querySelector('#image-y').value}%`
+  };
+}
+function selectedFigure() {
+  const cursor = source.selectionStart;
+  const before = source.value.lastIndexOf('<figure', cursor);
+  if (before < 0) return null;
+  let end = source.value.indexOf('</figure>', before);
+  if (end < cursor) return null;
+  end += '</figure>'.length;
+  const clear = source.value.slice(end).match(/^\n<div class="figure-clear"><\/div>/);
+  if (clear) end += clear[0].length;
+  const text = source.value.slice(before, end);
+  const file = text.match(/\.\.\/assets\/handouts\/[^/]+\/([^"?#]+)/)?.[1];
+  return { start: before, end, text, file };
+}
+function showAssets() {
+  assetList.replaceChildren(...(opened.assets || []).map(asset => {
+    const button = document.createElement('button');
+    button.type = 'button'; button.className = `asset${selectedAsset === asset.file ? ' selected' : ''}`;
+    const image = document.createElement('img');
+    image.src = `/assets/handouts/${encodeURIComponent(opened.code)}/${encodeURIComponent(asset.file)}`; image.alt = '';
+    button.append(image, document.createTextNode(asset.file));
+    button.addEventListener('click', () => { selectedAsset = asset.file; showAssets(); });
+    return button;
+  }));
+}
+async function figureMarkup(file) {
+  return request('/api/figure', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ path: select.value, file, options: imageOptions() }) });
+}
+async function insertAsset(file) {
+  const result = await figureMarkup(file);
+  const range = selectedFigure();
+  if (range) source.setRangeText(result.markup, range.start, range.end, 'end');
+  else source.setRangeText(`\n${result.markup}\n`, source.selectionStart, source.selectionEnd, 'end');
+  source.focus(); renderSoon(); imageDialog.close();
+}
+document.querySelector('#images').addEventListener('click', () => {
+  const figure = selectedFigure();
+  if (figure?.file) selectedAsset = figure.file;
+  showAssets(); imageDialog.showModal();
+});
+document.querySelector('#image-form').addEventListener('submit', async event => {
+  event.preventDefault();
+  const file = document.querySelector('#image-file').files[0];
+  if (!file) return;
+  try {
+    const dataUrl = await new Promise((resolve, reject) => { const reader = new FileReader(); reader.onload = () => resolve(reader.result); reader.onerror = reject; reader.readAsDataURL(file); });
+    const decorative = document.querySelector('#image-decorative').checked;
+    const result = await request('/api/assets', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({
+      path: select.value, name: file.name, mimeType: file.type, dataUrl,
+      type: document.querySelector('#image-type').value, alt: decorative ? '' : document.querySelector('#image-alt').value,
+      decorative, caption: document.querySelector('#image-caption').value, creator: document.querySelector('#image-creator').value,
+      source: document.querySelector('#image-source').value, license: document.querySelector('#image-license').value, options: imageOptions()
+    }) });
+    opened.assets.push(result.asset); selectedAsset = result.asset.file;
+    source.setRangeText(`\n${result.markup}\n`, source.selectionStart, source.selectionEnd, 'end');
+    event.target.reset(); showAssets(); renderSoon(); imageDialog.close();
+  } catch (error) { message.textContent = `Image not added: ${error.message}`; }
+});
+document.querySelector('#image-decorative').addEventListener('change', event => {
+  const alt = document.querySelector('#image-alt'); alt.disabled = event.target.checked; alt.required = !event.target.checked;
+});
+document.querySelector('#apply-image').addEventListener('click', async () => {
+  if (!selectedAsset) return void (message.textContent = 'Select an image first.');
+  try { await insertAsset(selectedAsset); } catch (error) { message.textContent = error.message; }
+});
+document.querySelector('#remove-image').addEventListener('click', () => {
+  const figure = selectedFigure();
+  if (!figure) return void (message.textContent = 'Place the source cursor inside a figure first.');
+  source.setRangeText('', figure.start, figure.end, 'start'); renderSoon(); imageDialog.close();
+});
+document.querySelector('#delete-image').addEventListener('click', async () => {
+  if (!selectedAsset || !confirm(`Permanently delete ${selectedAsset}?`)) return;
+  const figure = selectedFigure();
+  if (figure?.file === selectedAsset) source.setRangeText('', figure.start, figure.end, 'start');
+  if (source.value.includes(`../assets/handouts/${opened.code}/${selectedAsset}`)) return void (message.textContent = 'Remove every use of this image from the source before deleting it.');
+  if (dirty() && !await save()) return;
+  try {
+    await request('/api/assets', { method: 'DELETE', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ path: select.value, file: selectedAsset }) });
+    opened.assets = opened.assets.filter(asset => asset.file !== selectedAsset); selectedAsset = ''; showAssets(); renderSoon(); imageDialog.close(); message.textContent = 'Asset deleted.';
+  } catch (error) { message.textContent = `Asset not deleted: ${error.message}`; }
+});
+document.querySelector('#toolbar').addEventListener('click', event => { if (event.target.matches('button:not(#images)')) insert(event.target); });
 document.querySelector('#save').addEventListener('click', save);
 document.querySelector('#revert').addEventListener('click', openHandout);
 select.addEventListener('change', openHandout); source.addEventListener('input', renderSoon);

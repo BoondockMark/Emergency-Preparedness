@@ -79,6 +79,14 @@ omit the `alt` attribute.
 
 ## Add a graphic to a handout
 
+The local visual editor (`npm run editor`) provides an **Images** panel for this
+workflow. It writes the uploaded file and manifest entry together, then inserts
+the same documented figure markup shown below. Its crop and alignment controls
+change only the figure classes and `--crop-position`; they never resample or
+overwrite the original image. All creator, source, license, and alternative-text
+fields remain required. Deleting from the page keeps the asset available, while
+permanent asset deletion is blocked until all saved references are removed.
+
 Handouts are Markdown files, but documented HTML components may be used for
 print layout. Reference an asset with the exact repository-relative path
 `../assets/handouts/<CODE>/<file>`:

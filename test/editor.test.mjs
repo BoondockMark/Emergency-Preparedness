@@ -7,6 +7,7 @@ import { spawnSync } from 'node:child_process';
 import { renderHandout, parseHandoutSource, renderHandoutSource } from '../scripts/lib/content-rendering.mjs';
 import { createEditorServer } from '../scripts/lib/editor-server.mjs';
 import { prepareDocumentValidation } from '../scripts/lib/artifact-generation.mjs';
+import { figureMarkup, safeAssetName } from '../scripts/lib/editor-support.mjs';
 
 const repository = path.resolve(import.meta.dirname, '..');
 const fixture = () => fs.readFile(path.join(repository, 'test/unit-fixtures/front-matter.md'), 'utf8');
@@ -94,4 +95,39 @@ test('editor preview HTML has exact parity with build rendering', async t => {
   const response = await fetch(`${base}/api/render`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ path: 'handouts/section/example.md', source }) });
   assert.equal(response.status, 200);
   assert.equal(await response.text(), buildHtml.replace('../assets/print.css', '/assets/styles/print.css'));
+});
+
+test('image helpers normalize names and generate supported crop and alignment markup', () => {
+  assert.equal(safeAssetName('../../My Photo.PNG', 'image/png'), 'my-photo.png');
+  const markup = figureMarkup('STH-001', { file: 'my-photo.png', alt: 'A <safe> route', caption: 'Look & leave.' }, {
+    width: 'half', align: 'right', crop: 'square', position: '25% 70%'
+  });
+  assert.match(markup, /figure--half figure--right figure--crop-square/);
+  assert.match(markup, /--crop-position: 25% 70%/);
+  assert.match(markup, /alt="A &lt;safe&gt; route"/);
+  assert.match(markup, /Look &amp; leave/);
+  assert.match(markup, /figure-clear/);
+});
+
+test('editor uploads, manifests, serves, and safely deletes an image asset', async t => {
+  const { base, root } = await setup(t);
+  const svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10"><title>Dot</title><desc>A dot</desc><circle cx="5" cy="5" r="4"/></svg>';
+  const upload = await fetch(`${base}/api/assets`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({
+    path: 'handouts/section/example.md', name: 'Route Dot.svg', mimeType: 'image/svg+xml',
+    dataUrl: `data:image/svg+xml;base64,${Buffer.from(svg).toString('base64')}`,
+    type: 'diagram', creator: 'Test creator', source: 'Original test art', license: 'Test license',
+    alt: 'A route dot.', caption: 'Route marker.', decorative: false,
+    options: { width: 'half', align: 'left', crop: 'contain' }
+  }) });
+  const uploadBody = await upload.text();
+  assert.equal(upload.status, 201, uploadBody);
+  const uploaded = JSON.parse(uploadBody);
+  assert.equal(uploaded.asset.file, 'route-dot.svg');
+  assert.match(uploaded.markup, /figure--half figure--left figure--contain/);
+  assert.equal((await fetch(`${base}/assets/handouts/STH-001/route-dot.svg`)).status, 200);
+  const manifest = JSON.parse(await fs.readFile(path.join(root, 'assets/handouts/STH-001/manifest.json')));
+  assert.equal(manifest.assets[0].alt, 'A route dot.');
+  const removed = await fetch(`${base}/api/assets`, { method: 'DELETE', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ path: 'handouts/section/example.md', file: 'route-dot.svg' }) });
+  assert.equal(removed.status, 200, await removed.text());
+  await assert.rejects(fs.access(path.join(root, 'assets/handouts/STH-001/route-dot.svg')));
 });
