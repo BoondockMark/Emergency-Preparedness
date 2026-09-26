@@ -65,6 +65,13 @@ For the quickest edit/check cycle, pass one or more handout codes. Failures stil
 include the Markdown source line when available, and JSON plus screenshot
 diagnostics are written under `build/diagnostics/`.
 
+For a vertically overflowing page, the first diagnostic also identifies the
+first authored block that crosses the footer or printable boundary. When that
+block belongs to a headed section, it suggests the preceding heading as a
+likely place to inspect for a page break. This is a diagnostic hint rather than
+an automatic edit: keep related safety instructions together and review the
+resulting proof after moving or shortening content.
+
 ```bash
 npm run lint:layout -- COM-001
 npm run lint:layout -- COM-001 EVS-001

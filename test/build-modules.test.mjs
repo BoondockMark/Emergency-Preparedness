@@ -127,6 +127,25 @@ test('vertical layout remediation recommends shortening content or a page break'
   assert.match(message, /handouts\/test\.md:31.*Shorten the content or add a page break/);
 });
 
+test('page overflow diagnostics identify the first block that does not fit and a likely break point', () => {
+  const message = formatLayoutIssue({
+    code: 'EVS-002', page: 1, type: 'vertical-overflow', selector: ':scope',
+    bounds: {}, region: {}, sourcePath: 'handouts/evacuation/EVS-002.md', sourceLine: 83,
+    likelyCause: {
+      selector: 'main.content > div.checklist',
+      sourcePath: 'handouts/evacuation/EVS-002.md', sourceLine: 72,
+      overflowPixels: 294.29, boundary: 'footer',
+      suggestedBreak: {
+        selector: 'main.content > h2:nth-of-type(2)',
+        sourcePath: 'handouts/evacuation/EVS-002.md', sourceLine: 68
+      }
+    }
+  });
+  assert.match(message, /Likely cause: main\.content > div\.checklist at handouts\/evacuation\/EVS-002\.md:72/);
+  assert.match(message, /first block that does not fit \(294\.29px past the footer boundary\)/);
+  assert.match(message, /section beginning at handouts\/evacuation\/EVS-002\.md:68 .* likely place for a page break/);
+});
+
 test('accessibility diagnostics identify the page and exact authoring line', () => {
   const message = formatAccessibilityIssue({
     code: 'TST-001', page: 2, type: 'heading-order', selector: 'h3',
