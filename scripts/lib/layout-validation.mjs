@@ -34,6 +34,27 @@ export async function inspectSheetGeometry(page, handoutCode) {
       const contentBox = rect(content);
       const footer = content.querySelector(':scope > .footer');
       const footerBox = footer ? rect(footer) : null;
+      const authoredChildren = [...content.children].filter(element =>
+        element !== footer && element.hasAttribute('data-source-path')
+      );
+      const printableBottom = footerBox?.top ?? contentBox.bottom;
+      const firstBottomOverflow = authoredChildren.find(element => rect(element).bottom > printableBottom + tolerance);
+      const precedingHeading = firstBottomOverflow
+        ? authoredChildren.slice(0, authoredChildren.indexOf(firstBottomOverflow) + 1)
+          .findLast(element => /^H[23]$/.test(element.tagName))
+        : null;
+      const likelyCause = firstBottomOverflow ? {
+        selector: selector(firstBottomOverflow),
+        sourcePath: firstBottomOverflow.dataset.sourcePath,
+        sourceLine: Number(firstBottomOverflow.dataset.sourceLine),
+        overflowPixels: Math.round((rect(firstBottomOverflow).bottom - printableBottom) * 100) / 100,
+        boundary: footerBox ? 'footer' : 'printable region',
+        suggestedBreak: precedingHeading ? {
+          selector: selector(precedingHeading),
+          sourcePath: precedingHeading.dataset.sourcePath,
+          sourceLine: Number(precedingHeading.dataset.sourceLine)
+        } : undefined
+      } : undefined;
       const overflowSource = axis => [...content.querySelectorAll('[data-source-path][data-source-line]')]
         .reduce((candidate, element) => {
           if (!candidate) return element;
@@ -54,7 +75,8 @@ export async function inspectSheetGeometry(page, handoutCode) {
         issues.push({
           code, page: pageIndex + 1, type, selector: selector(element), bounds: measured, region, detail, axis,
           sourcePath: source?.dataset.sourcePath,
-          sourceLine: source?.dataset.sourceLine ? Number(source.dataset.sourceLine) : undefined
+          sourceLine: source?.dataset.sourceLine ? Number(source.dataset.sourceLine) : undefined,
+          likelyCause: element === sheet && type === 'vertical-overflow' ? likelyCause : undefined
         });
       };
 
@@ -92,5 +114,15 @@ export function formatLayoutIssue(issue) {
   const remediation = horizontal
     ? 'Break or shorten long unbroken text, or reduce the element width.'
     : 'Shorten the content or add a page break.';
-  return `${issue.code} page ${issue.page}${location}: ${issue.type} at ${issue.selector}; bounds=${JSON.stringify(issue.bounds)} region=${JSON.stringify(issue.region)}${issue.detail ? ` (${issue.detail})` : ''} Remedy: ${remediation}`;
+  const cause = issue.likelyCause;
+  const causeLocation = cause?.sourcePath && cause?.sourceLine
+    ? `${cause.sourcePath}:${cause.sourceLine}`
+    : undefined;
+  const breakLocation = cause?.suggestedBreak?.sourcePath && cause?.suggestedBreak?.sourceLine
+    ? `${cause.suggestedBreak.sourcePath}:${cause.suggestedBreak.sourceLine}`
+    : undefined;
+  const explanation = cause
+    ? `\n  Likely cause: ${cause.selector} at ${causeLocation ?? 'an unannotated generated element'} is the first block that does not fit (${cause.overflowPixels}px past the ${cause.boundary} boundary).${breakLocation ? ` Inspect the section beginning at ${breakLocation} (${cause.suggestedBreak.selector}) as a likely place for a page break.` : ''}`
+    : '';
+  return `${issue.code} page ${issue.page}${location}: ${issue.type} at ${issue.selector}; bounds=${JSON.stringify(issue.bounds)} region=${JSON.stringify(issue.region)}${issue.detail ? ` (${issue.detail})` : ''}.${explanation} Remedy: ${remediation}`;
 }
