@@ -4,6 +4,7 @@ import os from 'node:os';
 import path from 'node:path';
 import test from 'node:test';
 import { validateAssetEntry } from '../scripts/lib/asset-validation.mjs';
+import { formatAccessibilityIssue } from '../scripts/lib/accessibility-validation.mjs';
 import { escapeHtml, renderHandout, renderMarkdown } from '../scripts/lib/content-rendering.mjs';
 import { discoverDocuments } from '../scripts/lib/filesystem-discovery.mjs';
 import { generateBinderIndex } from '../scripts/lib/index-generation.mjs';
@@ -124,6 +125,18 @@ test('vertical layout remediation recommends shortening content or a page break'
     bounds: {}, region: {}, sourcePath: 'handouts/test.md', sourceLine: 31
   });
   assert.match(message, /handouts\/test\.md:31.*Shorten the content or add a page break/);
+});
+
+test('accessibility diagnostics identify the page and exact authoring line', () => {
+  const message = formatAccessibilityIssue({
+    code: 'TST-001', page: 2, type: 'heading-order', selector: 'h3',
+    detail: 'heading level jumps from h1 to h3',
+    sourcePath: 'handouts/test.md', sourceLine: 42
+  });
+  assert.equal(
+    message,
+    'TST-001 page 2 (handouts/test.md:42): heading-order at h3 (heading level jumps from h1 to h3)'
+  );
 });
 
 test('handout pages use their section slot and show the document code', () => {

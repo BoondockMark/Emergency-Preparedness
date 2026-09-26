@@ -72,6 +72,8 @@ Primary destination: ______________________________ Backup: ____________________
 
 <!-- pagebreak -->
 
+## Prepare now—continued
+
 ### 3. Two routes and backup transportation planned
 
 <div class="checklist"><ul>
@@ -101,6 +103,8 @@ See **EVS-004** for route planning and **EVS-005** for transportation planning.
 See **EVS-002** for go-bags, documents, medicines, power, and necessary equipment; use **EVS-010** for a detailed accessible-equipment plan.
 
 <!-- pagebreak -->
+
+## Prepare now—continued
 
 ### 5. Children, animals, access needs, and neighbors accounted for
 

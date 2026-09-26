@@ -258,6 +258,9 @@ export async function lintLayouts({ root, outputRoot, documents, manifests }) {
           });
           failures.push(...issues.map(formatLayoutIssue));
         }
+
+        const accessibilityIssues = await inspectAccessibility(page, meta.code);
+        failures.push(...accessibilityIssues.map(formatAccessibilityIssue));
       } catch (error) {
         failures.push(`${meta.code}: layout lint could not render the handout (${error.message})`);
       } finally {
