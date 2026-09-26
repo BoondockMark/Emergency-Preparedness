@@ -70,7 +70,7 @@ export async function inspectAccessibility(page, documentCode) {
       else if (figure.getAttribute('aria-labelledby') !== caption.id || !caption.id) add('figure-caption-relationship', figure, 'figure aria-labelledby must reference its caption id');
     }
     for (const table of document.querySelectorAll('table')) {
-      if (!table.querySelector(':scope > caption')) add('table-caption', table, 'data tables require a caption');
+      if (!table.querySelector(':scope > caption')) add('table-caption', table, 'data tables require a caption; add a “Table: Description” line immediately before the Markdown header row');
       for (const heading of table.querySelectorAll('th')) if (!heading.hasAttribute('scope')) add('table-heading', heading, 'table headings require scope');
     }
     return issues;

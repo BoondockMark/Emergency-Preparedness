@@ -3,7 +3,7 @@
 <body>
   <header><strong>Handout editor</strong><select id="handout" aria-label="Handout"></select><button id="save">Save</button><button id="revert">Revert</button><span id="state">Loading…</span></header>
   <nav id="toolbar" aria-label="Insert markup">
-    <button data-before="## ">Heading</button><button data-wrap="**|**">Bold</button><button data-wrap="*|*">Emphasis</button><button data-before="- ">List</button>
+    <button data-before="## ">Heading</button><button data-wrap="**|**">Bold</button><button data-wrap="*|*">Emphasis</button><button data-before="- ">List</button><button data-insert="Table: Describe this table&#10;| Heading | Heading |&#10;|---|---|&#10;| Value | Value |">Table</button>
     <button data-block="warning">warning</button><button data-block="checklist">checklist</button><button data-block="procedure">procedure</button><button data-block="local-info">local-info</button><button data-block="sources">sources</button><button data-block="grid">grid</button><button data-insert="\n<!-- pagebreak -->\n">Page break</button><button id="images" class="image-button">Images</button>
   </nav>
   <main><section><label for="source">Markdown / HTML source</label><textarea id="source" spellcheck="true"></textarea></section><section class="preview-column"><span>Print preview</span><iframe id="preview" title="Rendered print preview"></iframe><aside id="validation" aria-live="polite"><h2>Validation <span id="validation-state"></span></h2><ol id="issues"></ol></aside></section></main>

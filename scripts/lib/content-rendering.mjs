@@ -81,14 +81,20 @@ export function renderMarkdown(source, { sourcePath, startLine = 1 } = {}) {
       output += `<h${level}${attributes}>${inlineMarkdown(heading[2])}</h${level}>`;
       continue;
     }
-    const headerCells = line.includes('|') ? tableCells(line) : [];
-    if (headerCells.length > 1 && isTableDivider(lines[index + 1]?.trim(), headerCells.length)) {
+    const caption = line.match(/^Table:\s+(.+)$/i);
+    const headerIndex = caption ? index + 1 : index;
+    const headerLine = lines[headerIndex]?.trim() ?? '';
+    const headerCells = headerLine.includes('|') ? tableCells(headerLine) : [];
+    if (headerCells.length > 1 && isTableDivider(lines[headerIndex + 1]?.trim(), headerCells.length)) {
       if (list) output += `</${list}>`;
       list = null;
-      output += `<table${attributes}><thead><tr>`;
-      output += headerCells.map(cell => `<th scope="col"${attributes}>${inlineMarkdown(cell)}</th>`).join('');
+      const headerAttributes = sourceAttributes(sourcePath, startLine + headerIndex);
+      output += `<table${headerAttributes}>`;
+      if (caption) output += `<caption${attributes}>${inlineMarkdown(caption[1])}</caption>`;
+      output += '<thead><tr>';
+      output += headerCells.map(cell => `<th scope="col"${headerAttributes}>${inlineMarkdown(cell)}</th>`).join('');
       output += '</tr></thead><tbody>';
-      index += 2;
+      index = headerIndex + 2;
       while (index < lines.length && lines[index].trim() && lines[index].includes('|')) {
         const rowAttributes = sourceAttributes(sourcePath, startLine + index);
         const cells = tableCells(lines[index]);

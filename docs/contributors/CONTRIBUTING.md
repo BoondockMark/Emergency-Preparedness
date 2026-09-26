@@ -87,7 +87,22 @@ substitute for manifest metadata:
 
 ## Reusable patterns
 
-Markdown headings, lists, and emphasis are supported. These HTML wrappers are intentionally allowed:
+Markdown headings, lists, emphasis, and pipe tables are supported. Every table
+needs a visible caption for accessibility. Put a `Table: ` caption directly
+before the header row (with no blank line); emphasis is allowed in the caption
+and cells, and a literal pipe in a cell must be escaped as `\\|`:
+
+```markdown
+Table: **Evacuation route status**
+| Route | Status | Notes |
+|---|---|---|
+| A | Open | Main \| alternate |
+```
+
+The editor's **Table** button inserts this complete pattern. Replace the sample
+caption, headings, and cells rather than removing the caption line.
+
+These HTML wrappers are intentionally allowed:
 
 - `<div class="warning">…</div>` — urgent hazard or stop condition.
 - `<div class="checklist"><ul>…</ul></div>` — tick-box list.
