@@ -4,8 +4,25 @@
   <header><strong>Handout editor</strong><select id="handout" aria-label="Handout"></select><button id="save">Save</button><button id="revert">Revert</button><span id="state">Loading…</span></header>
   <nav id="toolbar" aria-label="Insert markup">
     <button data-before="## ">Heading</button><button data-wrap="**|**">Bold</button><button data-wrap="*|*">Emphasis</button><button data-before="- ">List</button>
-    <button data-block="warning">warning</button><button data-block="checklist">checklist</button><button data-block="procedure">procedure</button><button data-block="local-info">local-info</button><button data-block="sources">sources</button><button data-block="grid">grid</button><button data-insert="\n<!-- pagebreak -->\n">Page break</button>
+    <button data-block="warning">warning</button><button data-block="checklist">checklist</button><button data-block="procedure">procedure</button><button data-block="local-info">local-info</button><button data-block="sources">sources</button><button data-block="grid">grid</button><button data-insert="\n<!-- pagebreak -->\n">Page break</button><button id="images" class="image-button">Images</button>
   </nav>
   <main><section><label for="source">Markdown / HTML source</label><textarea id="source" spellcheck="true"></textarea></section><section class="preview-column"><span>Print preview</span><iframe id="preview" title="Rendered print preview"></iframe><aside id="validation" aria-live="polite"><h2>Validation <span id="validation-state"></span></h2><ol id="issues"></ol></aside></section></main>
   <div id="message" role="status"></div><script type="module" src="/editor.js"></script>
+  <dialog id="image-dialog">
+    <form method="dialog" class="dialog-heading"><strong>Images</strong><button value="cancel" aria-label="Close">×</button></form>
+    <div class="image-layout">
+      <section><h2>Handout assets</h2><div id="asset-list"></div></section>
+      <form id="image-form"><h2>Add an image</h2>
+        <label>Image file <input id="image-file" type="file" accept="image/png,image/jpeg,image/svg+xml" required></label>
+        <label>Type <select id="image-type"><option value="photograph">Photograph</option><option value="illustration">Illustration</option><option value="diagram">Diagram (SVG only)</option></select></label>
+        <label>Alternative text <input id="image-alt" required></label><label class="inline"><input id="image-decorative" type="checkbox"> Decorative</label>
+        <label>Caption <input id="image-caption"></label><label>Creator <input id="image-creator" required></label>
+        <label>Source <input id="image-source" required></label><label>License <input id="image-license" required></label>
+        <button type="submit">Upload and insert</button>
+      </form>
+    </div>
+    <fieldset><legend>Placement</legend><label>Width <select id="image-width"><option value="full">Full</option><option value="half">Half</option></select></label><label>Align <select id="image-align"><option value="left">Left</option><option value="right">Right</option></select></label><label>Crop <select id="image-crop"><option value="">Original</option><option value="contain">Contain</option><option value="3x2">3:2</option><option value="4x3">4:3</option><option value="square">Square</option></select></label><label>Focus X <input id="image-x" type="range" min="0" max="100" value="50"></label><label>Y <input id="image-y" type="range" min="0" max="100" value="50"></label></fieldset>
+    <p class="image-help">Place the cursor inside an existing figure to replace its crop, size, or alignment. “Remove from page” keeps the asset available; “Delete asset” requires saving its removal first.</p>
+    <div class="dialog-actions"><button id="apply-image" type="button">Apply to selected figure</button><button id="remove-image" type="button">Remove from page</button><button id="delete-image" type="button" class="danger">Delete asset</button></div>
+  </dialog>
 </body></html>

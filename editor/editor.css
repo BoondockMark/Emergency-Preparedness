@@ -5,6 +5,7 @@ header, nav { display: flex; align-items: center; gap: .5rem; padding: .6rem 1re
 header select { min-width: 24rem; } button, select { padding: .4rem .65rem; }
 nav { background: #34495e; flex-wrap: wrap; }
 nav button { font-family: ui-monospace, monospace; }
+.image-button { margin-left: auto; background: #dbeafe; border-color: #93c5fd; }
 #state.dirty { color: #ffd166; font-weight: bold; }
 main { height: calc(100vh - 114px); display: grid; grid-template-columns: minmax(25rem, 1fr) minmax(30rem, 1.15fr); gap: .75rem; padding: .75rem; }
 section { display: flex; flex-direction: column; gap: .3rem; min-width: 0; }
@@ -20,4 +21,24 @@ iframe { transform-origin: top center; }
 #issues button { width: 100%; margin: .15rem 0; text-align: left; border: 0; border-left: 4px solid #b91c1c; background: #fff1f2; }
 #issues small { display: block; color: #475569; margin-top: .2rem; }
 #message { position: fixed; right: 1rem; bottom: 1rem; padding: .5rem; background: #fff; box-shadow: 0 1px 5px #777; }
+dialog { width: min(860px, 94vw); max-height: 90vh; border: 0; border-radius: .5rem; box-shadow: 0 18px 55px #0008; }
+dialog::backdrop { background: #0f172a99; }
+.dialog-heading, .dialog-actions, fieldset { display: flex; align-items: center; gap: .75rem; }
+.dialog-heading { justify-content: space-between; font-size: 1.2rem; }
+.dialog-heading button { font-size: 1.4rem; border: 0; background: transparent; }
+.image-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin: 1rem 0; }
+.image-layout section { max-height: 23rem; overflow: auto; }
+.image-layout h2, #image-form h2 { font-size: 1rem; margin: 0 0 .5rem; }
+#image-form { display: grid; gap: .45rem; }
+#image-form label { display: grid; gap: .15rem; }
+#image-form label.inline { display: flex; }
+#asset-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .5rem; }
+.asset { padding: .4rem; border: 2px solid transparent; background: #f1f5f9; text-align: left; overflow-wrap: anywhere; }
+.asset.selected { border-color: #2563eb; background: #dbeafe; }
+.asset img { display: block; width: 100%; height: 90px; object-fit: contain; background: white; margin-bottom: .25rem; }
+fieldset { flex-wrap: wrap; margin: .75rem 0; }
+fieldset label { display: grid; gap: .15rem; }
+.image-help { color: #475569; }
+.dialog-actions { justify-content: flex-end; }
+.danger { color: #991b1b; }
 @media (max-width: 850px) { main { grid-template-columns: 1fr; height: auto; } textarea, iframe { height: 70vh; flex: none; } header select { min-width: 0; flex: 1; } }

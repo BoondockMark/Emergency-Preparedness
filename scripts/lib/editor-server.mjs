@@ -9,6 +9,7 @@ import { loadAssetManifests } from './asset-validation.mjs';
 import { renderHandoutSource } from './content-rendering.mjs';
 import { discoverDocuments } from './filesystem-discovery.mjs';
 import { loadDocument } from './metadata.mjs';
+import { addAsset, deleteAsset, figureMarkup } from './editor-support.mjs';
 
 const json = (response, status, value) => {
   response.writeHead(status, { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' });
@@ -19,7 +20,7 @@ const revision = source => createHash('sha256').update(source).digest('hex');
 export async function createEditorServer({ root }) {
   const handoutsRoot = path.resolve(root, 'handouts');
   const realHandoutsRoot = await fs.realpath(handoutsRoot);
-  const manifests = await loadAssetManifests(root);
+  let manifests = await loadAssetManifests(root);
   const documents = await discoverDocuments(root, manifests);
   const discovered = new Map();
   for (const { sourcePath } of documents) {
@@ -42,6 +43,14 @@ export async function createEditorServer({ root }) {
     })();
     return resourcesPromise;
   }
+  async function refreshAssets() {
+    manifests = await loadAssetManifests(root);
+    await browser?.close();
+    if (validationRoot) await fs.rm(validationRoot, { recursive: true, force: true });
+    browser = undefined;
+    validationRoot = undefined;
+    resourcesPromise = undefined;
+  }
   const validationGeneration = new Map();
 
   function safeFile(relative) {
@@ -52,7 +61,7 @@ export async function createEditorServer({ root }) {
     let value = '';
     for await (const chunk of request) {
       value += chunk;
-      if (value.length > 2_000_000) throw Object.assign(Error('Request too large'), { status: 413 });
+      if (value.length > 25_000_000) throw Object.assign(Error('Request too large'), { status: 413 });
     }
     return JSON.parse(value || '{}');
   }
@@ -72,7 +81,35 @@ export async function createEditorServer({ root }) {
         const file = safeFile(relative);
         if (!file) return json(response, 404, { error: 'Unknown handout path' });
         const source = await fs.readFile(file, 'utf8');
-        return json(response, 200, { path: relative, source, revision: revision(source) });
+        const document = documents.find(item => item.sourcePath === relative);
+        const assets = [...(manifests.get(document.meta.code)?.values() ?? [])];
+        return json(response, 200, { path: relative, source, revision: revision(source), code: document.meta.code, assets });
+      }
+      if (request.method === 'POST' && url.pathname === '/api/assets') {
+        const value = await body(request);
+        const file = safeFile(value.path);
+        if (!file) return json(response, 404, { error: 'Unknown handout path' });
+        const document = documents.find(item => item.sourcePath === value.path);
+        const asset = await addAsset(root, document.meta.code, value);
+        await refreshAssets();
+        return json(response, 201, { asset, markup: figureMarkup(document.meta.code, asset, value.options) });
+      }
+      if (request.method === 'POST' && url.pathname === '/api/figure') {
+        const value = await body(request);
+        const document = documents.find(item => item.sourcePath === value.path);
+        const asset = manifests.get(document?.meta.code)?.get(value.file);
+        if (!document || !asset) return json(response, 404, { error: 'Unknown handout asset' });
+        return json(response, 200, { markup: figureMarkup(document.meta.code, asset, value.options) });
+      }
+      if (request.method === 'DELETE' && url.pathname === '/api/assets') {
+        const value = await body(request);
+        const file = safeFile(value.path);
+        if (!file) return json(response, 404, { error: 'Unknown handout path' });
+        const source = await fs.readFile(file, 'utf8');
+        const document = documents.find(item => item.sourcePath === value.path);
+        await deleteAsset(root, document.meta.code, value.file, source);
+        await refreshAssets();
+        return json(response, 200, { deleted: value.file });
       }
       if (request.method === 'POST' && url.pathname === '/api/render') {
         const value = await body(request);
@@ -129,6 +166,15 @@ export async function createEditorServer({ root }) {
       if (request.method === 'GET' && url.pathname === '/editor.js') return serve(response, path.join(root, 'editor/editor.js'), 'text/javascript; charset=utf-8');
       if (request.method === 'GET' && url.pathname === '/editor.css') return serve(response, path.join(root, 'editor/editor.css'), 'text/css; charset=utf-8');
       if (request.method === 'GET' && url.pathname === '/assets/styles/print.css') return serve(response, path.join(root, 'assets/styles/print.css'), 'text/css; charset=utf-8');
+      if (request.method === 'GET' && url.pathname.startsWith('/assets/handouts/')) {
+        const match = decodeURIComponent(url.pathname).match(/^\/assets\/handouts\/([^/]+)\/([^/]+)$/);
+        if (!match || !manifests.get(match[1])?.has(match[2])) return json(response, 404, { error: 'Unknown asset' });
+        const file = path.join(root, 'assets', 'handouts', match[1], match[2]);
+        const types = { '.svg': 'image/svg+xml', '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg' };
+        const contentType = types[path.extname(file).toLowerCase()];
+        if (!contentType) return json(response, 404, { error: 'Unknown asset' });
+        return serve(response, file, contentType);
+      }
       json(response, 404, { error: 'Not found' });
     } catch (error) {
       json(response, error.status ?? (error instanceof SyntaxError ? 400 : 422), { error: error.message });
