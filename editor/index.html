@@ -6,6 +6,6 @@
     <button data-before="## ">Heading</button><button data-wrap="**|**">Bold</button><button data-wrap="*|*">Emphasis</button><button data-before="- ">List</button>
     <button data-block="warning">warning</button><button data-block="checklist">checklist</button><button data-block="procedure">procedure</button><button data-block="local-info">local-info</button><button data-block="sources">sources</button><button data-block="grid">grid</button><button data-insert="\n<!-- pagebreak -->\n">Page break</button>
   </nav>
-  <main><section><label for="source">Markdown / HTML source</label><textarea id="source" spellcheck="true"></textarea></section><section><span>Print preview</span><iframe id="preview" title="Rendered print preview"></iframe></section></main>
+  <main><section><label for="source">Markdown / HTML source</label><textarea id="source" spellcheck="true"></textarea></section><section class="preview-column"><span>Print preview</span><iframe id="preview" title="Rendered print preview"></iframe><aside id="validation" aria-live="polite"><h2>Validation <span id="validation-state"></span></h2><ol id="issues"></ol></aside></section></main>
   <div id="message" role="status"></div><script type="module" src="/editor.js"></script>
 </body></html>

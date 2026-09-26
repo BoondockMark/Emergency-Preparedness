@@ -3,8 +3,10 @@ import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import test from 'node:test';
+import { spawnSync } from 'node:child_process';
 import { renderHandout, parseHandoutSource, renderHandoutSource } from '../scripts/lib/content-rendering.mjs';
 import { createEditorServer } from '../scripts/lib/editor-server.mjs';
+import { prepareDocumentValidation } from '../scripts/lib/artifact-generation.mjs';
 
 const repository = path.resolve(import.meta.dirname, '..');
 const fixture = () => fs.readFile(path.join(repository, 'test/unit-fixtures/front-matter.md'), 'utf8');
@@ -18,6 +20,7 @@ async function setup(t) {
   await fs.copyFile(path.join(repository, 'templates/handout.html'), path.join(root, 'templates/handout.html'));
   for (const name of ['index.html', 'editor.js', 'editor.css']) await fs.copyFile(path.join(repository, 'editor', name), path.join(root, 'editor', name));
   await fs.copyFile(path.join(repository, 'assets/styles/print.css'), path.join(root, 'assets/styles/print.css'));
+  await fs.cp(path.join(repository, 'assets/fonts'), path.join(root, 'assets/fonts'), { recursive: true });
   const server = await createEditorServer({ root });
   await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
   t.after(() => new Promise(resolve => server.close(resolve)));
@@ -30,6 +33,35 @@ test('editor rejects traversal and only opens discovered markdown paths', async 
     const response = await fetch(`${base}/api/handout?path=${encodeURIComponent(attempted)}`);
     assert.equal(response.status, 404);
   }
+});
+
+test('validation returns structured metadata errors for an unsaved buffer', async () => {
+  const template = await fs.readFile(path.join(repository, 'templates/handout.html'), 'utf8');
+  const result = prepareDocumentValidation({ source: 'not front matter', sourcePath: 'handouts/example.md', template });
+  assert.equal(result.issues.length, 1);
+  assert.deepEqual({ severity: result.issues[0].severity, type: result.issues[0].type, sourcePath: result.issues[0].sourcePath }, {
+    severity: 'error', type: 'metadata', sourcePath: 'handouts/example.md'
+  });
+});
+
+test('browser validation reports simultaneous, source-mapped layout and accessibility findings', async t => {
+  const { base, source } = await setup(t);
+  const body = `${source}\n## Skipped heading\n<h3 style="font-size:4pt;color:#eee">Tiny pale text</h3>\n${'<p>Overflow content</p>\n'.repeat(180)}`;
+  const response = await fetch(`${base}/api/validate`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ path: 'handouts/section/example.md', source: body, phase: 'layout', session: 'test' }) });
+  const responseBody = await response.text();
+  if (response.status === 422 && /Could not find Chrome/.test(responseBody)) return t.skip('Puppeteer browser is not installed');
+  assert.equal(response.status, 200, responseBody);
+  const result = JSON.parse(responseBody);
+  assert.equal(result.valid, false);
+  assert.ok(result.issues.length > 1);
+  assert.ok(result.issues.some(issue => issue.bounds && issue.sourceLine && issue.printableRegionBounds));
+  assert.ok(result.issues.some(issue => ['minimum-text-size', 'text-contrast', 'heading-order'].includes(issue.type) && issue.sourceLine));
+});
+
+test('layout CLI preserves a nonzero exit for invalid requests', () => {
+  const result = spawnSync(process.execPath, ['scripts/lint-layout.mjs', 'NOT-999'], { cwd: repository, encoding: 'utf8' });
+  assert.notEqual(result.status, 0);
+  assert.match(result.stderr, /Unknown handout code/);
 });
 
 test('editor open/save round trip is atomic and stale writes are rejected', async t => {

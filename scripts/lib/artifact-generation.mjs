@@ -8,7 +8,7 @@ import puppeteer from 'puppeteer';
 import { inspectAccessibility, formatAccessibilityIssue } from './accessibility-validation.mjs';
 import { sanitizeSvg } from './asset-validation.mjs';
 import { createCalibrationPdf } from './calibration-pdf.mjs';
-import { renderHandout } from './content-rendering.mjs';
+import { parseHandoutSource, renderHandout } from './content-rendering.mjs';
 import { generateBinderIndex, generateMoodleIndex } from './index-generation.mjs';
 import { inspectSheetGeometry, formatLayoutIssue } from './layout-validation.mjs';
 import { validateImages, validateLocalLinks } from './page-validation.mjs';
@@ -21,7 +21,7 @@ const FONT_HASHES = {
   'DejaVuSans-Bold.ttf': '5c1247acef7f2b8522a31742c76d6adcb5569bacc0be7ceaa4dc39dd252ce895'
 };
 
-async function prepareDirectories(root, outputRoot) {
+export async function prepareDirectories(root, outputRoot) {
   await fs.rm(outputRoot, { recursive: true, force: true });
   for (const directory of [
     'html',
@@ -40,7 +40,7 @@ async function prepareDirectories(root, outputRoot) {
   );
 }
 
-async function copyAssets(root, outputRoot, manifests) {
+export async function copyAssets(root, outputRoot, manifests) {
   for (const [code, entries] of manifests) {
     const destination = path.join(outputRoot, 'assets/handouts', code);
     await fs.mkdir(destination, { recursive: true });
@@ -90,7 +90,7 @@ async function renderSources(root, outputRoot, documents, manifests) {
   );
 }
 
-function browserOptions() {
+export function browserOptions() {
   return {
     headless: true,
     args: [
@@ -111,7 +111,7 @@ function browserOptions() {
   };
 }
 
-async function openPrintPage(browser, file) {
+export async function openPrintPage(browser, file) {
   const page = await browser.newPage();
   await page.setViewport({ width: 816, height: 1056, deviceScaleFactor: 1 });
   await page.setRequestInterception(true);
@@ -124,6 +124,60 @@ async function openPrintPage(browser, file) {
   await page.goto(pathToFileURL(file).href, { waitUntil: 'load' });
   await page.evaluate(async () => document.fonts.ready);
   return page;
+}
+
+const structuredIssue = ({ severity = 'error', code, sourcePath, sourceLine, page, type, message, bounds, region, ...extra }) => ({
+  severity, code, sourcePath, sourceLine, page, type, message, bounds, printableRegionBounds: region, ...extra
+});
+
+function errorLocation(error, sourcePath, source = '') {
+  const message = error?.message ?? String(error);
+  const escaped = sourcePath.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const line = message.match(new RegExp(`${escaped}: line (\\d+)`))?.[1];
+  if (line) return { message, sourceLine: Number(line) };
+  const field = message.match(new RegExp(`${escaped}: ([A-Za-z][\\w.]*(?:\\[\\d+\\])?):`))?.[1]?.split('.')[0]?.replace(/\[\d+\]$/, '');
+  const fieldLine = field ? source.split('\n').findIndex(value => new RegExp(`^\\s*${field}:`).test(value)) + 1 : 0;
+  return { message, sourceLine: fieldLine || undefined };
+}
+
+/** Parse and render one source buffer, returning metadata/parser failures as data. */
+export function prepareDocumentValidation({ source, sourcePath, template, manifests = new Map() }) {
+  try {
+    const document = parseHandoutSource(source, sourcePath, manifests);
+    return { document, html: renderHandout(template, document), issues: [] };
+  } catch (error) {
+    const location = errorLocation(error, sourcePath, source);
+    const code = source.match(/^code:\s*['"]?([^\s'"]+)/m)?.[1];
+    const metadata = error?.constructor?.name === 'MetadataError' || /frontMatter|: (?:line \d+|[A-Za-z][\w.]*(?:\[\d+\])?):/.test(location.message);
+    return { issues: [structuredIssue({
+      severity: 'error', code, sourcePath, sourceLine: location.sourceLine,
+      type: /pageCount/.test(location.message) ? 'page-count' : /(?:image|asset|srcset)/i.test(location.message) ? 'asset' : metadata ? 'metadata' : 'parser',
+      message: location.message
+    })] };
+  }
+}
+
+/** Validate one rendered document without throwing, for both the CLI and editor. */
+export async function validateDocument({ page, document, html, htmlFile }) {
+  const { meta, sourcePath } = document;
+  const issues = [];
+  const addError = (type, message, extra = {}) => issues.push(structuredIssue({ code: meta.code, sourcePath, type, message, ...extra }));
+  if (html && htmlFile) {
+    try { await validateLocalLinks(html, htmlFile, meta.code); }
+    catch (error) { addError('local-link', error.message); }
+  }
+  try {
+    if (!await page.evaluate(() => document.fonts.check('12px "Binder Sans"'))) addError('font', 'pinned Binder Sans font did not load');
+    const sheetCount = await page.$$eval('.sheet', sheets => sheets.length);
+    if (sheetCount !== meta.pageCount) addError('page-count', `HTML page count ${sheetCount}, expected ${meta.pageCount}`);
+    for (const issue of await inspectSheetGeometry(page, meta.code)) {
+      issues.push(structuredIssue({ severity: 'error', message: formatLayoutIssue(issue), remediation: issue.axis === 'horizontal' || issue.type === 'horizontal-overflow' ? 'Break or shorten long unbroken text, or reduce the element width.' : 'Shorten the content or add a page break.', ...issue }));
+    }
+    for (const issue of await inspectAccessibility(page, meta.code)) {
+      issues.push(structuredIssue({ severity: 'error', message: formatAccessibilityIssue(issue), remediation: 'Adjust the marked content or markup to meet this accessibility requirement.', ...issue }));
+    }
+  } catch (error) { addError('render', `layout lint could not render the handout (${error.message})`); }
+  return { valid: !issues.some(issue => issue.severity === 'error'), code: meta.code, sourcePath, issues };
 }
 
 async function validateRenderedPage(page, code, pageCount, diagnostics) {
@@ -238,29 +292,20 @@ export async function lintLayouts({ root, outputRoot, documents, manifests }) {
       let page;
       try {
         page = await openPrintPage(browser, path.join(outputRoot, 'html', `${meta.code}.html`));
-        const fontReady = await page.evaluate(() => document.fonts.check('12px "Binder Sans"'));
-        if (!fontReady) throw Error('pinned Binder Sans font did not load');
-
-        const sheetCount = await page.$$eval('.sheet', sheets => sheets.length);
-        if (sheetCount !== meta.pageCount) {
-          failures.push(`${meta.code}: HTML page count ${sheetCount}, expected ${meta.pageCount}`);
-        }
-
-        const issues = await inspectSheetGeometry(page, meta.code);
-        if (issues.length) {
+        const htmlFile = path.join(outputRoot, 'html', `${meta.code}.html`);
+        const result = await validateDocument({ page, document: documents.find(item => item.meta === meta), html: await fs.readFile(htmlFile, 'utf8'), htmlFile });
+        const layoutIssues = result.issues.filter(issue => issue.bounds);
+        if (layoutIssues.length) {
           await fs.writeFile(
             path.join(outputRoot, 'diagnostics', `${meta.code}-layout.json`),
-            JSON.stringify(issues, null, 2)
+            JSON.stringify(layoutIssues, null, 2)
           );
           await page.screenshot({
             path: path.join(outputRoot, 'diagnostics', `${meta.code}-layout.png`),
             fullPage: true
           });
-          failures.push(...issues.map(formatLayoutIssue));
         }
-
-        const accessibilityIssues = await inspectAccessibility(page, meta.code);
-        failures.push(...accessibilityIssues.map(formatAccessibilityIssue));
+        failures.push(...result.issues.map(issue => issue.message));
       } catch (error) {
         failures.push(`${meta.code}: layout lint could not render the handout (${error.message})`);
       } finally {
