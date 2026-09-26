@@ -56,7 +56,7 @@ sources:
 <!-- pagebreak -->
 
 ## My household alert record
-
+Table: ** Alert Record **
 | What to record | Household entry |
 |---|---|
 | Verified local alert system | ______________________________________________ |
@@ -68,9 +68,11 @@ sources:
 | Accessible or language option selected | ______________________________________________ |
 | Backup person and method | ______________________________________________ |
 | Last tested / reviewed | __________________________ |
+*Table 1: Monthly Expense Report*
 
 <p><strong>Household enrollment check:</strong></p>
 
+Table: ** Alert Enrollment Check **
 | Resident / device | Text | Voice | Email / app | Enrollment confirmed |
 |---|:---:|:---:|:---:|---|
 | __________________________ | ☐ | ☐ | ☐ | __________ |
@@ -81,4 +83,4 @@ sources:
 
 <div class="local-info"><p><strong>Publication verification — required:</strong> I verified each completed local entry directly with the responsible agency and checked that the link reaches the agency-controlled enrollment page.</p><p><strong>Agency representative:</strong> ____________________ &nbsp; <strong>Title/unit:</strong> ____________________<br><strong>Verification method:</strong> ____________________ &nbsp; <strong>Date:</strong> __________<br><strong>Binder reviewer:</strong> ____________________ &nbsp; <strong>Signature/initials:</strong> __________</p></div>
 
-<div class="sources">General alerting guidance: Ready.gov, “Alerts and Warnings”; FEMA, “Wireless Emergency Alerts”; FCC, “Emergency Alert System.” Accessed September 25, 2026. Local entries intentionally remain blank pending responsible-agency verification.</div>
+<div class="sources">General alerting guidance: Ready.gov, “Alerts and Warnings”; FEMA, “Wireless Emergency Alerts”; FCC, “Emergency Alert System.” Accessed September 25, 2026. </div>

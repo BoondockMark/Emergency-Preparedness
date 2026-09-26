@@ -40,6 +40,7 @@ sources:
 
 <p><strong>General direction / corridor:</strong> __________________________________________________________</p>
 
+Table: Route A Plan
 | Plan item | Route A details |
 |---|---|
 | Roads and turns, in order | ___________________________________________________<br>___________________________________________________<br>___________________________________________________ |
@@ -51,13 +52,13 @@ sources:
 <p><strong>Safe place to pause or change plans:</strong> ___________________________________________________</p>
 <p><strong>Estimated travel time in ordinary conditions:</strong> ___________________________________________</p>
 
+<!-- pagebreak -->
+
 <div class="checklist"><ul>
 <li>Route A follows a corridor officials may direct us to use; it is not treated as guaranteed open.</li>
 <li>Every driver or travel companion can identify the pickup points and destination.</li>
 <li>We have a paper map in case phone, power, or data service fails.</li>
 </ul></div>
-
-<!-- pagebreak -->
 
 ## Route B — genuinely different way out
 
@@ -66,7 +67,7 @@ sources:
 <p><strong>Different general direction / corridor:</strong> _________________________________________________</p>
 <p><strong>How this avoids Route A's shared roads, bridge, gate, or other constraint:</strong></p>
 <p>________________________________________________________________________________________</p>
-
+Table: Route B Details
 | Plan item | Route B details |
 |---|---|
 | Roads and turns, in order | ___________________________________________________<br>___________________________________________________<br>___________________________________________________ |
@@ -78,6 +79,7 @@ sources:
 <p><strong>Safe place to pause or change plans:</strong> ___________________________________________________</p>
 <p><strong>Estimated travel time in ordinary conditions:</strong> ___________________________________________</p>
 
+<!-- pagebreak -->
 ## Hand-drawn route map
 
 <p>Mark north, the start, both corridors, destinations, meeting place, pickup points, landmarks, known constraints, and alternate decision points. This blank is intentional; draw a map for your location.</p>
@@ -93,12 +95,10 @@ sources:
 <p>&nbsp;</p>
 </div>
 
-<!-- pagebreak -->
-
 ## Official information we will use
 
 <p class="lede">Record responsible local sources now, then check them for current directions before and during travel.</p>
-
+Table: Route
 | Official source | Name, URL, phone, channel, or app | Last checked |
 |---|---|---|
 | Evacuation map | __________________________________________ | ____________ |
@@ -108,6 +108,8 @@ sources:
 | Fire, law enforcement, or emergency management agency | __________________________________________ | ____________ |
 
 <div class="local-info"><p><strong>LOCAL INFORMATION — VERIFY BEFORE USE</strong></p><p><strong>Our evacuation zone:</strong> ____________________ &nbsp; <strong>Map edition / date:</strong> ____________________</p><p><strong>Who will monitor official updates:</strong> ____________________ &nbsp; <strong>Backup:</strong> ____________________</p><p>Local names and links remain blank until the household verifies them with the responsible agency.</p></div>
+
+<!-- pagebreak -->
 
 ## Transportation and fuel assumptions
 
@@ -130,6 +132,7 @@ sources:
 
 ## Review both routes
 
+Table: Route Direction
 | Route | Driven | Walked | Otherwise reviewed (method) | Person(s) reviewing / notes |
 |---|---|---|---|---|
 | A | __________ | __________ | ____________________ | __________________________ |

@@ -53,6 +53,8 @@ Conditions may worsen or officials may recommend that you prepare. Treat the tim
 <li><strong>Leave early if conditions threaten you.</strong> People who need extra travel time, have animals or transportation constraints, or are uncomfortable waiting should consider leaving before an order, when officials permit and a safe route and destination are available.</li>
 </ol>
 
+<!-- pagebreak -->
+
 ## 2. Evacuation order or direction: leave now
 
 <div class="warning warning--caution"><strong>Do not wait to finish packing.</strong> Follow the authorized official's instructed route and destination. Use a different route or destination only if officials redirect you or the instructed path presents an immediate danger.</div>
@@ -61,8 +63,6 @@ Conditions may worsen or officials may recommend that you prepare. Treat the tim
 2. Use the instructed transportation, route, destination, and timing. Obey roadblocks and responder directions; do not take shortcuts into closed areas.
 3. If you cannot evacuate as directed, contact the emergency or transportation-assistance service identified by local officials. If there is an immediate threat to life, call emergency services when safe and appropriate.
 4. Continue monitoring official updates while traveling, without distracting the driver. Do not return until the responsible authority says the area is open.
-
-<!-- pagebreak -->
 
 ## 3. Immediate threat: move away from danger
 
@@ -73,13 +73,17 @@ Conditions may worsen or officials may recommend that you prepare. Treat the tim
 * Call emergency services when you are in a safer place and when calling is safe and appropriate. State your location, the threat, injuries, and anyone known to remain in danger; follow the call taker's instructions.
 * Once clear, use official information to choose a safe destination and learn whether the area is closed. Do not go back into danger.
 
+<!-- pagebreak -->
+
 ## Do not delay for
 
 * belongings beyond essentials already at hand;
 * photographs or keepsakes;
 * watering, covering, defending, or otherwise preparing property;
-* searching for absent household members in an unsafe area—use the household communication plan and tell responders what you know; or
-* waiting for television, radio, phone alerts, social media, neighbors, and every other communication channel to agree. Act on an authenticated instruction or an immediate threat.
+* searching for absent household members in an unsafe area — use the household communication plan and tell responders what you know; or
+* television, radio, phone alerts, social media, neighbors, or other communication channel to agree. 
+
+## Act on authenticated instructions or an immediate threat.
 
 ## Fill in only after local verification
 
@@ -91,6 +95,8 @@ Conditions may worsen or officials may recommend that you prepare. Treat the tim
 <p><strong>Official public-information / evacuation-assistance phone number(s):</strong><br>________________________________________________________________________</p>
 <p><strong>Authority confirming these entries:</strong> ______________________________<br><strong>Representative and role:</strong> ____________________ <strong>Date verified:</strong> __________<br><strong>Verification method:</strong> _______________________ <strong>Binder reviewer:</strong> _________</p>
 </div>
+
+<!-- pagebreak -->
 
 ## Continue your plan
 

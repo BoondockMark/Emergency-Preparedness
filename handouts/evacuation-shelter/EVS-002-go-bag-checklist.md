@@ -65,6 +65,8 @@ Choose amounts for the trip and likely delays using current local guidance. Do n
 
 <div class="warning warning--caution"><strong>Prevent battery fires:</strong> Follow the device and battery maker's charging, temperature, and storage instructions. Keep batteries dry and protect loose battery terminals from metal objects, such as keys, with their original package, a case, or nonconductive tape. Do not pack a swollen, leaking, damaged, or recalled battery or power bank. Never put gasoline, propane cylinders, camp-stove fuel, or other fuel in a go-bag.</div>
 
+<!-- pagebreak -->
+
 ## 2. Medicines, health, and accessibility
 
 Ask a pharmacist, prescriber, equipment supplier, and insurer how to build and rotate a lawful emergency supply. Storage requirements and refill rules differ; do not stop treatment or change a dose to make a supply last.
@@ -82,8 +84,6 @@ Ask a pharmacist, prescriber, equipment supplier, and insurer how to build and r
 Medicine/device that cannot go in the bag: _________________________________<br>
 Who retrieves or carries it: ____________________ &nbsp; Backup: _______________
 
-<!-- pagebreak -->
-
 ## 3. Documents, contacts, access, and payment
 
 Carry copies rather than irreplaceable originals when copies will work. Protect paper from water; protect digital copies with strong access controls. Do not put account passwords or PINs on a label.
@@ -97,6 +97,8 @@ Carry copies rather than irreplaceable originals when copies will work. Protect 
 <li>House, vehicle, gate, storage, and device keys or access items that will be needed</li>
 <li>A limited amount of securely stored small bills and coins, plus only the payment cards needed; choose an amount that fits the household's plan and risk</li>
 </ul></div>
+
+<!-- pagebreak -->
 
 ## 4. People and animals
 
@@ -140,7 +142,7 @@ Test the complete load without risking a fall, strain, or loss of balance. Split
 <li>Assign every bag, child/animal carrier, device, and item that cannot be prepacked; name a backup carrier</li>
 <li>Tell household members and helpers where bags are kept; return used items promptly</li>
 </ul></div>
-
+Table: Bag Location and Owner
 | Bag or separate item | Storage location | Weight | Primary carrier | Backup carrier |
 |---|---|---:|---|---|
 | __________________ | __________________ | ____ | __________________ | __________________ |
@@ -148,10 +150,13 @@ Test the complete load without risking a fall, strain, or loss of balance. Split
 | __________________ | __________________ | ____ | __________________ | __________________ |
 | __________________ | __________________ | ____ | __________________ | __________________ |
 
+<!-- pagebreak -->
+
 ## 7. Dated maintenance panel
 
 Review after any use and whenever needs, seasons, routes, or household members change. Set a recurring schedule that matches the shortest manufacturer, medicine, food, and document review interval in the bag.
 
+Table: Bag Contents
 | Check | Date checked | Replace/update by | Initials |
 |---|---|---|---|
 | Food, water, first aid, hygiene: dates, seals, leaks, fit | __________ | __________ | _____ |

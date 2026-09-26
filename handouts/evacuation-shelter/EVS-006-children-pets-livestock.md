@@ -60,10 +60,12 @@ sources:
 <li>Confirm a primary and backup animal-accepting destination before an incident and again when leaving. Ask what species, records, equipment, and arrangements the site currently accepts.</li>
 </ul></div>
 
+<!-- pagebreak -->
+
 <p><strong>Animal / handler:</strong> __________________________ <strong>Backup:</strong> __________________<br>
 <strong>Confirmed destination / phone:</strong> ___________________________________________</p>
 
-<!-- pagebreak -->
+
 
 ## Livestock and large animals
 
@@ -90,14 +92,16 @@ sources:
 <li><strong>Call the backup.</strong> If the primary person cannot act, contact the named backup and the out-of-area household contact. Tell them what officials have directed and where the dependent or animal is believed to be.</li>
 <li><strong>Do not go into danger.</strong> Never enter an unsafe, evacuated, or closed area to retrieve a child, dependent, or animal. Tell emergency officials what help is needed and follow their direction.</li>
 </ol>
+<!-- pagebreak -->
 
+Table: Children & Animals
 | Child, dependent, or animal | Authorized retriever / handler | Backup and phone |
 |---|---|---|
 | ___________________________ | ______________________________ | ________________ |
 | ___________________________ | ______________________________ | ________________ |
 | ___________________________ | ______________________________ | ________________ |
 
-<!-- pagebreak -->
+
 
 ## Practice and maintenance
 
@@ -109,6 +113,7 @@ sources:
 <li>Inspect carriers, restraints, car seats, trailers, tires, lights, hitches, brakes, gates, ramps, loading aids, sanitation supplies, batteries, and communication devices.</li>
 </ul></div>
 
+Table: Drill Checklist
 | Check | Last completed | Next review / action |
 |---|---|---|
 | Child plan and reunification rules | ______________ | ____________________ |
@@ -116,6 +121,8 @@ sources:
 | Livestock loading, transport, and destination | ______________ | ____________________ |
 | Photos, identification, medicines, and records | ______________ | ____________________ |
 | Carriers, restraints, vehicles, and trailers | ______________ | ____________________ |
+
+<!-- pagebreak -->
 
 ## Use with the rest of the plan
 

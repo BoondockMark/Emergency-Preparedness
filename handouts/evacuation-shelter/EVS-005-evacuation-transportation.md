@@ -52,7 +52,7 @@ sources:
 <p><strong>Vehicle make/model/color:</strong> _________________________________________________________</p>
 <p><strong>License plate:</strong> __________________ <strong>Usual location of keys:</strong> __________________________</p>
 <p><strong>Fuel/charging plan:</strong> ______________________________________________________________</p>
-
+<!-- pagebreak -->
 ## If not driving
 
 <div class="checklist"><ul>
@@ -62,6 +62,8 @@ sources:
 <li>Tell the provider about an accessible pickup location and any boarding help, lift or ramp, securement position, mobility-equipment space, communication support, personal assistant, service animal, pet carrier, or other capacity needed.</li>
 <li>Keep the pickup address and entrance precise. Arrange a safe way to reach the pickup point; do not wait outdoors in hazardous conditions.</li>
 </ul></div>
+
+
 
 <div class="local-info">
 <p><strong>Jurisdiction-specific transportation — VERIFY BEFORE USE OR PUBLICATION</strong></p>
@@ -102,7 +104,8 @@ sources:
 <p>________________________________________________________________________________________</p>
 <p><strong>Passenger count:</strong> ______ <strong>Seat/restraint needs:</strong> ____________________________________</p>
 
-## During departure
+<!-- pagebreak -->
+
 
 <ol class="procedure">
 <li><strong>Check</strong> current instructions from public officials before moving, if it is safe to do so.</li>

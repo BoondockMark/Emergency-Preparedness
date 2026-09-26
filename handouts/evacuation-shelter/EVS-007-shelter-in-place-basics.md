@@ -73,6 +73,8 @@ An interior room is not a universal refuge. Rising water may require movement to
 </div>
 </div>
 
+<!-- pagebreak -->
+
 <div class="local-info">
 <p><strong>LOCAL SHELTER INSTRUCTIONS / ALERT CHANNELS — VERIFY BEFORE USE</strong></p>
 <p><strong>Responsible agency:</strong> _______________________________________________<br>
@@ -81,8 +83,6 @@ An interior room is not a universal refuge. Rising water may require movement to
 <strong>Verified directly with agency by:</strong> ____________________ <strong>Date:</strong> __________</p>
 <p>Leave entries blank until checked against a current, agency-controlled source. Incident instructions override this planning handout.</p>
 </div>
-
-<!-- pagebreak -->
 
 ## Keep these supplies within reach
 
@@ -105,7 +105,7 @@ An interior room is not a universal refuge. Rising water may require movement to
 <li>Never heat a home with a gas oven or range. Never burn charcoal indoors. Keep combustion devices away from dry materials and never refuel a hot generator.</li>
 <li>If a CO alarm sounds, or anyone develops headache, dizziness, weakness, nausea, vomiting, chest pain, or confusion, get everyone—including animals—to fresh air away from the suspected source and call emergency services. Do not re-enter until responders say it is safe.</li>
 </ul>
-
+<!-- pagebreak -->
 ## Leave the shelter only when
 
 <ul>
