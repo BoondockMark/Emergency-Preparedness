@@ -4,9 +4,10 @@ import os from 'node:os';
 import path from 'node:path';
 import test from 'node:test';
 import { spawnSync } from 'node:child_process';
+import puppeteer from 'puppeteer';
 import { renderHandout, parseHandoutSource, renderHandoutSource } from '../scripts/lib/content-rendering.mjs';
 import { createEditorServer } from '../scripts/lib/editor-server.mjs';
-import { prepareDocumentValidation } from '../scripts/lib/artifact-generation.mjs';
+import { browserOptions, prepareDocumentValidation } from '../scripts/lib/artifact-generation.mjs';
 import { figureMarkup, safeAssetName } from '../scripts/lib/editor-support.mjs';
 import { indentSelection, prefixLines, selectionDetails } from '../editor/editor-model.js';
 
@@ -19,14 +20,51 @@ async function setup(t) {
   for (const directory of ['handouts/section', 'templates', 'editor', 'assets/styles']) await fs.mkdir(path.join(root, directory), { recursive: true });
   const source = (await fixture()).replace('Fixture body.', '<div class="custom">Keep **raw** HTML</div>\n\nFirst page.\n<!-- pagebreak -->\nSecond page.').replace('pageCount: 1', 'pageCount: 2');
   await fs.writeFile(path.join(root, 'handouts/section/example.md'), source);
+  const secondSource = source.replace('code: STH-001', 'code: STH-002').replace('title: Fixture', 'title: Second fixture');
+  await fs.writeFile(path.join(root, 'handouts/section/second.md'), secondSource);
   await fs.copyFile(path.join(repository, 'templates/handout.html'), path.join(root, 'templates/handout.html'));
   for (const name of ['index.html', 'editor.js', 'editor.css', 'editor-model.js']) await fs.copyFile(path.join(repository, 'editor', name), path.join(root, 'editor', name));
   await fs.copyFile(path.join(repository, 'assets/styles/print.css'), path.join(root, 'assets/styles/print.css'));
   await fs.cp(path.join(repository, 'assets/fonts'), path.join(root, 'assets/fonts'), { recursive: true });
+  const assetDirectory = path.join(root, 'assets/handouts/STH-001');
+  await fs.mkdir(assetDirectory, { recursive: true });
+  await fs.writeFile(path.join(assetDirectory, 'route.svg'), '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10"><title>Route</title><desc>A route marker</desc><circle cx="5" cy="5" r="4"/></svg>');
+  await fs.writeFile(path.join(assetDirectory, 'manifest.json'), JSON.stringify({ assets: [{
+    file: 'route.svg', type: 'diagram', creator: 'Test', source: 'Test fixture', license: 'Test license',
+    alt: 'A route marker.', caption: 'Route marker.', decorative: false
+  }] }));
   const server = await createEditorServer({ root });
   await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
   t.after(() => new Promise(resolve => server.close(resolve)));
   return { root, source, base: `http://127.0.0.1:${server.address().port}`, file: path.join(root, 'handouts/section/example.md') };
+}
+
+async function openEditor(t) {
+  const context = await setup(t);
+  const browser = await puppeteer.launch(browserOptions());
+  t.after(() => browser.close());
+  const page = await browser.newPage();
+  await page.goto(context.base, { waitUntil: 'networkidle0' });
+  await page.waitForFunction(() => document.querySelector('#source').value.includes('code: STH-001'));
+  return { ...context, page };
+}
+
+const value = (page, selector) => page.$eval(selector, element => element.value);
+const text = (page, selector) => page.$eval(selector, element => element.textContent);
+async function replaceSource(page, contents) {
+  await page.$eval('#source', (element, next) => {
+    element.value = next;
+    element.dispatchEvent(new Event('input', { bubbles: true }));
+  }, contents);
+}
+async function appendSource(page, contents) {
+  await page.$eval('#source', (element, suffix) => {
+    element.value += suffix;
+    element.dispatchEvent(new Event('input', { bubbles: true }));
+  }, contents);
+}
+async function waitForText(page, selector, expected) {
+  await page.waitForFunction((target, pattern) => document.querySelector(target)?.textContent.includes(pattern), {}, selector, expected);
 }
 
 test('editor source helpers report position and transform complete line selections', () => {
@@ -138,8 +176,148 @@ test('editor uploads, manifests, serves, and safely deletes an image asset', asy
   assert.match(uploaded.markup, /figure--half figure--left figure--contain/);
   assert.equal((await fetch(`${base}/assets/handouts/STH-001/route-dot.svg`)).status, 200);
   const manifest = JSON.parse(await fs.readFile(path.join(root, 'assets/handouts/STH-001/manifest.json')));
-  assert.equal(manifest.assets[0].alt, 'A route dot.');
+  assert.equal(manifest.assets.find(asset => asset.file === 'route-dot.svg').alt, 'A route dot.');
   const removed = await fetch(`${base}/api/assets`, { method: 'DELETE', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ path: 'handouts/section/example.md', file: 'route-dot.svg' }) });
   assert.equal(removed.status, 200, await removed.text());
   await assert.rejects(fs.access(path.join(root, 'assets/handouts/STH-001/route-dot.svg')));
+});
+
+test('browser editor opens, switches, saves, reverts, reports conflicts, and recovers drafts', { timeout: 45_000 }, async t => {
+  const { page, file } = await openEditor(t);
+  assert.match(await value(page, '#source'), /title: Fixture/);
+
+  await appendSource(page, '\nSaved with button.');
+  await waitForText(page, '#state', 'Unsaved changes');
+  await page.click('#save');
+  await waitForText(page, '#message', 'Saved atomically.');
+  assert.match(await fs.readFile(file, 'utf8'), /Saved with button\.$/);
+  assert.equal(await text(page, '#state'), 'Saved');
+
+  await appendSource(page, '\nSaved with shortcut.');
+  await page.keyboard.down('Control');
+  await page.keyboard.press('s');
+  await page.keyboard.up('Control');
+  await page.waitForFunction(() => document.querySelector('#state').textContent === 'Saved');
+  assert.match(await fs.readFile(file, 'utf8'), /Saved with shortcut\.$/);
+
+  await appendSource(page, '\nDiscard this edit.');
+  page.once('dialog', dialog => dialog.accept());
+  await page.click('#revert');
+  await page.waitForFunction(() => !document.querySelector('#source').value.includes('Discard this edit.'));
+  assert.equal(await text(page, '#state'), 'Saved');
+
+  await fs.appendFile(file, '\nChanged outside the editor.');
+  await appendSource(page, '\nConflicting browser edit.');
+  await page.click('#save');
+  await waitForText(page, '#message', 'File changed on disk');
+  assert.doesNotMatch(await fs.readFile(file, 'utf8'), /Conflicting browser edit/);
+  page.once('dialog', dialog => dialog.accept());
+  await page.click('#revert');
+  await page.waitForFunction(() => document.querySelector('#source').value.includes('Changed outside the editor.'));
+
+  await appendSource(page, '\nRecover this browser draft.');
+  page.once('dialog', dialog => dialog.accept());
+  await page.select('#handout', 'handouts/section/second.md');
+  await page.waitForFunction(() => document.querySelector('#source').value.includes('code: STH-002'));
+  await page.select('#handout', 'handouts/section/example.md');
+  await page.waitForFunction(() => !document.querySelector('#draft-recovery').hidden);
+  assert.equal(await text(page, '#draft-recovery span'), 'A newer browser draft is available.');
+  await page.click('#restore-draft');
+  assert.match(await value(page, '#source'), /Recover this browser draft\.$/);
+  assert.match(await text(page, '#message'), /Browser draft restored/);
+
+  page.once('dialog', dialog => dialog.accept());
+  await page.click('#revert');
+  await page.waitForFunction(() => !document.querySelector('#source').value.includes('Recover this browser draft.'));
+  await page.evaluate(sourceText => localStorage.setItem('handout-editor:draft:handouts/section/example.md', JSON.stringify({ source: `${sourceText}\nDismiss this draft.`, revision: 'old', updatedAt: Date.now() })), await value(page, '#source'));
+  await page.select('#handout', 'handouts/section/second.md');
+  await page.waitForFunction(() => document.querySelector('#source').value.includes('code: STH-002'));
+  await page.select('#handout', 'handouts/section/example.md');
+  await page.waitForFunction(() => !document.querySelector('#draft-recovery').hidden);
+  await page.click('#discard-draft');
+  assert.equal(await page.$eval('#draft-recovery', element => element.hidden), true);
+  assert.equal(await page.evaluate(() => localStorage.getItem('handout-editor:draft:handouts/section/example.md')), null);
+});
+
+test('browser editor toolbar and keyboard operations transform and save Markdown', { timeout: 45_000 }, async t => {
+  const { page, file } = await openEditor(t);
+  const initial = await value(page, '#source');
+  const phraseStart = initial.indexOf('First page.');
+  await page.$eval('#source', (element, start) => { element.focus(); element.setSelectionRange(start, start + 'First page.'.length); }, phraseStart);
+  await page.click('#toolbar [data-wrap="**|**"]');
+  assert.match(await value(page, '#source'), /\*\*First page\.\*\*/);
+
+  const withBold = await value(page, '#source');
+  const twoLines = 'Alpha\nBeta';
+  await replaceSource(page, `${withBold}\n${twoLines}`);
+  const selectionStart = (await value(page, '#source')).lastIndexOf(twoLines);
+  await page.$eval('#source', (element, start) => { element.focus(); element.setSelectionRange(start, element.value.length); }, selectionStart);
+  await page.keyboard.press('Tab');
+  assert.match(await value(page, '#source'), /\n  Alpha\n  Beta$/);
+  await page.keyboard.down('Shift');
+  await page.keyboard.press('Tab');
+  await page.keyboard.up('Shift');
+  assert.match(await value(page, '#source'), /\nAlpha\nBeta$/);
+
+  await page.$eval('#source', element => { element.focus(); element.setSelectionRange(element.value.length, element.value.length); });
+  await page.click('#toolbar [data-block="warning"]');
+  assert.match(await value(page, '#source'), /<div class="warning">\nContent\n<\/div>$/);
+  await page.click('#save');
+  await page.waitForFunction(() => document.querySelector('#state').textContent === 'Saved');
+  const saved = await fs.readFile(file, 'utf8');
+  assert.match(saved, /\*\*First page\.\*\*/);
+  assert.match(saved, /\nAlpha\nBeta/);
+  assert.match(saved, /<div class="warning">/);
+});
+
+test('browser editor navigates validation results and inserts and removes figures', { timeout: 60_000 }, async t => {
+  const { page, file } = await openEditor(t);
+  const original = await value(page, '#source');
+  await replaceSource(page, original.replace('title: Fixture', 'title:'));
+  await page.waitForFunction(() => document.querySelector('#validation-state').textContent.includes('Fix syntax / metadata'));
+  await page.waitForSelector('#issues button');
+  assert.match(await text(page, '#validation-state'), /Fix syntax \/ metadata/);
+  await page.click('#issues button');
+  const selectedLine = await page.$eval('#source', element => element.value.slice(element.selectionStart, element.selectionEnd));
+  assert.equal(selectedLine, 'title:');
+
+  await replaceSource(page, `${original}\n### Skipped heading`);
+  await page.waitForFunction(() => {
+    const state = document.querySelector('#validation-state').textContent;
+    return state !== 'Checking layout' && (state.includes('issue') || state.includes('No issues') || state.includes('Validation unavailable'));
+  }, { timeout: 30_000 });
+  const layoutState = await text(page, '#validation-state');
+  if (/Validation unavailable:.*Could not find Chrome/.test(layoutState)) {
+    t.diagnostic('Puppeteer browser for layout validation is not installed; source navigation remains covered above');
+  } else {
+    assert.match(layoutState, /issue/);
+    const headingIssueIndex = await page.$$eval('#issues button', buttons => buttons.findIndex(button => button.textContent.includes('heading-order')));
+    assert.notEqual(headingIssueIndex, -1);
+    const headingIssues = await page.$$('#issues button');
+    await headingIssues[headingIssueIndex].click();
+    assert.match(await page.$eval('#source', element => element.value.slice(element.selectionStart, element.selectionEnd)), /Skipped heading/);
+    await page.waitForFunction(() => document.querySelector('#preview').contentDocument?.querySelector('[data-validation-outline="true"]'));
+  }
+
+  await replaceSource(page, original);
+  await page.$eval('#source', element => { element.focus(); element.setSelectionRange(element.value.length, element.value.length); });
+  await page.click('#images');
+  assert.equal(await page.$eval('#image-dialog', element => element.open), true);
+  await page.click('#asset-list .asset');
+  await page.select('#image-width', 'half');
+  await page.select('#image-align', 'right');
+  await page.select('#image-crop', 'square');
+  await page.click('#apply-image');
+  const inserted = await value(page, '#source');
+  assert.match(inserted, /<figure class="figure figure--half figure--right figure--crop-square"/);
+  assert.match(inserted, /\.\.\/assets\/handouts\/STH-001\/route\.svg/);
+
+  const figurePosition = inserted.indexOf('<figure') + 10;
+  await page.$eval('#source', (element, position) => { element.focus(); element.setSelectionRange(position, position); }, figurePosition);
+  await page.click('#images');
+  await page.click('#remove-image');
+  assert.doesNotMatch(await value(page, '#source'), /<figure/);
+  await page.click('#save');
+  await page.waitForFunction(() => document.querySelector('#state').textContent === 'Saved');
+  assert.doesNotMatch(await fs.readFile(file, 'utf8'), /route\.svg/);
 });
