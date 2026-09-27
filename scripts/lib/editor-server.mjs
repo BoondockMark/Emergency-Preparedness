@@ -70,6 +70,35 @@ export async function createEditorServer({ root }) {
     response.end(await fs.readFile(file));
   }
 
+  async function validateSource(value) {
+    const session = typeof value.session === 'string' ? value.session : 'default';
+    const requestId = Number.isSafeInteger(value.requestId) ? value.requestId : (validationGeneration.get(session) ?? 0) + 1;
+    validationGeneration.set(session, Math.max(validationGeneration.get(session) ?? 0, requestId));
+    // Deliberately perform the cheap metadata parse before any browser work.
+    try { loadDocument(value.source, value.path); } catch (error) {
+      const prepared = prepareDocumentValidation({ source: value.source, sourcePath: value.path, template, manifests });
+      return { phase: 'syntax', valid: false, issues: prepared.issues };
+    }
+    const prepared = prepareDocumentValidation({ source: value.source, sourcePath: value.path, template, manifests });
+    if (prepared.issues.length || value.phase === 'syntax') {
+      return { phase: 'syntax', valid: !prepared.issues.length, issues: prepared.issues };
+    }
+    const generation = requestId;
+    const resources = await validationResources();
+    const htmlFile = path.join(resources.validationRoot, 'html', `${prepared.document.meta.code}-${generation}-${randomUUID()}.html`);
+    await fs.writeFile(htmlFile, prepared.html);
+    let page;
+    try {
+      page = await openPrintPage(resources.browser, htmlFile);
+      const result = await validateDocument({ page, document: prepared.document, html: prepared.html, htmlFile });
+      if (validationGeneration.get(session) !== generation) throw Object.assign(Error('Validation superseded'), { status: 409 });
+      return { phase: 'layout', ...result };
+    } finally {
+      await page?.close();
+      await fs.rm(htmlFile, { force: true });
+    }
+  }
+
   const server = http.createServer(async (request, response) => {
     try {
       const url = new URL(request.url, 'http://127.0.0.1');
@@ -122,32 +151,15 @@ export async function createEditorServer({ root }) {
       if (request.method === 'POST' && url.pathname === '/api/validate') {
         const value = await body(request);
         if (!safeFile(value.path) || typeof value.source !== 'string') return json(response, 400, { error: 'Invalid handout' });
-        const session = typeof value.session === 'string' ? value.session : 'default';
-        const requestId = Number.isSafeInteger(value.requestId) ? value.requestId : (validationGeneration.get(session) ?? 0) + 1;
-        validationGeneration.set(session, Math.max(validationGeneration.get(session) ?? 0, requestId));
-        // Deliberately perform the cheap metadata parse before any browser work.
-        try { loadDocument(value.source, value.path); } catch (error) {
-          const prepared = prepareDocumentValidation({ source: value.source, sourcePath: value.path, template, manifests });
-          return json(response, 200, { phase: 'syntax', valid: false, issues: prepared.issues });
-        }
-        const prepared = prepareDocumentValidation({ source: value.source, sourcePath: value.path, template, manifests });
-        if (prepared.issues.length || value.phase === 'syntax') {
-          return json(response, 200, { phase: 'syntax', valid: !prepared.issues.length, issues: prepared.issues });
-        }
-        const generation = requestId;
-        const resources = await validationResources();
-        const htmlFile = path.join(resources.validationRoot, 'html', `${prepared.document.meta.code}-${generation}.html`);
-        await fs.writeFile(htmlFile, prepared.html);
-        let page;
-        try {
-          page = await openPrintPage(resources.browser, htmlFile);
-          const result = await validateDocument({ page, document: prepared.document, html: prepared.html, htmlFile });
-          if (validationGeneration.get(session) !== generation) return json(response, 409, { superseded: true });
-          return json(response, 200, { phase: 'layout', ...result });
-        } finally {
-          await page?.close();
-          await fs.rm(htmlFile, { force: true });
-        }
+        return json(response, 200, await validateSource(value));
+      }
+      if (request.method === 'POST' && url.pathname === '/api/scan') {
+        const value = await body(request);
+        const file = safeFile(value.path);
+        if (!file) return json(response, 404, { error: 'Unknown handout path' });
+        const source = await fs.readFile(file, 'utf8');
+        const result = await validateSource({ path: value.path, source, phase: 'layout', session: `scan:${value.path}` });
+        return json(response, 200, { path: value.path, formatting: result.valid ? 'valid' : 'error', issueCount: result.issues.length });
       }
       if (request.method === 'POST' && url.pathname === '/api/save') {
         const value = await body(request);

@@ -42,11 +42,11 @@ export function indentSelection(value, start, end, unindent = false) {
 }
 
 export function handoutNeedsFixing(handout) {
-  return handout.status !== 'approved' || handout.formatting === 'error';
+  return handout.status !== 'approved' || handout.formatting !== 'valid';
 }
 
 export function handoutOptionLabel(handout) {
-  const indicator = handout.formatting === 'error' ? '🔴' : handout.formatting === 'valid' ? '🟢' : '⚪';
+  const indicator = handout.formatting === 'error' ? '🔴' : handout.formatting === 'valid' ? '🟢' : handout.formatting === 'checking' ? '🟡' : handout.formatting === 'unavailable' ? '⚠️' : '⚪';
   const status = handout.status === 'approved' ? 'release' : handout.status;
   return `${indicator} ${handout.code} — ${handout.title} · ${status}`;
 }

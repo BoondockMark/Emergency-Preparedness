@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>Handout editor</title><link rel="stylesheet" href="/editor.css"></head>
 <body>
-  <header><strong>Handout editor</strong><select id="handout" aria-label="Handout"></select><label class="needs-fixing-filter"><input id="needs-fixing" type="checkbox"> Needs fixing only</label><button id="save">Save</button><button id="revert">Revert</button><span id="state">Loading…</span></header>
+  <header><strong>Handout editor</strong><select id="handout" aria-label="Handout"></select><label class="needs-fixing-filter"><input id="needs-fixing" type="checkbox"> Needs fixing only</label><button id="save">Save</button><button id="revert">Revert</button><span id="state">Loading…</span><output id="scan-state" aria-live="polite"></output></header>
   <nav id="toolbar" aria-label="Insert markup">
     <button data-before="## ">Heading</button><button data-wrap="**|**">Bold</button><button data-wrap="*|*">Emphasis</button><button data-before="- ">List</button><button data-insert="Table: Describe this table&#10;| Heading | Heading |&#10;|---|---|&#10;| Value | Value |">Table</button>
     <button data-block="warning">warning</button><button data-block="checklist">checklist</button><button data-block="procedure">procedure</button><button data-block="local-info">local-info</button><button data-block="sources">sources</button><button data-block="grid">grid</button><button data-insert="\n<!-- pagebreak -->\n">Page break</button><button id="images" class="image-button">Images</button>
