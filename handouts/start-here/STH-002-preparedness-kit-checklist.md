@@ -58,6 +58,7 @@ Two-week planning period: **14 days** &nbsp; | &nbsp; Go-bag planning period set
 
 Use each person's real daily needs—not an average—when the table says “daily use.” Round up and allow for spills, delays, or damaged supplies where space and budget permit.
 
+Table: Two Week Calculations
 | Need | Two-week home calculation | Quantity to obtain |
 |---|---|---|
 | **Water** | 1 gallon × ____ people × 14 days = ____ gallons minimum. Plan more for pregnancy, illness, hot climates, and hygiene or medical needs. Add each animal's usual daily water × 14. | People: ____ gal<br>Animals: ____ gal |
@@ -65,6 +66,11 @@ Use each person's real daily needs—not an average—when the table says “dai
 | **Medications and health supplies** | Each person's daily use × 14, **only when permitted** by the prescriber, pharmacist, insurer, and law. Include prescriptions, over-the-counter items, and supplies used with medicines or medical devices. | Person/item: __________<br>Qty: ____<br>Refills due: ____ |
 | **Sanitation and hygiene** | Each person's daily use × 14 for diapers, menstrual products, incontinence items, wipes, and other consumables. Add soap, toilet paper, trash bags, ties, and a safe backup toilet method. | ____________________<br>Qty: ____ |
 | **Lighting** | One flashlight or headlamp for each person who can use one, plus area lighting. Calculate replacement batteries or recharge cycles for 14 days from the device instructions. Prefer lights to candles. | Lights: ____<br>Batteries/cycles: ____ |
+
+<!-- pagebreak -->
+Table: Two Week Calculations
+| Need | Two-week home calculation | Quantity to obtain |
+|---|---|---|
 | **Communications** | At least one battery-powered or hand-crank weather radio; a charged phone/device for each user; paper contact and meeting plans; local map. | Radios: ____<br>Devices: ____ |
 | **Power** | For every essential device, list watt-hours, battery type, or recharge cycles needed across 14 days. Prioritize medical, mobility, communication, and refrigeration needs; make a power-outage plan with the utility and care team. | Device: __________<br>Batteries/charges: ____ |
 | **Cash** | Choose an amount for 14 days of essential local purchases; include small bills and coins. Do not keep more than you can store securely. | $____ total |
@@ -73,6 +79,8 @@ Use each person's real daily needs—not an average—when the table says “dai
 | **Animal supplies** | Each animal's usual daily food, water, medicine, litter, and other consumables × 14. Include bowls, sanitation supplies, records, identification, carrier, leash, harness, or other safe restraint. | Food: ____<br>Water: ____<br>Medicine/other: ____ |
 
 Water is the minimum priority: CDC and the American Red Cross recommend storing at least **1 gallon per person per day**; the Red Cross lists a **two-week supply for home** and a **three-day supply for evacuation**. Your local authority may set a different evacuation amount.
+
+<!-- pagebreak -->
 
 ## 2. Pack the portable go-bag separately
 
@@ -98,6 +106,8 @@ Label bags. Keep medical, communication, mobility, sensory, and animal items bes
 <li>Ask a clinician or pharmacist how to obtain and safely store an emergency medication supply; never change doses or use expired medicine unless an authorized official specifically directs it.</li>
 </ul></div>
 
+<!-- pagebreak -->
+
 ## 4. Store safely and rotate
 
 <div class="checklist"><ul>
@@ -109,6 +119,8 @@ Label bags. Keep medical, communication, mobility, sensory, and animal items bes
 </ul></div>
 
 Next check date: ____ / ____ / ______ &nbsp; &nbsp; Checked by: ____________________
+
+<!-- pagebreak -->
 
 ## 5. Build it in stages
 

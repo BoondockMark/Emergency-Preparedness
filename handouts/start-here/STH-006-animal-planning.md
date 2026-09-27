@@ -49,6 +49,8 @@ sources:
 
 <p><strong>Do not assume a public shelter, hotel, boarding facility, fairground, or rescue site will accept an animal.</strong> Rules, capacity, opening times, and health requirements vary and can change during an incident. Verify them locally before leaving and again when officials activate evacuation or shelter sites.</p>
 
+<!-- pagebreak -->
+
 ## Household pets
 
 <div class="checklist"><ul>
@@ -93,6 +95,8 @@ sources:
 <li><strong>Plan a locally approved alternative.</strong> Ask local emergency management, animal control, agricultural extension, and the veterinarian what to do if evacuation is impossible. Record only instructions verified for the location, species, and hazard; do not release animals or improvise an unsafe move.</li>
 </ol>
 
+<!-- pagebreak -->
+
 <div class="local-info"><strong>Verify locally before an incident:</strong><br>
 Emergency-management / evacuation instructions: [VERIFY] ____________________<br>
 Animal control / activated animal sheltering: [VERIFY] _______________________<br>
@@ -108,21 +112,25 @@ Transporter and backup transporter: [VERIFY] _________________________________</
 
 <p>Complete one row for each animal or clearly identified compatible group. Attach extra pages, photos, records, maps, and written care instructions. Update after any change.</p>
 
+Table: Animal Planning
 | Animal / group and species | Identification and current photo reference | Usual location | Handling considerations |
 |---|---|---|---|
-| __________________________ | __________________________________________ | ______________ | ________________________ |
-| __________________________ | __________________________________________ | ______________ | ________________________ |
-| __________________________ | __________________________________________ | ______________ | ________________________ |
-| __________________________ | __________________________________________ | ______________ | ________________________ |
-| __________________________ | __________________________________________ | ______________ | ________________________ |
+| __________________________ | ___________________________ | ______________ | ________________________ |
+| __________________________ | ___________________________ | ______________ | ________________________ |
+| __________________________ | ___________________________ | ______________ | ________________________ |
+| __________________________ | ___________________________ | ______________ | ________________________ |
+| __________________________ | ___________________________ | ______________ | ________________________ |
 
+Table: Supplies
 | Carrier, restraint, or handling equipment and location | Loading order | Confirmed destination and route |
 |---|---|---|
-| ______________________________________________________ | _____________ | _________________________________ |
-| ______________________________________________________ | _____________ | _________________________________ |
-| ______________________________________________________ | _____________ | _________________________________ |
-| ______________________________________________________ | _____________ | _________________________________ |
-| ______________________________________________________ | _____________ | _________________________________ |
+| ______________________________ | _____________ | _________________________________ |
+| ______________________________ | _____________ | _________________________________ |
+| ______________________________ | _____________ | _________________________________ |
+| ______________________________ | _____________ | _________________________________ |
+| ______________________________ | _____________ | _________________________________ |
+
+<!-- pagebreak -->
 
 ## Care and backup arrangements
 

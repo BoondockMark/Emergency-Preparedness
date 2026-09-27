@@ -43,7 +43,8 @@ sources:
 ---
 <p class="lede">A cleaner-air room can reduce wildfire-smoke particles while it is safe to remain indoors. Prepare it before smoke arrives, if possible.</p>
 
-<div class="warning"><strong>Smoke shelter is not flame shelter.</strong> A cleaner-air room does not protect you from flames, extreme heat, or an approaching wildfire. <strong>Evacuation orders and instructions from public-safety officials take priority.</strong> Leave immediately when directed or when fire threatens; do not stay to finish these steps.</div>
+<div class="warning">A smoke shelter is not flame shelter. A cleaner-air room does not protect you from flames, extreme heat, or an approaching wildfire. 
+An air cleaner reduces particles; it does not supply oxygen, control heat, remove every gas, or make an unsafe building safe..</div>
 
 ## 1. Choose the room
 
@@ -67,6 +68,8 @@ Bring needed medicines, water, a phone and charger, and the household's alert in
 * Do not tape over, disconnect, or alter combustion-air openings, exhausts, or other safety ventilation. Never defeat a smoke alarm or carbon-monoxide (CO) alarm.
 * If closing the home makes it too hot, go to a cleaner-air center, cooling center, or other safe air-conditioned place identified by local officials. Heat can be immediately dangerous.
 
+<!-- pagebreak -->
+
 ## 3. Use a portable air cleaner
 
 Choose a unit that mechanically filters particles and does **not** intentionally produce ozone. Check the label or manufacturer's documentation rather than relying on words such as “air purifier.”
@@ -76,10 +79,6 @@ Choose a unit that mechanically filters particles and does **not** intentionally
 3. Close windows and doors and run the unit as continuously as practical, at the highest speed that is tolerable. A lower speed filters less air.
 4. Check the filter often during smoke events. Replace it when it is dirty, when the indicator or manual directs, or when airflow drops. Use the type specified by the manufacturer; unplug the unit before service and install the filter in the marked direction.
 
-An air cleaner reduces particles; it does not supply oxygen, control heat, remove every gas, or make an unsafe building safe.
-
-<!-- pagebreak -->
-
 ## 4. If a do-it-yourself air cleaner is the only option
 
 EPA reports that a well-constructed **box-fan-and-filter** air cleaner can temporarily reduce smoke particles, but its performance varies and a tested commercial unit is preferred. Use only a design published by EPA, AirNow, or your public-health authority, and follow that authority's current parts, assembly, and operating directions exactly. Do not invent a fan/filter arrangement or treat it as permanent equipment.
@@ -87,6 +86,8 @@ EPA reports that a well-constructed **box-fan-and-filter** air cleaner can tempo
 <div class="warning warning--caution"><strong>Prevent shock and fire:</strong> use a certified box fan made in 2012 or later with a fused plug and a safety mark such as UL or ETL. Inspect the fan, plug, and cord; do not use damaged equipment. Plug it directly into a suitable wall outlet—never an extension cord—and keep it away from water, curtains, clutter, children, and pets. Keep airflow clear. Do not leave it unattended or use it while sleeping.</div>
 
 An awake adult should supervise it. Turn it off and unplug it if it smells hot, makes unusual noise, vibrates, tips, is damaged, or the plug or cord becomes hot. Replace a dirty filter according to the verified design's directions. A DIY unit is not a substitute for leaving excessive heat, heavy smoke that continues indoors, a CO hazard, or a threatened building.
+
+<!-- pagebreak -->
 
 ## 5. Do not add particles or combustion gases
 
@@ -100,8 +101,6 @@ In the cleaner-air room and the rest of the home:
 
 <div class="warning"><strong>Carbon monoxide cannot be seen or smelled.</strong> Keep working CO alarms in the home. Headache, dizziness, weakness, nausea, vomiting, chest pain, or confusion can indicate CO poisoning. Get everyone into fresh air and call 911 immediately; do not re-enter until responders say it is safe.</div>
 
-<!-- pagebreak -->
-
 ## 6. Keep checking conditions
 
 <div class="checklist"><ul>
@@ -110,6 +109,8 @@ In the cleaner-air room and the rest of the home:
 <li><strong>People:</strong> check one another for coughing, wheezing, trouble breathing, chest tightness or pain, palpitations, unusual fatigue, headache, dizziness, confusion, or worsening of a medical condition.</li>
 <li><strong>Building safety:</strong> keep exits clear and smoke and CO alarms active. Watch for power loss, electrical problems, fire, or worsening outdoor conditions.</li>
 </ul></div>
+
+<!-- pagebreak -->
 
 ## 7. Know when to leave or get help
 

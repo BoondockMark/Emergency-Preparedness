@@ -63,7 +63,7 @@ sources:
 <!-- pagebreak -->
 
 ## Our voluntary check-in network
-
+Table: Voluntary Check-In Network
 | Area / household | Primary contact and method | Backup contact and method | Assistance requested? |
 |---|---|---|---|
 | __________________ | __________________________ | __________________________ | __________________ |
@@ -74,7 +74,7 @@ sources:
 <p><strong>Coordinator:</strong> ____________________ &nbsp; <strong>Backup:</strong> ____________________ &nbsp; <strong>Review date:</strong> __________</p>
 
 ## Verify local communication details before use
-
+Table: Local Communication Details
 | Item | Verified entry | Responsible agency / owner | Verified by and date |
 |---|---|---|---|
 | Official alert system and enrollment URL | __________________ | __________________ | __________________ |

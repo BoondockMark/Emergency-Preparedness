@@ -99,6 +99,8 @@ sources:
 </tbody>
 </table>
 
+<!-- pagebreak -->
+
 ## Hazard record B
 
 <table>
@@ -132,6 +134,8 @@ sources:
 <tr><th>Information verified</th><td>Date: __________</td><th>Verified with</th><td>Agency/record and URL, office, or document ID: ____________________</td></tr>
 </tbody>
 </table>
+
+<!-- pagebreak -->
 
 ## Hazard record D
 
@@ -174,6 +178,8 @@ sources:
 <li>Discuss assistance, transport, medicines, power, communication, and animal needs before an alert.</li>
 <li>Review after a move, school/job/route change, insurance renewal, map revision, major incident, or official guidance update—and at least annually.</li>
 </ul></div>
+
+<!-- pagebreak -->
 
 ## Binder follow-through
 

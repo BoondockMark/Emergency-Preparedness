@@ -52,6 +52,8 @@ sources:
 
 <div class="local-info"><p><strong>LOCAL INFORMATION — VERIFY BEFORE USE</strong></p><p><strong>Official reentry portal or information source:</strong> __________________________________________</p><p><strong>Utility emergency contacts:</strong> _______________________________________________________</p><p><strong>Approved debris/disposal site or cleanup program:</strong> ____________________________________</p><p>Confirm each entry with the responsible local authority or provider after this emergency; hours, boundaries, routes, and services can change.</p></div>
 
+<!-- pagebreak -->
+
 ## 2. Approaching the property
 
 <p>Slow down, stay alert, and obey barriers and responder directions. Do not drive or walk around a closure.</p>
@@ -108,6 +110,8 @@ sources:
 <p>Leave again if fire, floodwater, weather, air quality, structural conditions, utilities, chemicals, animals, or responder activity make the area unsafe. Call emergency services for an immediate threat. Seek prompt medical or poison-control advice for injury, breathing trouble, chest pain, dizziness, confusion, burns, chemical exposure, or other concerning symptoms.</p>
 
 <p>Disasters and loss can cause strong stress reactions. Pace the work, rest, eat and drink safely, stay connected with supportive people, and seek a health professional or crisis service if distress is severe, persistent, or makes it hard to function or stay safe.</p>
+
+<!-- pagebreak -->
 
 ## 7. Return checklist
 

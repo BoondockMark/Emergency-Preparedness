@@ -85,6 +85,8 @@ sources:
 <li>Practice one part of the plan, then update names, routes, and needs.</li>
 </ul></div>
 
+<!-- pagebreak -->
+
 <p><strong>Build supplies next:</strong> use <strong>STH-002 — Build a Two-Week Preparedness Kit</strong>. Store what your household can safely carry and use.</p>
 
 <p><strong>Keep the plan usable:</strong> use <strong>STH-007 — Annual Binder & Kit Review</strong> every year and after a household change, move, drill, or emergency. Replace expired supplies and update contacts, routes, equipment, medications, and care needs when they change.</p>

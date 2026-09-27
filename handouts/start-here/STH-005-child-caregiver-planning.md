@@ -31,15 +31,12 @@ sources:
 <div class="warning"><strong>Official instructions take priority.</strong> Follow evacuation, shelter, school-release, and other directions from the responsible authority. Never return to a closed or dangerous area to reach a meeting place.</div>
 
 ## People, contacts, and responsibilities
-
-<table>
-<thead><tr><th scope="col">Person who needs support</th><th scope="col">Need or responsibility</th><th scope="col">Primary caregiver</th><th scope="col">Backup caregiver</th></tr></thead>
-<tbody>
-<tr><td>&nbsp;<br>&nbsp;</td><td></td><td></td><td></td></tr>
-<tr><td>&nbsp;<br>&nbsp;</td><td></td><td></td><td></td></tr>
-<tr><td>&nbsp;<br>&nbsp;</td><td></td><td></td><td></td></tr>
-</tbody>
-</table>
+Table: Contacts
+| Person who Needs Support | Need / Responsibility | Primary Caregiver | Backup Caregiver |
+|---|---|---|---|
+| &nbsp;  |   |   |   |
+| &nbsp;  |   |   |   |
+| &nbsp;  |   |   |   |
 
 <p><strong>Out-of-area contact:</strong> ______________________________ <strong>Phone / method:</strong> ____________________</p>
 <p><strong>School, child care, or care program:</strong> __________________ <strong>Phone:</strong> __________________________</p>
