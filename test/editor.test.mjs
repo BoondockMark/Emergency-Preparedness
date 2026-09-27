@@ -135,9 +135,18 @@ test('editor open/save round trip is atomic and stale writes are rejected', asyn
 
 test('browser editor validates valid buffers before saving', { timeout: 45_000 }, async t => {
   const { page, file } = await openEditor(t);
+  await page.evaluate(() => {
+    const actualFetch = window.fetch.bind(window);
+    window.saveRequestOrder = [];
+    window.fetch = (url, options) => {
+      if (url === '/api/validate' || url === '/api/save') window.saveRequestOrder.push(url);
+      return actualFetch(url, options);
+    };
+  });
   await appendSource(page, '\nA valid saved change.');
   await page.click('#save');
   await waitForText(page, '#message', 'Saved atomically.');
+  assert.deepEqual(await page.evaluate(() => window.saveRequestOrder.slice(-2)), ['/api/validate', '/api/save']);
   assert.match(await fs.readFile(file, 'utf8'), /A valid saved change\.$/);
 });
 
@@ -170,12 +179,16 @@ test('browser editor validates edits made while an older validation is pending',
   await page.evaluate(() => {
     const actualFetch = window.fetch.bind(window);
     let release;
+    window.currentBufferValidationCount = 0;
     window.releaseDelayedValidation = () => release?.();
     window.fetch = (url, options) => {
       const body = options?.body && JSON.parse(options.body);
       if (url === '/api/validate' && body?.phase === 'syntax' && body.source.includes('delayed validation')) {
         window.delayedValidationStarted = true;
         return new Promise(resolve => { release = () => resolve(actualFetch(url, options)); });
+      }
+      if (url === '/api/validate' && body?.phase === 'syntax' && body.source === 'new invalid buffer') {
+        window.currentBufferValidationCount += 1;
       }
       return actualFetch(url, options);
     };
@@ -189,6 +202,10 @@ test('browser editor validates edits made while an older validation is pending',
   await page.evaluate(() => window.releaseDelayedValidation());
   await new Promise(resolve => setTimeout(resolve, 100));
   assert.match(await text(page, '#validation-state'), /Fix syntax \/ metadata/);
+  page.once('dialog', dialog => dialog.dismiss());
+  await page.click('#save');
+  await waitForText(page, '#message', 'Save canceled');
+  assert.equal(await page.evaluate(() => window.currentBufferValidationCount), 2);
   assert.equal(await fs.readFile(file, 'utf8'), original);
 });
 

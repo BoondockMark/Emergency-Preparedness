@@ -17,7 +17,10 @@ let selectedAsset = '';
 let previewTimer;
 let validationTimer;
 let validationSequence = 0;
-let latestSyntaxResult;
+// This cache describes a completed request, not whatever happens to be rendered
+// in the Validation panel. Background validation may finish out of order, so
+// callers must compare the complete buffer snapshot before reusing it.
+let completedSyntaxValidation;
 let renderSequence = 0;
 let renderController;
 const session = crypto.randomUUID();
@@ -85,10 +88,23 @@ function selectIssue(issue) {
     if (element) { element.dataset.validationOutline = 'true'; element.style.outline = '3px solid #dc2626'; element.style.outlineOffset = '2px'; element.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
   }
 }
+function bufferSnapshot() {
+  return { path: select.value, source: source.value };
+}
+function isCurrentBuffer(snapshot) {
+  return snapshot.path === select.value && snapshot.source === source.value;
+}
+function matchesBuffer(validation, snapshot) {
+  return validation?.path === snapshot.path && validation.source === snapshot.source;
+}
 async function validateSyntax(snapshot) {
   const result = await request('/api/validate', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ ...snapshot, phase: 'syntax' }) });
-  latestSyntaxResult = { path: snapshot.path, source: snapshot.source, result };
+  completedSyntaxValidation = { path: snapshot.path, source: snapshot.source, result };
   return result;
+}
+async function syntaxForSave(snapshot) {
+  if (matchesBuffer(completedSyntaxValidation, snapshot)) return completedSyntaxValidation.result;
+  return validateSyntax({ ...snapshot, session, requestId: ++validationSequence });
 }
 async function validate() {
   const sequence = ++validationSequence;
@@ -139,11 +155,9 @@ async function save() {
     let snapshot;
     let syntax;
     do {
-      snapshot = { path: select.value, source: source.value };
-      syntax = latestSyntaxResult?.path === snapshot.path && latestSyntaxResult.source === snapshot.source
-        ? latestSyntaxResult.result
-        : await validateSyntax({ ...snapshot, session, requestId: ++validationSequence });
-    } while (snapshot.path !== select.value || snapshot.source !== source.value);
+      snapshot = bufferSnapshot();
+      syntax = await syntaxForSave(snapshot);
+    } while (!isCurrentBuffer(snapshot));
     if (!syntax.valid) {
       showIssues(syntax.issues);
       validationState.textContent = 'Fix syntax / metadata';
