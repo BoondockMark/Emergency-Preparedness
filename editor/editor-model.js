@@ -40,3 +40,13 @@ export function indentSelection(value, start, end, unindent = false) {
     selectionEnd: Math.max(lineStart, end + totalDelta)
   };
 }
+
+export function handoutNeedsFixing(handout) {
+  return handout.status !== 'approved' || handout.formatting === 'error';
+}
+
+export function handoutOptionLabel(handout) {
+  const indicator = handout.formatting === 'error' ? '🔴' : handout.formatting === 'valid' ? '🟢' : '⚪';
+  const status = handout.status === 'approved' ? 'release' : handout.status;
+  return `${indicator} ${handout.code} — ${handout.title} · ${status}`;
+}
