@@ -5,6 +5,7 @@ const needsFixing = document.querySelector('#needs-fixing');
 const source = document.querySelector('#source');
 const preview = document.querySelector('#preview');
 const state = document.querySelector('#state');
+const scanState = document.querySelector('#scan-state');
 const message = document.querySelector('#message');
 const issues = document.querySelector('#issues');
 const validationState = document.querySelector('#validation-state');
@@ -38,6 +39,27 @@ function updateHandout(path, changes) {
   Object.assign(item, changes);
   if (needsFixing.checked && path === select.value && !handoutNeedsFixing(item)) needsFixing.checked = false;
   populateHandouts(path);
+}
+
+async function scanHandouts() {
+  let completed = 0;
+  scanState.textContent = `Scanning handouts… 0/${handouts.length}`;
+  for (const item of handouts) {
+    updateHandout(item.path, { formatting: 'checking' });
+    try {
+      const result = await request('/api/scan', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ path: item.path }) });
+      if (item.path !== opened.path || !dirty()) updateHandout(item.path, { formatting: result.formatting, issueCount: result.issueCount });
+    } catch {
+      if (item.path !== opened.path || !dirty()) updateHandout(item.path, { formatting: 'unavailable' });
+    }
+    completed += 1;
+    scanState.textContent = `Scanning handouts… ${completed}/${handouts.length}`;
+  }
+  const errors = handouts.filter(item => item.formatting === 'error').length;
+  const unavailable = handouts.filter(item => item.formatting === 'unavailable').length;
+  scanState.textContent = unavailable
+    ? `Scan complete · ${errors} with errors · ${unavailable} unavailable`
+    : `Scan complete · ${errors} with errors`;
 }
 
 const draftKey = path => `handout-editor:draft:${path}`;
@@ -330,4 +352,7 @@ window.addEventListener('beforeunload', event => { if (dirty()) event.preventDef
 
 handouts = await request('/api/handouts');
 populateHandouts();
-if (handouts.length) openHandout();
+if (handouts.length) {
+  await openHandout();
+  scanHandouts();
+}

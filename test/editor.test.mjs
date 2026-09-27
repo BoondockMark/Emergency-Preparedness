@@ -92,6 +92,9 @@ test('editor handout labels expose release and formatting state and can filter w
   assert.equal(handoutNeedsFixing(release), false);
   assert.equal(handoutNeedsFixing(draft), true);
   assert.equal(handoutNeedsFixing(broken), true);
+  assert.equal(handoutOptionLabel({ ...release, formatting: 'checking' }), '🟡 STH-001 — Ready · release');
+  assert.equal(handoutNeedsFixing({ ...release, formatting: 'checking' }), true);
+  assert.equal(handoutNeedsFixing({ ...release, formatting: 'unavailable' }), true);
 });
 
 test('handout list includes workflow and formatting state', async t => {
@@ -102,6 +105,14 @@ test('handout list includes workflow and formatting state', async t => {
   assert.deepEqual(handouts.map(({ status, formatting }) => ({ status, formatting })), [
     { status: 'draft', formatting: 'unchecked' }, { status: 'draft', formatting: 'unchecked' }
   ]);
+});
+
+test('editor scan validates a handout from disk without opening it', async t => {
+  const { base, file } = await setup(t);
+  await fs.writeFile(file, 'not valid front matter');
+  const invalid = await fetch(`${base}/api/scan`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ path: 'handouts/section/example.md' }) });
+  assert.equal(invalid.status, 200);
+  assert.deepEqual(await invalid.json(), { path: 'handouts/section/example.md', formatting: 'error', issueCount: 1 });
 });
 
 test('editor rejects traversal and only opens discovered markdown paths', async t => {
