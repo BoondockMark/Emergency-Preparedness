@@ -379,6 +379,9 @@ test('browser editor toolbar and keyboard operations transform and save Markdown
   assert.match(await value(page, '#source'), /\nAlpha\nBeta$/);
 
   await page.$eval('#source', element => { element.focus(); element.setSelectionRange(element.value.length, element.value.length); });
+  await page.click('#toolbar [data-insert*="pagebreak"]');
+  assert.equal((await value(page, '#source')).endsWith('\n<!-- pagebreak -->\n'), true);
+
   await page.click('#toolbar [data-block="warning"]');
   assert.match(await value(page, '#source'), /<div class="warning">\nContent\n<\/div>$/);
   await page.click('#save');
@@ -386,6 +389,7 @@ test('browser editor toolbar and keyboard operations transform and save Markdown
   const saved = await fs.readFile(file, 'utf8');
   assert.match(saved, /\*\*First page\.\*\*/);
   assert.match(saved, /\nAlpha\nBeta/);
+  assert.match(saved, /\n<!-- pagebreak -->\n/);
   assert.match(saved, /<div class="warning">/);
 });
 
