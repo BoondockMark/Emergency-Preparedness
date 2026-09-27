@@ -66,6 +66,12 @@ async function appendSource(page, contents) {
 async function waitForText(page, selector, expected) {
   await page.waitForFunction((target, pattern) => document.querySelector(target)?.textContent.includes(pattern), {}, selector, expected);
 }
+async function saveWithShortcut(page, modifier) {
+  await page.keyboard.down(modifier);
+  await page.keyboard.press('s');
+  await page.keyboard.up(modifier);
+  await page.waitForFunction(() => document.querySelector('#state').textContent === 'Saved');
+}
 
 test('editor source helpers report position and transform complete line selections', () => {
   assert.deepEqual(selectionDetails('one\ntwo words', 6, 9), { line: 2, column: 3, characters: 13, words: 3, selected: 3 });
@@ -253,11 +259,12 @@ test('browser editor opens, switches, saves, reverts, reports conflicts, and rec
   assert.equal(await text(page, '#state'), 'Saved');
 
   await appendSource(page, '\nSaved with shortcut.');
-  await page.keyboard.down('Control');
-  await page.keyboard.press('s');
-  await page.keyboard.up('Control');
-  await page.waitForFunction(() => document.querySelector('#state').textContent === 'Saved');
+  await saveWithShortcut(page, 'Control');
   assert.match(await fs.readFile(file, 'utf8'), /Saved with shortcut\.$/);
+
+  await appendSource(page, '\nSaved with Command shortcut.');
+  await saveWithShortcut(page, 'Meta');
+  assert.match(await fs.readFile(file, 'utf8'), /Saved with Command shortcut\.$/);
 
   await appendSource(page, '\nDiscard this edit.');
   page.once('dialog', dialog => dialog.accept());
@@ -278,8 +285,11 @@ test('browser editor opens, switches, saves, reverts, reports conflicts, and rec
   page.once('dialog', dialog => dialog.accept());
   await page.select('#handout', 'handouts/section/second.md');
   await page.waitForFunction(() => document.querySelector('#source').value.includes('code: STH-002'));
+  assert.equal(await value(page, '#handout'), 'handouts/section/second.md');
+  assert.match(await value(page, '#source'), /title: Second fixture/);
   await page.select('#handout', 'handouts/section/example.md');
   await page.waitForFunction(() => !document.querySelector('#draft-recovery').hidden);
+  assert.equal(await value(page, '#handout'), 'handouts/section/example.md');
   assert.equal(await text(page, '#draft-recovery span'), 'A newer browser draft is available.');
   await page.click('#restore-draft');
   assert.match(await value(page, '#source'), /Recover this browser draft\.$/);
@@ -296,6 +306,8 @@ test('browser editor opens, switches, saves, reverts, reports conflicts, and rec
   await page.click('#discard-draft');
   assert.equal(await page.$eval('#draft-recovery', element => element.hidden), true);
   assert.equal(await page.evaluate(() => localStorage.getItem('handout-editor:draft:handouts/section/example.md')), null);
+  assert.doesNotMatch(await value(page, '#source'), /Dismiss this draft/);
+  assert.match(await fs.readFile(file, 'utf8'), /Changed outside the editor\.$/);
 });
 
 test('browser editor toolbar and keyboard operations transform and save Markdown', { timeout: 45_000 }, async t => {
@@ -367,6 +379,7 @@ test('browser editor navigates validation results and inserts and removes figure
   await page.select('#image-align', 'right');
   await page.select('#image-crop', 'square');
   await page.click('#apply-image');
+  assert.equal(await page.$eval('#image-dialog', element => element.open), false);
   const inserted = await value(page, '#source');
   assert.match(inserted, /<figure class="figure figure--half figure--right figure--crop-square"/);
   assert.match(inserted, /\.\.\/assets\/handouts\/STH-001\/route\.svg/);
@@ -375,6 +388,7 @@ test('browser editor navigates validation results and inserts and removes figure
   await page.$eval('#source', (element, position) => { element.focus(); element.setSelectionRange(position, position); }, figurePosition);
   await page.click('#images');
   await page.click('#remove-image');
+  assert.equal(await page.$eval('#image-dialog', element => element.open), false);
   assert.doesNotMatch(await value(page, '#source'), /<figure/);
   await page.click('#save');
   await page.waitForFunction(() => document.querySelector('#state').textContent === 'Saved');
