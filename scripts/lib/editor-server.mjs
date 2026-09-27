@@ -74,7 +74,7 @@ export async function createEditorServer({ root }) {
     try {
       const url = new URL(request.url, 'http://127.0.0.1');
       if (request.method === 'GET' && url.pathname === '/api/handouts') {
-        return json(response, 200, documents.map(({ sourcePath, meta }) => ({ path: sourcePath, title: meta.title, code: meta.code })));
+        return json(response, 200, documents.map(({ sourcePath, meta }) => ({ path: sourcePath, title: meta.title, code: meta.code, status: meta.status, formatting: 'unchecked' })));
       }
       if (request.method === 'GET' && url.pathname === '/api/handout') {
         const relative = url.searchParams.get('path');
@@ -160,7 +160,9 @@ export async function createEditorServer({ root }) {
           await fs.writeFile(temporary, value.source, { flag: 'wx' });
           await fs.rename(temporary, file);
         } finally { await fs.rm(temporary, { force: true }); }
-        return json(response, 200, { revision: revision(value.source) });
+        const savedStatus = value.source.match(/^status:\s*(draft|under-review|approved)\s*$/m)?.[1]
+          ?? documents.find(item => item.sourcePath === value.path)?.meta.status;
+        return json(response, 200, { revision: revision(value.source), status: savedStatus });
       }
       if (request.method === 'GET' && (url.pathname === '/' || url.pathname === '/index.html')) return serve(response, path.join(root, 'editor/index.html'), 'text/html; charset=utf-8');
       if (request.method === 'GET' && url.pathname === '/editor.js') return serve(response, path.join(root, 'editor/editor.js'), 'text/javascript; charset=utf-8');

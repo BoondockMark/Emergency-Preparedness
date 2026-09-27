@@ -9,7 +9,7 @@ import { renderHandout, parseHandoutSource, renderHandoutSource } from '../scrip
 import { createEditorServer } from '../scripts/lib/editor-server.mjs';
 import { browserOptions, prepareDocumentValidation } from '../scripts/lib/artifact-generation.mjs';
 import { figureMarkup, safeAssetName } from '../scripts/lib/editor-support.mjs';
-import { indentSelection, prefixLines, selectionDetails } from '../editor/editor-model.js';
+import { handoutNeedsFixing, handoutOptionLabel, indentSelection, prefixLines, selectionDetails } from '../editor/editor-model.js';
 
 const repository = path.resolve(import.meta.dirname, '..');
 const fixture = () => fs.readFile(path.join(repository, 'test/unit-fixtures/front-matter.md'), 'utf8');
@@ -82,6 +82,26 @@ test('editor source helpers report position and transform complete line selectio
     start: 0, end: 9, replacement: 'one\ntwo', selectionStart: 0, selectionEnd: 7
   });
   assert.equal(prefixLines('one\ntwo\nthree', 0, 8, '- ').replacement, '- one\n- two');
+});
+
+test('editor handout labels expose release and formatting state and can filter work', () => {
+  const release = { code: 'STH-001', title: 'Ready', status: 'approved', formatting: 'valid' };
+  const draft = { code: 'STH-002', title: 'Work', status: 'draft', formatting: 'valid' };
+  const broken = { code: 'STH-003', title: 'Broken', status: 'approved', formatting: 'error' };
+  assert.equal(handoutOptionLabel(release), '🟢 STH-001 — Ready · release');
+  assert.equal(handoutNeedsFixing(release), false);
+  assert.equal(handoutNeedsFixing(draft), true);
+  assert.equal(handoutNeedsFixing(broken), true);
+});
+
+test('handout list includes workflow and formatting state', async t => {
+  const { base } = await setup(t);
+  const response = await fetch(`${base}/api/handouts`);
+  assert.equal(response.status, 200);
+  const handouts = await response.json();
+  assert.deepEqual(handouts.map(({ status, formatting }) => ({ status, formatting })), [
+    { status: 'draft', formatting: 'unchecked' }, { status: 'draft', formatting: 'unchecked' }
+  ]);
 });
 
 test('editor rejects traversal and only opens discovered markdown paths', async t => {

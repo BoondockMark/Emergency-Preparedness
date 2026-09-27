@@ -1,6 +1,7 @@
-import { indentSelection, prefixLines, selectionDetails } from './editor-model.js';
+import { handoutNeedsFixing, handoutOptionLabel, indentSelection, prefixLines, selectionDetails } from './editor-model.js';
 
 const select = document.querySelector('#handout');
+const needsFixing = document.querySelector('#needs-fixing');
 const source = document.querySelector('#source');
 const preview = document.querySelector('#preview');
 const state = document.querySelector('#state');
@@ -24,6 +25,20 @@ let completedSyntaxValidation;
 let renderSequence = 0;
 let renderController;
 const session = crypto.randomUUID();
+let handouts = [];
+
+function populateHandouts(preferredPath = select.value) {
+  const visible = needsFixing.checked ? handouts.filter(handoutNeedsFixing) : handouts;
+  select.replaceChildren(...visible.map(item => new Option(handoutOptionLabel(item), item.path)));
+  if (visible.some(item => item.path === preferredPath)) select.value = preferredPath;
+}
+function updateHandout(path, changes) {
+  const item = handouts.find(candidate => candidate.path === path);
+  if (!item) return;
+  Object.assign(item, changes);
+  if (needsFixing.checked && path === select.value && !handoutNeedsFixing(item)) needsFixing.checked = false;
+  populateHandouts(path);
+}
 
 const draftKey = path => `handout-editor:draft:${path}`;
 function readDraft(path) {
@@ -113,13 +128,14 @@ async function validate() {
     const syntax = await validateSyntax(payload);
     if (sequence !== validationSequence) return;
     showIssues(syntax.issues);
-    if (!syntax.valid) { validationState.textContent = 'Fix syntax / metadata'; validationState.className = ''; return; }
+    if (!syntax.valid) { updateHandout(payload.path, { formatting: 'error' }); validationState.textContent = 'Fix syntax / metadata'; validationState.className = ''; return; }
     validationState.textContent = 'Checking layout'; validationState.className = 'checking';
     showIssues([]);
     const layout = await request('/api/validate', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ ...payload, phase: 'layout' }) });
     if (sequence !== validationSequence) return;
     showIssues(layout.issues);
     validationState.textContent = layout.valid ? 'No issues' : `${layout.issues.length} issue${layout.issues.length === 1 ? '' : 's'}`;
+    updateHandout(payload.path, { formatting: layout.valid ? 'valid' : 'error' });
     validationState.className = '';
   } catch (error) {
     if (sequence === validationSequence && !/superseded/i.test(error.message)) { validationState.textContent = `Validation unavailable: ${error.message}`; validationState.className = ''; }
@@ -169,7 +185,7 @@ async function save() {
       }
     }
     const result = await request('/api/save', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ ...snapshot, revision: opened.revision }) });
-    opened = { ...opened, ...snapshot, revision: result.revision }; clearDraft(); dirty(); message.textContent = 'Saved atomically.'; return true;
+    opened = { ...opened, ...snapshot, revision: result.revision }; updateHandout(snapshot.path, { status: result.status }); clearDraft(); dirty(); message.textContent = 'Saved atomically.'; return true;
   } catch (error) { message.textContent = `Not saved: ${error.message}`; return false; }
 }
 function insert(button) {
@@ -283,6 +299,15 @@ document.querySelector('#toolbar').addEventListener('click', event => { if (even
 document.querySelector('#save').addEventListener('click', save);
 document.querySelector('#revert').addEventListener('click', () => openHandout({ discardCurrentDraft: true }));
 select.addEventListener('change', openHandout); source.addEventListener('input', renderSoon);
+needsFixing.addEventListener('change', async () => {
+  const previous = select.value;
+  populateHandouts(previous);
+  if (!select.value && handouts.length) {
+    needsFixing.checked = false;
+    populateHandouts(previous);
+    message.textContent = 'No handouts currently need fixing.';
+  } else if (select.value !== previous) await openHandout();
+});
 source.addEventListener('click', updateCursorStatus);
 source.addEventListener('keyup', updateCursorStatus);
 source.addEventListener('keydown', event => {
@@ -303,6 +328,6 @@ document.querySelector('#discard-draft').addEventListener('click', () => { clear
 document.addEventListener('keydown', event => { if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 's') { event.preventDefault(); save(); } });
 window.addEventListener('beforeunload', event => { if (dirty()) event.preventDefault(); });
 
-const handouts = await request('/api/handouts');
-for (const item of handouts) select.add(new Option(`${item.code} — ${item.title}`, item.path));
+handouts = await request('/api/handouts');
+populateHandouts();
 if (handouts.length) openHandout();

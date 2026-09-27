@@ -3,6 +3,7 @@
 body { margin: 0; background: #e5e7eb; }
 header, nav { display: flex; align-items: center; gap: .5rem; padding: .6rem 1rem; background: #17202a; color: white; }
 header select { min-width: 24rem; } button, select { padding: .4rem .65rem; }
+.needs-fixing-filter { display: inline-flex; align-items: center; gap: .3rem; white-space: nowrap; }
 nav { background: #34495e; flex-wrap: wrap; }
 nav button { font-family: ui-monospace, monospace; }
 .image-button { margin-left: auto; background: #dbeafe; border-color: #93c5fd; }
