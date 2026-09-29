@@ -1,0 +1,24 @@
+{
+  "assets": [
+    {
+      "file": "posture-lift.svg",
+      "type": "diagram",
+      "creator": "La Habra Heights Fire Watch handout contributors",
+      "source": "Original diagram for SKL-008, 2026-09-29",
+      "license": "Repository license",
+      "alt": "Four grayscale panels show testing a container before lifting, placing feet around the load, holding it close while rising, and turning by stepping instead of twisting.",
+      "caption": "Test the load, set stable feet, hold it close, and step to turn.",
+      "decorative": false
+    },
+    {
+      "file": "two-person-carry.svg",
+      "type": "diagram",
+      "creator": "La Habra Heights Fire Watch handout contributors",
+      "source": "Original diagram for SKL-008, 2026-09-29",
+      "license": "Repository license",
+      "alt": "A grayscale diagram shows one person at each end of a long supply box, both facing the direction of travel. The person with the clearest view is labeled caller. A command strip reads ready, lift, walk, stop, and down.",
+      "caption": "Choose one caller and use agreed commands for the whole carry.",
+      "decorative": false
+    }
+  ]
+}

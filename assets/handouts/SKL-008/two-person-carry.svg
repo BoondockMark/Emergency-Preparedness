@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="320" viewBox="0 0 960 320" role="img" aria-labelledby="title desc">
+  <title id="title">Coordinated two-person carry</title>
+  <desc id="desc">A grayscale diagram shows one person at each end of a long supply box, both facing the direction of travel. The person with the clearest view is labeled caller. A command strip reads ready, lift, walk, stop, and down.</desc>
+  <defs><style>.line{fill:none;stroke:#111;stroke-width:9;stroke-linecap:round;stroke-linejoin:round}.thin{fill:none;stroke:#333;stroke-width:4;stroke-linecap:round;stroke-linejoin:round}.box{fill:#d8d8d8;stroke:#111;stroke-width:6}.txt{font:700 25px Arial,sans-serif;fill:#111}.small{font:20px Arial,sans-serif;fill:#111}.tag{fill:#fff;stroke:#111;stroke-width:3}.ground{stroke:#555;stroke-width:4}.arrow{fill:#111}</style></defs>
+  <line class="ground" x1="34" y1="251" x2="926" y2="251"/>
+  <circle class="line" cx="190" cy="87" r="20"/><path class="line" d="M190 109v91M190 132l60 41M190 200l-38 50M190 200l43 50"/>
+  <circle class="line" cx="755" cy="87" r="20"/><path class="line" d="M755 109v91M755 132l-60 41M755 200l-38 50M755 200l43 50"/>
+  <rect class="box" x="246" y="140" width="453" height="86" rx="6"/><path class="thin" d="M250 172l-43-18M695 172l42-18"/>
+  <rect class="tag" x="689" y="33" width="132" height="34" rx="17"/><text class="small" x="707" y="57">CALLER</text>
+  <path class="arrow" d="M837 131h70v-18l34 30-34 30v-18h-70z"/><text class="small" x="830" y="103">TRAVEL</text>
+  <rect class="tag" x="56" y="271" width="848" height="40" rx="7"/><text class="txt" x="86" y="299">“READY?”  →  “LIFT”  →  “WALK”  →  “STOP”  →  “DOWN”</text>
+  <text class="small" x="276" y="133">Level load • matched pace • clear view</text>
+</svg>
