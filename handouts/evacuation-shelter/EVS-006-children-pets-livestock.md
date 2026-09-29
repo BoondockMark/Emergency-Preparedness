@@ -94,7 +94,6 @@ sources:
 </ol>
 <!-- pagebreak -->
 
-Table: Children & Animals
 | Child, dependent, or animal | Authorized retriever / handler | Backup and phone |
 |---|---|---|
 | ___________________________ | ______________________________ | ________________ |
@@ -113,7 +112,6 @@ Table: Children & Animals
 <li>Inspect carriers, restraints, car seats, trailers, tires, lights, hitches, brakes, gates, ramps, loading aids, sanitation supplies, batteries, and communication devices.</li>
 </ul></div>
 
-Table: Drill Checklist
 | Check | Last completed | Next review / action |
 |---|---|---|
 | Child plan and reunification rules | ______________ | ____________________ |

@@ -39,7 +39,6 @@ sources:
 </ul></div>
 
 <table>
-<caption>Record each completed review and the next action.</caption>
 <thead><tr><th scope="col">Date</th><th scope="col">Binder / kit</th><th scope="col">Replaced, charged, or updated</th><th scope="col">Next review</th></tr></thead>
 <tbody>
 <tr><td>&nbsp;<br>&nbsp;</td><td></td><td></td><td></td></tr>

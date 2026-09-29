@@ -142,7 +142,6 @@ Test the complete load without risking a fall, strain, or loss of balance. Split
 <li>Assign every bag, child/animal carrier, device, and item that cannot be prepacked; name a backup carrier</li>
 <li>Tell household members and helpers where bags are kept; return used items promptly</li>
 </ul></div>
-Table: Bag Location and Owner
 | Bag or separate item | Storage location | Weight | Primary carrier | Backup carrier |
 |---|---|---:|---|---|
 | __________________ | __________________ | ____ | __________________ | __________________ |
@@ -156,7 +155,6 @@ Table: Bag Location and Owner
 
 Review after any use and whenever needs, seasons, routes, or household members change. Set a recurring schedule that matches the shortest manufacturer, medicine, food, and document review interval in the bag.
 
-Table: Bag Contents
 | Check | Date checked | Replace/update by | Initials |
 |---|---|---|---|
 | Food, water, first aid, hygiene: dates, seals, leaks, fit | __________ | __________ | _____ |

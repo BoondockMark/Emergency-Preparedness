@@ -58,7 +58,6 @@ Two-week planning period: **14 days** &nbsp; | &nbsp; Go-bag planning period set
 
 Use each person's real daily needs—not an average—when the table says “daily use.” Round up and allow for spills, delays, or damaged supplies where space and budget permit.
 
-Table: Two Week Calculations
 | Need | Two-week home calculation | Quantity to obtain |
 |---|---|---|
 | **Water** | 1 gallon × ____ people × 14 days = ____ gallons minimum. Plan more for pregnancy, illness, hot climates, and hygiene or medical needs. Add each animal's usual daily water × 14. | People: ____ gal<br>Animals: ____ gal |
@@ -68,7 +67,6 @@ Table: Two Week Calculations
 | **Lighting** | One flashlight or headlamp for each person who can use one, plus area lighting. Calculate replacement batteries or recharge cycles for 14 days from the device instructions. Prefer lights to candles. | Lights: ____<br>Batteries/cycles: ____ |
 
 <!-- pagebreak -->
-Table: Two Week Calculations
 | Need | Two-week home calculation | Quantity to obtain |
 |---|---|---|
 | **Communications** | At least one battery-powered or hand-crank weather radio; a charged phone/device for each user; paper contact and meeting plans; local map. | Radios: ____<br>Devices: ____ |

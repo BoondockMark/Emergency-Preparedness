@@ -56,7 +56,6 @@ sources:
 <!-- pagebreak -->
 
 ## My household alert record
-Table: ** Alert Record **
 | What to record | Household entry |
 |---|---|
 | Verified local alert system | ______________________________________________ |
@@ -72,7 +71,6 @@ Table: ** Alert Record **
 
 <p><strong>Household enrollment check:</strong></p>
 
-Table: ** Alert Enrollment Check **
 | Resident / device | Text | Voice | Email / app | Enrollment confirmed |
 |---|:---:|:---:|:---:|---|
 | __________________________ | ☐ | ☐ | ☐ | __________ |

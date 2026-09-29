@@ -40,7 +40,6 @@ sources:
 
 <p><strong>General direction / corridor:</strong> __________________________________________________________</p>
 
-Table: Route A Plan
 | Plan item | Route A details |
 |---|---|
 | Roads and turns, in order | ___________________________________________________<br>___________________________________________________<br>___________________________________________________ |
@@ -67,7 +66,6 @@ Table: Route A Plan
 <p><strong>Different general direction / corridor:</strong> _________________________________________________</p>
 <p><strong>How this avoids Route A's shared roads, bridge, gate, or other constraint:</strong></p>
 <p>________________________________________________________________________________________</p>
-Table: Route B Details
 | Plan item | Route B details |
 |---|---|
 | Roads and turns, in order | ___________________________________________________<br>___________________________________________________<br>___________________________________________________ |
@@ -98,7 +96,6 @@ Table: Route B Details
 ## Official information we will use
 
 <p class="lede">Record responsible local sources now, then check them for current directions before and during travel.</p>
-Table: Route
 | Official source | Name, URL, phone, channel, or app | Last checked |
 |---|---|---|
 | Evacuation map | __________________________________________ | ____________ |
@@ -132,7 +129,6 @@ Table: Route
 
 ## Review both routes
 
-Table: Route Direction
 | Route | Driven | Walked | Otherwise reviewed (method) | Person(s) reviewing / notes |
 |---|---|---|---|---|
 | A | __________ | __________ | ____________________ | __________________________ |
