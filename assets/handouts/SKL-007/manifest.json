@@ -1,0 +1,14 @@
+{
+  "assets": [
+    {
+      "file": "bleeding-control-sequence.svg",
+      "type": "diagram",
+      "creator": "La Habra Heights Fire Watch handout contributors",
+      "source": "Technique sequence adapted from American College of Surgeons STOP THE BLEED training resources, 2026-09-29",
+      "license": "Repository license",
+      "alt": "Four panels show calling emergency services, pressing directly on a wound, packing an appropriate wound if trained, and tightening a commercial tourniquet on a severely bleeding limb.",
+      "caption": "Call, press, pack if trained, and use a commercial tourniquet for severe limb bleeding.",
+      "decorative": false
+    }
+  ]
+}
