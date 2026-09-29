@@ -49,6 +49,8 @@ sources:
 
 <div class="callout"><strong>Do not use a questionable unit.</strong> If a check fails—or the extinguisher was discharged, even briefly—mark the issue and arrange qualified service or replacement according to its label and local requirements.</div>
 
+<!-- pagebreak -->
+
 ## Record the check
 
 | Extinguisher/location | Date | Initials | Result and action taken |
@@ -81,6 +83,8 @@ sources:
   <img src="../assets/handouts/SKL-002/pass-sequence.svg" style="height: 2.15in" alt="Four grayscale panels illustrate PASS: pull the pin, aim the nozzle at the base of the fire, squeeze the handle, and sweep the stream side to side.">
   <figcaption id="pass-caption"><strong>PASS is a memory aid.</strong> Use the exact operating directions and distance printed on the extinguisher. <span class="credit">Original Fire Watch diagram; see asset manifest.</span></figcaption>
 </figure>
+
+<!-- pagebreak -->
 
 ## P—A—S—S
 

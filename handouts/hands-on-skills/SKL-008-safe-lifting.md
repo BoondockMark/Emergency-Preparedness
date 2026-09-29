@@ -47,12 +47,16 @@ sources:
   <figcaption id="lift-caption"><strong>Test → set → hold close → step.</strong> The safest posture cannot make an over-heavy or unstable load safe. <span class="credit">Original Fire Watch diagram; technical basis: OSHA and NIOSH.</span></figcaption>
 </figure>
 
+<!-- pagebreak -->
+
 <ol class="procedure">
 <li>Wear secure, closed-toe footwear. Stand on firm, dry, stable footing with feet apart and one foot slightly forward. Get close to the load.</li>
 <li>Use secure handles or opposite lower corners. Keep a neutral, comfortable back position; bend at the hips and knees as your abilities allow. Keep fingers away from pinch points.</li>
 <li>Brace gently and rise smoothly with the load close to your body. Do not jerk. Keep the load between knee and shoulder height when practical, and keep your view clear.</li>
 <li><strong>Never twist while holding the load.</strong> Turn your whole body by taking small steps. Set down smoothly on a stable surface; protect fingers and toes.</li>
 </ol>
+
+<!-- pagebreak -->
 
 <div class="callout"><strong>No universal “safe weight” applies to everyone.</strong> Size, shape, distance from the body, repetition, terrain, health, and individual capability all matter. When unsure, divide the load, use an aid, or ask for help.</div>
 
@@ -83,7 +87,11 @@ sources:
 <li>Ask a household member, neighbor, caregiver, animal-assistance contact, or community group now. Practice once in ordinary conditions and confirm who brings the cart, who handles animals, and who is the backup.</li>
 </ul>
 
+<!-- pagebreak -->
+
 <div class="local-info"><p><strong>My help plan</strong></p><p>Supplies I will not move alone: ____________________________________________<br>Primary helper / method: ____________________ &nbsp; Backup: ____________________<br>Aid and storage location: ___________________ &nbsp; Route checked on: ___________<br>How I will request help: ____________________ &nbsp; Plan practiced on: __________</p></div>
+
+<!-- pagebreak -->
 
 ## Supplies are not injured people
 

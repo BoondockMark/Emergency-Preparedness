@@ -87,6 +87,8 @@ Assign a backup for every essential role. One person may hold more than one role
 
 <p><strong>Total time from start to ready-to-leave:</strong> ____________________</p>
 
+<!-- pagebreak -->
+
 <div class="warning"><strong>This is the end of the drill.</strong> Do not drive the evacuation route as part of this card. If the household separately practices a route, plan that activity under ordinary traffic laws and the safety limits in EVS-004 and EVS-005.</div>
 
 <!-- pagebreak -->
@@ -100,6 +102,8 @@ Assign a backup for every essential role. One person may hold more than one role
 <li><strong>Medication:</strong> retrieve the prepared, labeled supply or an empty practice container from its normal safe location. Maintain required security and temperature; do not delay or change a dose for the drill.</li>
 <li><strong>Transportation assistance:</strong> practice the agreed call or message with a pre-briefed helper, including pickup entrance, passenger count, mobility-device space, animal capacity, and boarding support. Clearly say no actual pickup is requested unless one was scheduled.</li>
 </ul></div>
+
+<!-- pagebreak -->
 
 ## After-action review
 
@@ -128,5 +132,7 @@ Reviewed the simulated alert, stop point, traffic limits, fire safety, and confl
 <strong>Required changes:</strong> __________________________________________ <strong>Date:</strong> __________ <strong>Initials:</strong> ________</p>
 <p><strong>Changes completed by:</strong> ____________________ <strong>Date:</strong> __________ <strong>Approval recorded by:</strong> ____________________</p>
 </div>
+
+<!-- pagebreak -->
 
 <div class="sources"><strong>Sources:</strong> Ready.gov, “Evacuation,” “Individuals with Disabilities,” and “Pets and Animals.” Accessed 2026-09-29. Use EVS-001 through EVS-006 for the household planning guidance this drill tests.</div>

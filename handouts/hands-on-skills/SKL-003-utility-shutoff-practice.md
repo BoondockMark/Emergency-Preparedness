@@ -37,6 +37,8 @@ sources:
 
 <div class="warning warning--danger"><strong>Stop the entire drill and keep away</strong> if there is fire, smoke, sparks, arcing, a gas odor, or hissing. Do not touch a switch, control, phone, garage-door opener, vehicle, flame, or anything else that could create a spark near a suspected gas leak. Leave by a safe route, warn others, and contact emergency services and the utility from a safe location.</div>
 
+<!-- pagebreak -->
+
 ## Electricity
 
 ### Locate, record, and explain
@@ -74,6 +76,8 @@ sources:
 <strong>Home shutoff location:</strong> _____________________________________________________________<br>
 <strong>Required tool, if provider/plumber specifies one:</strong> ______________________________________<br>
 <strong>Photo saved/printed at:</strong> ___________________________________ <strong>Date:</strong> __________</p>
+
+<!-- pagebreak -->
 
 ## Natural gas
 
@@ -123,6 +127,8 @@ sources:
 <p>Do not fill this block from memory, a search result, or a neighbor's procedure. Confirm directly with each responsible provider or authority; record the representative or official source and date.</p>
 <p><strong>Verified by/source:</strong> __________________________________________ <strong>Date:</strong> __________</p>
 </div>
+
+<!-- pagebreak -->
 
 ## Required technical and fire-service review
 

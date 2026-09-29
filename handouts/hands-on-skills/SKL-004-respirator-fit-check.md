@@ -47,6 +47,8 @@ sources:
   <figcaption id="donning-caption"><strong>Inspect → place → position and shape → seal-check.</strong> Strap locations and the seal-check method can vary; use the manufacturer's instructions for your model. <span class="credit">Original diagram based on NIOSH guidance; see asset manifest.</span></figcaption>
 </figure>
 
+<!-- pagebreak -->
+
 ## Put it on
 
 <ol class="procedure">
@@ -74,6 +76,8 @@ sources:
 **If it fails:** adjust the nosepiece and straps, reposition the respirator, and repeat the same check. If it still leaks, try another NIOSH-approved model or size. **Do not enter or remain in smoky or contaminated air without a seal. Move to cleaner air and follow current local public-health advice.**
 
 <div class="warning warning--caution"><strong>Do not improvise.</strong> Do not knot, staple, cut, tape, or add material to the respirator to force a fit. Do not wear a second respirator over it unless its manufacturer specifically allows that use.</div>
+
+<!-- pagebreak -->
 
 ## Replace it—and know when to get help
 
