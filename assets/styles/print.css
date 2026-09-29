@@ -150,6 +150,14 @@ caption { caption-side: top; text-align: left; color: var(--ink-secondary); font
 th, td { border: 1px solid var(--rule-strong); padding: .055in .07in; text-align: left; vertical-align: top; }
 th { background: var(--shade-medium); font-weight: 800; }
 
+.toc-sheet .content { right: var(--page-inner); }
+.toc-table { margin-top: .16in; table-layout: fixed; }
+.toc-table th, .toc-table td { font-size: 7.5pt; line-height: 1.12; padding: .035in .05in; }
+.toc-table th:nth-child(1) { width: .72in; }
+.toc-table th:nth-child(3) { width: 1.55in; }
+.toc-table th:nth-child(4) { width: .68in; }
+.toc-pages { text-align: right; white-space: nowrap; }
+
 .figure { margin: .13in 0; break-inside: avoid; }
 .figure--full { width: 100%; }
 .figure--half { width: calc(50% - .075in); }

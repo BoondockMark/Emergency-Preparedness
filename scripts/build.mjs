@@ -5,6 +5,7 @@ import process from 'node:process';
 import { generateArtifacts } from './lib/artifact-generation.mjs';
 import { loadAssetManifests } from './lib/asset-validation.mjs';
 import { discoverDocuments } from './lib/filesystem-discovery.mjs';
+import { BINDER_CODE, TABLE_OF_CONTENTS_CODE } from './lib/binder-generation.mjs';
 
 const root = path.resolve(import.meta.dirname, '..');
 const checkOnly = process.argv.includes('--check');
@@ -31,6 +32,8 @@ try {
   const expectedArtifacts = [
     ['BINDER_INDEX.md', 'BINDER_INDEX.md'],
     ['docs/moodle-index.html', 'moodle-index.html'],
+    [`docs/pdfs/${TABLE_OF_CONTENTS_CODE}.pdf`, `pdfs/${TABLE_OF_CONTENTS_CODE}.pdf`],
+    [`docs/pdfs/${BINDER_CODE}.pdf`, `pdfs/${BINDER_CODE}.pdf`],
     ...documents.map(({ meta }) => [
       `docs/pdfs/${meta.code}.pdf`,
       `pdfs/${meta.code}.pdf`
@@ -66,6 +69,12 @@ try {
     );
     await fs.mkdir(path.join(root, 'docs/pdfs'), { recursive: true });
     await fs.mkdir(path.join(root, 'docs/previews'), { recursive: true });
+    for (const code of [TABLE_OF_CONTENTS_CODE, BINDER_CODE]) {
+      await fs.copyFile(
+        path.join(outputRoot, 'pdfs', `${code}.pdf`),
+        path.join(root, 'docs/pdfs', `${code}.pdf`)
+      );
+    }
     for (const { meta } of documents) {
       await fs.copyFile(
         path.join(outputRoot, 'pdfs', `${meta.code}.pdf`),

@@ -6,6 +6,12 @@ import { pathToFileURL } from 'node:url';
 import { gunzipSync } from 'node:zlib';
 import puppeteer from 'puppeteer';
 import { inspectAccessibility, formatAccessibilityIssue } from './accessibility-validation.mjs';
+import {
+  BINDER_CODE,
+  generateBinderHtml,
+  generateTableOfContentsHtml,
+  TABLE_OF_CONTENTS_CODE
+} from './binder-generation.mjs';
 import { sanitizeSvg } from './asset-validation.mjs';
 import { createCalibrationPdf } from './calibration-pdf.mjs';
 import { parseHandoutSource, renderHandout } from './content-rendering.mjs';
@@ -67,12 +73,22 @@ export async function copyAssets(root, outputRoot, manifests) {
 
 async function renderSources(root, outputRoot, documents, manifests) {
   const template = await fs.readFile(path.join(root, 'templates/handout.html'), 'utf8');
+  const handoutHtml = new Map();
   for (const document of documents) {
     const html = renderHandout(template, document);
+    handoutHtml.set(document.meta.code, html);
     const htmlFile = path.join(outputRoot, 'html', `${document.meta.code}.html`);
     await fs.writeFile(htmlFile, html);
     await validateLocalLinks(html, htmlFile, document.meta.code);
   }
+  await fs.writeFile(
+    path.join(outputRoot, 'html', `${TABLE_OF_CONTENTS_CODE}.html`),
+    generateTableOfContentsHtml(template, documents)
+  );
+  await fs.writeFile(
+    path.join(outputRoot, 'html', `${BINDER_CODE}.html`),
+    generateBinderHtml(template, documents, handoutHtml)
+  );
 
   const fixtureSource = await fs.readFile(path.join(root, 'test/fixtures/components.html'), 'utf8');
   validateImages(fixtureSource, 'FIX-00', manifests);
@@ -238,6 +254,21 @@ async function createPdfAndPreviews(page, outputRoot, meta, derivedPageCount) {
   }
 }
 
+async function createPdf(page, outputRoot, code, expectedPageCount) {
+  const pdf = normalizePdfDates(await page.pdf({
+    width: '8.5in', height: '11in',
+    margin: { top: 0, right: 0, bottom: 0, left: 0 },
+    printBackground: true, preferCSSPageSize: true, tagged: false, outline: false
+  }));
+  await fs.writeFile(path.join(outputRoot, 'pdfs', `${code}.pdf`), pdf);
+  const count = await getPdfPageCount(pdf);
+  if (count !== expectedPageCount) throw Error(`${code}: PDF page count ${count}, expected ${expectedPageCount}`);
+  const fonts = inspectEmbeddedFonts(pdf);
+  if (!fonts.embeddedPrograms || !fonts.fontNames.some(name => name.includes('DejaVuSans'))) {
+    throw Error(`${code}: generated PDF does not contain the bundled DejaVu Sans font`);
+  }
+}
+
 async function renderArtifacts(root, outputRoot, documents) {
   const browser = await puppeteer.launch(browserOptions());
   try {
@@ -253,6 +284,17 @@ async function renderArtifacts(root, outputRoot, documents) {
       await createPdfAndPreviews(page, outputRoot, meta, derivedPageCount);
       await page.close();
     }
+
+    const contentsPage = await openPrintPage(browser, path.join(outputRoot, 'html', `${TABLE_OF_CONTENTS_CODE}.html`));
+    await validateRenderedPage(contentsPage, TABLE_OF_CONTENTS_CODE, 1, path.join(outputRoot, 'diagnostics'));
+    await createPdf(contentsPage, outputRoot, TABLE_OF_CONTENTS_CODE, 1);
+    await contentsPage.close();
+
+    const binderPageCount = 1 + documents.reduce((total, { meta }) => total + meta.pageCount, 0);
+    const binderPage = await openPrintPage(browser, path.join(outputRoot, 'html', `${BINDER_CODE}.html`));
+    await validateRenderedPage(binderPage, BINDER_CODE, binderPageCount, path.join(outputRoot, 'diagnostics'));
+    await createPdf(binderPage, outputRoot, BINDER_CODE, binderPageCount);
+    await binderPage.close();
 
     const fixturePage = await openPrintPage(browser, path.join(outputRoot, 'html/components-fixture.html'));
     await validateRenderedPage(fixturePage, 'FIX-00', 2, path.join(outputRoot, 'diagnostics'));
