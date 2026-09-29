@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 330" role="img" aria-labelledby="title desc">
+  <title id="title">Bleeding-control action sequence</title>
+  <desc id="desc">Four panels show calling emergency services, pressing directly on a wound, packing an appropriate wound if trained, and tightening a commercial tourniquet on a severely bleeding limb.</desc>
+  <style>
+    .panel{fill:#f7f5ef;stroke:#24323c;stroke-width:3}.n{fill:#9f1d20}.nt{font:700 25px sans-serif;fill:#fff}.h{font:700 25px sans-serif;fill:#18252e}.t{font:18px sans-serif;fill:#18252e}.line{fill:none;stroke:#18252e;stroke-width:8;stroke-linecap:round;stroke-linejoin:round}.blood{fill:#9f1d20}.band{fill:#e8c955;stroke:#18252e;stroke-width:4}.arrow{fill:#24323c}
+  </style>
+  <rect class="panel" x="8" y="8" width="224" height="314" rx="14"/><rect class="panel" x="248" y="8" width="224" height="314" rx="14"/><rect class="panel" x="488" y="8" width="224" height="314" rx="14"/><rect class="panel" x="728" y="8" width="224" height="314" rx="14"/>
+  <circle class="n" cx="39" cy="40" r="23"/><text class="nt" x="32" y="49">1</text><text class="h" x="70" y="49">CALL</text>
+  <rect x="73" y="80" width="92" height="128" rx="14" fill="#fff" stroke="#18252e" stroke-width="7"/><circle cx="119" cy="185" r="8" fill="#18252e"/><text class="h" x="89" y="145">911</text><path class="line" d="M53 241h132"/><path class="arrow" d="M177 227l28 14-28 14z"/><text class="t" x="29" y="287">Send someone; put</text><text class="t" x="33" y="310">the phone on speaker.</text>
+  <circle class="n" cx="279" cy="40" r="23"/><text class="nt" x="272" y="49">2</text><text class="h" x="310" y="49">PRESS</text>
+  <path d="M285 207c25-72 125-72 150 0" fill="#e8b995" stroke="#18252e" stroke-width="5"/><ellipse class="blood" cx="360" cy="191" rx="22" ry="13"/><path class="line" d="M322 100l38 61 38-61M300 115l60 46 60-46"/><text class="t" x="271" y="265">Hard, steady pressure.</text><text class="t" x="280" y="291">Do not lift to check.</text>
+  <circle class="n" cx="519" cy="40" r="23"/><text class="nt" x="512" y="49">3</text><text class="h" x="550" y="49">PACK*</text>
+  <path d="M521 210c28-71 130-71 158 0" fill="#e8b995" stroke="#18252e" stroke-width="5"/><path class="blood" d="M574 193q26-42 52 0q-26 19-52 0"/><path class="line" d="M600 82v89"/><path class="arrow" d="M585 150l15 31 15-31z"/><path d="M566 90q34-30 68 0q-34 26-68 0" fill="#fff" stroke="#18252e" stroke-width="4"/><text class="t" x="513" y="263">*Appropriate wound</text><text class="t" x="513" y="288">and trained: pack, then</text><text class="t" x="513" y="311">press continuously.</text>
+  <circle class="n" cx="759" cy="40" r="23"/><text class="nt" x="752" y="49">4</text><text class="h" x="790" y="49">TOURNIQUET</text>
+  <path class="line" d="M762 148h155"/><rect class="band" x="815" y="118" width="35" height="60"/><path class="line" d="M832 116V83h42"/><path class="blood" d="M892 162c12 16 12 25 0 35-12-10-12-19 0-35"/><text class="t" x="754" y="233">Severe limb bleeding:</text><text class="t" x="754" y="258">tighten until it stops.</text><text class="t" x="754" y="286">Record time. Leave</text><text class="t" x="754" y="311">visible and in place.</text>
+</svg>
