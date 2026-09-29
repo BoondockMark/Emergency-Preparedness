@@ -1,0 +1,34 @@
+{
+  "assets": [
+    {
+      "file": "hand-position.svg",
+      "type": "diagram",
+      "creator": "La Habra Heights Fire Watch handout contributors",
+      "source": "Original diagram for SKL-006, checked against the 2025 American Heart Association CPR/ECC Guidelines, 2026-09-29",
+      "license": "Repository license",
+      "alt": "Front view of an adult chest shows the heel of the lower hand centered on the breastbone, with the second hand on top and fingers interlocked and lifted off the ribs.",
+      "caption": "Adult chest-compression hand position.",
+      "decorative": false
+    },
+    {
+      "file": "body-posture.svg",
+      "type": "diagram",
+      "creator": "La Habra Heights Fire Watch handout contributors",
+      "source": "Original diagram for SKL-006, checked against the 2025 American Heart Association CPR/ECC Guidelines, 2026-09-29",
+      "license": "Repository license",
+      "alt": "Side view shows a rescuer kneeling close to an adult, with shoulders directly above straight arms and hands pressing vertically on the center of the chest.",
+      "caption": "Adult chest-compression body posture.",
+      "decorative": false
+    },
+    {
+      "file": "aed-pad-placement.svg",
+      "type": "diagram",
+      "creator": "La Habra Heights Fire Watch handout contributors",
+      "source": "Original diagram for SKL-006, checked against the 2025 American Heart Association CPR/ECC Guidelines, 2026-09-29",
+      "license": "Repository license",
+      "alt": "Front view of an adult torso shows one AED pad on the person's upper right chest below the collarbone and the other on the lower left side of the chest below the armpit, with space between the pads.",
+      "caption": "Common adult anterolateral AED pad placement.",
+      "decorative": false
+    }
+  ]
+}
