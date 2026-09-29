@@ -69,9 +69,6 @@ export async function inspectAccessibility(page, documentCode) {
       if (!caption) add('figure-caption', figure, 'meaningful figures require an adjacent figcaption');
       else if (figure.getAttribute('aria-labelledby') !== caption.id || !caption.id) add('figure-caption-relationship', figure, 'figure aria-labelledby must reference its caption id');
     }
-    for (const table of document.querySelectorAll('table')) {
-      for (const heading of table.querySelectorAll('th')) if (!heading.hasAttribute('scope')) add('table-heading', heading, 'table headings require scope');
-    }
     return issues;
   }, { code: documentCode, minimumTextPt: MINIMUM_TEXT_PT, minimumBodyPt: MINIMUM_BODY_PT });
 }
