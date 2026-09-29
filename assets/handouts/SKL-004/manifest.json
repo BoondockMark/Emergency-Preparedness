@@ -1,0 +1,14 @@
+{
+  "assets": [
+    {
+      "file": "donning-and-seal-check.svg",
+      "type": "diagram",
+      "creator": "La Habra Heights Fire Watch handout contributors",
+      "source": "Original diagram for SKL-004 based on NIOSH respirator donning and user seal-check guidance, 2026-09-29",
+      "license": "Repository license",
+      "alt": "Four grayscale panels show inspecting a cup respirator and two straps, placing it over nose and chin, positioning the lower strap below the ears and upper strap high on the head, shaping the nosepiece with both hands, and covering the respirator for a user seal check.",
+      "caption": "Inspect, place, position and shape, then perform the model-specific user seal check.",
+      "decorative": false
+    }
+  ]
+}

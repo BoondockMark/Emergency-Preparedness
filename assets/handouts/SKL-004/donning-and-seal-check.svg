@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="520" viewBox="0 0 1200 520" role="img" aria-labelledby="title desc">
+  <title id="title">Four steps for putting on and checking a disposable respirator</title>
+  <desc id="desc">Black, white, and gray line drawings show inspection, placement over nose and chin, two-strap positioning and two-handed nosepiece shaping, and the model-specific user seal check.</desc>
+  <defs>
+    <style>
+      .panel{fill:#fff;stroke:#222;stroke-width:4}.head{fill:#eee;stroke:#222;stroke-width:5}.mask{fill:#fff;stroke:#111;stroke-width:6}.line{fill:none;stroke:#222;stroke-width:6;stroke-linecap:round;stroke-linejoin:round}.thin{fill:none;stroke:#555;stroke-width:4;stroke-linecap:round}.label{font:700 25px sans-serif;fill:#111}.small{font:600 19px sans-serif;fill:#222}.num{fill:#111}.numtext{font:700 24px sans-serif;fill:#fff;text-anchor:middle}
+    </style>
+    <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0l10 5-10 5z" fill="#222"/></marker>
+  </defs>
+  <rect width="1200" height="520" fill="#fff"/>
+  <g transform="translate(15 15)">
+    <rect class="panel" width="278" height="490" rx="15"/><circle class="num" cx="30" cy="30" r="21"/><text class="numtext" x="30" y="39">1</text><text class="label" x="60" y="39">INSPECT</text>
+    <path class="mask" d="M72 150 Q139 84 206 150 L188 274 Q139 310 90 274z"/><path class="thin" d="M93 154q46-25 92 0"/><path class="line" d="M78 174q-45 39-21 106M200 174q45 39 21 106"/>
+    <circle cx="64" cy="350" r="18" fill="#fff" stroke="#222" stroke-width="4"/><path class="line" d="M55 350l7 8 13-18"/><text class="small" text-anchor="middle" x="139" y="402">Package • facepiece</text><text class="small" text-anchor="middle" x="139" y="430">nosepiece • both straps</text><text class="small" text-anchor="middle" x="139" y="460">Clean, dry, undamaged</text>
+  </g>
+  <g transform="translate(312 15)">
+    <rect class="panel" width="278" height="490" rx="15"/><circle class="num" cx="30" cy="30" r="21"/><text class="numtext" x="30" y="39">2</text><text class="label" x="60" y="39">PLACE</text>
+    <path class="head" d="M93 103q65-33 105 18 30 38 2 104-13 29-7 82H94q11-56-7-87-30-50 6-117z"/><path class="line" d="M106 157q28-18 60 1M111 205q31 19 60-1"/><path class="mask" d="M95 156q52-31 105 1l-13 103q-40 41-82 0z"/><path class="thin" d="M112 170q36-19 70 0"/>
+    <path class="line" d="M65 336v-55m0 0-16 22m16-22 16 22" marker-end="url(#arrow)"/><text class="small" text-anchor="middle" x="139" y="382">Cover nose, mouth,</text><text class="small" text-anchor="middle" x="139" y="410">and chin</text><text class="small" text-anchor="middle" x="139" y="450">Hold firmly in place</text>
+  </g>
+  <g transform="translate(609 15)">
+    <rect class="panel" width="278" height="490" rx="15"/><circle class="num" cx="30" cy="30" r="21"/><text class="numtext" x="30" y="39">3</text><text class="label" x="60" y="39">STRAPS + NOSE</text>
+    <path class="head" d="M96 102q63-30 104 20 30 37 1 105-13 31-5 81H96q10-55-8-88-28-51 8-118z"/><path class="mask" d="M99 157q48-28 102 2l-13 102q-40 39-80 0z"/>
+    <path class="line" d="M104 157q-37-1-48 22M196 158q32-15 55-6M110 253q-43 22-54 1M186 255q40 5 62-11"/><text class="small" x="47" y="123">HIGH</text><text class="small" x="29" y="306">BELOW EARS</text>
+    <path class="line" d="M115 143l20 25M184 143l-20 25"/><path class="thin" d="M88 132q18 8 29 25M210 132q-18 8-29 25"/>
+    <text class="small" text-anchor="middle" x="139" y="382">Both hands shape</text><text class="small" text-anchor="middle" x="139" y="410">nosepiece outward</text><text class="small" text-anchor="middle" x="139" y="450">Straps flat, not crossed</text>
+  </g>
+  <g transform="translate(906 15)">
+    <rect class="panel" width="278" height="490" rx="15"/><circle class="num" cx="30" cy="30" r="21"/><text class="numtext" x="30" y="39">4</text><text class="label" x="60" y="39">SEAL-CHECK</text>
+    <path class="head" d="M94 103q62-33 104 18 30 38 2 105-14 30-6 82H95q10-56-8-88-29-50 7-117z"/><path class="mask" d="M98 157q50-29 102 1l-13 104q-40 40-81 0z"/>
+    <path d="M71 183q16-16 37 5l24 42-20 41-42-32zM226 183q-16-16-37 5l-24 42 20 41 42-32z" fill="#ccc" stroke="#222" stroke-width="5"/>
+    <path class="line" d="M139 118v-27m0 0-10 13m10-13 10 13M139 283v28m0 0-10-13m10 13 10-13"/>
+    <text class="small" text-anchor="middle" x="139" y="382">Follow this model's</text><text class="small" text-anchor="middle" x="139" y="410">instructions</text><text class="small" text-anchor="middle" x="139" y="450">Feel for edge leaks</text>
+  </g>
+</svg>
