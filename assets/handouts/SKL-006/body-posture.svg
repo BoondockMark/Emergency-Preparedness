@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 250" role="img" aria-labelledby="title desc">
+  <title id="title">Rescuer posture for adult chest compressions</title>
+  <desc id="desc">A kneeling rescuer keeps shoulders directly above straight arms and presses vertically on the center of the person's chest.</desc>
+  <defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="4" refY="6" orient="auto"><path d="M1 1l3 5 3-5" fill="#111"/></marker></defs>
+  <g fill="none" stroke="#111" stroke-width="5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M29 210h365" stroke-width="3"/>
+    <circle cx="82" cy="174" r="24"/><path d="M106 177c65-22 134-22 210 1l54 4M316 178l30 28"/>
+    <circle cx="250" cy="43" r="22"/><path d="M239 65l-31 52 4 82M241 67l21 55-1 77"/>
+    <path d="M209 117l-20 53M262 122l-19 49"/>
+    <path d="M189 170h55" stroke-width="7"/>
+    <path d="M212 199l-45 11M261 199l46 11"/>
+    <path d="M232 35v115" stroke-width="2" stroke-dasharray="6 6" marker-end="url(#arrow)"/>
+  </g>
+  <g fill="#111" font-family="Arial, sans-serif">
+    <text x="18" y="20" font-size="17" font-weight="700">SHOULDERS OVER HANDS</text>
+    <text x="278" y="78" font-size="14" font-weight="700">ARMS STRAIGHT</text>
+    <text x="276" y="96" font-size="12">Press straight down</text>
+  </g>
+</svg>

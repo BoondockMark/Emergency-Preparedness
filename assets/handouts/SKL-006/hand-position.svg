@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 250" role="img" aria-labelledby="title desc">
+  <title id="title">Hand position for adult chest compressions</title>
+  <desc id="desc">The heel of the lower hand is centered on the breastbone. The second hand rests on top with fingers interlocked and raised from the ribs.</desc>
+  <g fill="none" stroke="#111" stroke-width="4" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M143 36c-39 14-65 51-65 97v82M277 36c39 14 65 51 65 97v82M143 36c18-14 116-14 134 0"/>
+    <path d="M210 48v150" stroke-dasharray="7 7" stroke-width="2"/>
+    <ellipse cx="210" cy="132" rx="39" ry="52" stroke-width="2" stroke-dasharray="5 6"/>
+    <path d="M124 109c32-8 60-2 88 16l42 27c10 7 9 23-3 28-7 3-14 1-20-3l-42-25-48 1c-27 0-34-36-17-44z" fill="#fff"/>
+    <path d="M296 97c-34-2-61 7-87 29l-35 30c-10 8-6 24 6 27 7 2 14-1 19-6l34-28 47-7c26-4 34-43 16-45z" fill="#eee"/>
+    <path d="M180 153l15 22m1-29 17 22m0-29 17 20m-2-28 18 18" stroke-width="2.5"/>
+    <path d="M210 71v32"/><path d="M200 94l10 10 10-10"/>
+  </g>
+  <g fill="#111" font-family="Arial, sans-serif" text-anchor="middle">
+    <text x="210" y="22" font-size="17" font-weight="700">CENTER OF CHEST</text>
+    <text x="210" y="228" font-size="14">Heel of lower hand on breastbone</text>
+    <text x="210" y="245" font-size="12">Other hand on top • fingers interlocked</text>
+  </g>
+</svg>

@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 660 260" role="img" aria-labelledby="title desc">
+  <title id="title">Common adult AED pad placement</title>
+  <desc id="desc">One pad is placed on the upper right chest below the collarbone. The second pad is placed on the lower left side of the chest below the armpit.</desc>
+  <g fill="none" stroke="#111" stroke-width="4" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="330" cy="42" r="27"/>
+    <path d="M299 71c-42 10-75 34-92 72l-26 89M361 71c42 10 75 34 92 72l26 89M299 71c14 11 48 11 62 0M207 143l38 22v77M453 143l-38 22v77M245 165c21-37 29-67 31-81M415 165c-21-37-29-67-31-81"/>
+    <path d="M276 84c31 18 77 18 108 0" stroke-width="2"/>
+    <rect x="342" y="92" width="72" height="50" rx="8" fill="#eee" transform="rotate(4 378 117)"/>
+    <rect x="246" y="157" width="72" height="50" rx="8" fill="#eee" transform="rotate(-8 282 182)"/>
+    <path d="M379 117l-12 8m-84 57l12-8" stroke-width="3"/>
+    <path d="M418 113h88M242 183h-88" stroke-width="2"/>
+  </g>
+  <g fill="#111" font-family="Arial, sans-serif">
+    <text x="514" y="102" font-size="15" font-weight="700">UPPER RIGHT CHEST</text>
+    <text x="514" y="120" font-size="13">below collarbone</text>
+    <text x="146" y="173" font-size="15" font-weight="700" text-anchor="end">LOWER LEFT SIDE</text>
+    <text x="146" y="191" font-size="13" text-anchor="end">below armpit</text>
+    <text x="330" y="252" font-size="14" text-anchor="middle" font-weight="700">FOLLOW THE PICTURES ON THE AED PADS</text>
+  </g>
+</svg>
