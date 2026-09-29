@@ -152,7 +152,7 @@ th { background: var(--shade-medium); font-weight: 800; }
 
 .toc-sheet .content { right: var(--page-inner); }
 .toc-table { margin-top: .16in; table-layout: fixed; }
-.toc-table th, .toc-table td { font-size: 7.5pt; line-height: 1.12; padding: .035in .05in; }
+.toc-table th, .toc-table td { font-size: 9pt; line-height: 1.12; padding: .035in .05in; }
 .toc-table th:nth-child(1) { width: .72in; }
 .toc-table th:nth-child(3) { width: 1.55in; }
 .toc-table th:nth-child(4) { width: .68in; }
