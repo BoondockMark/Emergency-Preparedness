@@ -1,0 +1,14 @@
+{
+  "assets": [
+    {
+      "file": "pass-sequence.svg",
+      "type": "diagram",
+      "creator": "La Habra Heights Fire Watch handout contributors",
+      "source": "Original diagram for SKL-002, 2026-09-29",
+      "license": "Repository license",
+      "alt": "Four grayscale panels illustrate PASS: pull the pin, aim the nozzle at the base of the fire, squeeze the handle, and sweep the stream side to side.",
+      "caption": "Pull, aim, squeeze, and sweep while keeping a clear exit behind you.",
+      "decorative": false
+    }
+  ]
+}
