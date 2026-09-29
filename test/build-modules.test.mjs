@@ -117,7 +117,7 @@ test('pipe tables render with inline formatting, escaped pipes, and source locat
   assert.doesNotMatch(markdown, /<p[^>]*>\| Route/);
 });
 
-test('pipe tables without a caption remain tables for accessibility validation', () => {
+test('pipe tables do not require a caption', () => {
   const markdown = renderMarkdown('| Item | Value |\n|---|---|\n| One | Two |');
   assert.match(markdown, /^<table><thead>/);
   assert.doesNotMatch(markdown, /<caption/);

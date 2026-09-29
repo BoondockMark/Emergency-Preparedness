@@ -112,7 +112,6 @@ Transporter and backup transporter: [VERIFY] _________________________________</
 
 <p>Complete one row for each animal or clearly identified compatible group. Attach extra pages, photos, records, maps, and written care instructions. Update after any change.</p>
 
-Table: Animal Planning
 | Animal / group and species | Identification and current photo reference | Usual location | Handling considerations |
 |---|---|---|---|
 | __________________________ | ___________________________ | ______________ | ________________________ |
@@ -121,7 +120,6 @@ Table: Animal Planning
 | __________________________ | ___________________________ | ______________ | ________________________ |
 | __________________________ | ___________________________ | ______________ | ________________________ |
 
-Table: Supplies
 | Carrier, restraint, or handling equipment and location | Loading order | Confirmed destination and route |
 |---|---|---|
 | ______________________________ | _____________ | _________________________________ |

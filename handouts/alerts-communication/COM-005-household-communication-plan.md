@@ -39,7 +39,6 @@ sources:
 
 ## Household contacts
 
-Table: **Household**
 | Person / role | Primary phone or method | Backup method / accessibility need |
 |---|---|---|
 | __________________________ | __________________________ | __________________________ |
@@ -47,7 +46,6 @@ Table: **Household**
 | __________________________ | __________________________ | __________________________ |
 | __________________________ | __________________________ | __________________________ |
 
-Table: **Key Contacts**
 | Key contact | Name | Phone / method |
 |---|---|---|
 | Out-of-area contact | __________________________ | __________________________ |
@@ -56,7 +54,6 @@ Table: **Key Contacts**
 | Caregiver / support person | __________________________ | __________________________ |
 | Veterinarian / animal contact | __________________________ | __________________________ |
 
-Table: **Reconnection Plan**
 | Situation | Place / action |
 |---|---|
 | Outside-home meeting place | ______________________________________________ |

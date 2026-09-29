@@ -31,7 +31,6 @@ sources:
 <div class="warning"><strong>Official instructions take priority.</strong> Follow evacuation, shelter, school-release, and other directions from the responsible authority. Never return to a closed or dangerous area to reach a meeting place.</div>
 
 ## People, contacts, and responsibilities
-Table: Contacts
 | Person who Needs Support | Need / Responsibility | Primary Caregiver | Backup Caregiver |
 |---|---|---|---|
 | &nbsp;  |   |   |   |

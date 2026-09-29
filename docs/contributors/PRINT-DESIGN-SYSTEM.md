@@ -40,8 +40,9 @@ coordinates.
   verb and put prerequisites before actions.
 - **Checklist**: independent items a reader can mark complete. Use a procedure
   instead if order affects safety.
-- **Table**: compact comparison or lookup data, with a visible caption and
-  scoped row/column headings. Do not use tables for layout.
+- **Table**: compact comparison or lookup data, with scoped row/column headings.
+  A visible caption is optional when the section heading already provides the
+  table's context. Do not use tables for layout.
 - **Figure**: a meaningful image or diagram in a semantic `figure`. Put its
   uniquely identified `figcaption` directly after the image and connect the
   figure with `aria-labelledby`. Captions explain relevance; credits identify
@@ -70,8 +71,8 @@ The build checks every rendered handout and the fixture for:
    order that matches the intended grid/column order. Keyboard and screen-reader
    review remains required for structural changes.
 5. **Relationships:** figures need adjacent, explicitly associated captions;
-   data tables need captions and scoped headers; every image needs validated
-   alternative text.
+   data tables need scoped headers; every image needs validated alternative
+   text.
 
 Automation also rejects content outside the printable region, footer overlap,
 clipping, inadequate raster resolution, missing assets, changed visual
@@ -108,4 +109,3 @@ Change tokens deliberately, run `npm run test:visual:update`, inspect both
 fixture pages and generated handouts, then run `npm run check`. A baseline
 update records an approved decision; it is not evidence that the decision is
 accessible or correct. Explain token and baseline changes in review.
-

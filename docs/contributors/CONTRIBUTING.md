@@ -87,10 +87,11 @@ substitute for manifest metadata:
 
 ## Reusable patterns
 
-Markdown headings, lists, emphasis, and pipe tables are supported. Every table
-needs a visible caption for accessibility. Put a `Table: ` caption directly
-before the header row (with no blank line); emphasis is allowed in the caption
-and cells, and a literal pipe in a cell must be escaped as `\\|`:
+Markdown headings, lists, emphasis, and pipe tables are supported. A table does
+not need a separate title when its section heading already supplies enough
+context. When a caption adds useful information, put a `Table: ` caption directly
+before the header row (with no blank line). Emphasis is allowed in captions and
+cells, and a literal pipe in a cell must be escaped as `\\|`:
 
 ```markdown
 Table: **Evacuation route status**
@@ -99,8 +100,9 @@ Table: **Evacuation route status**
 | A | Open | Main \| alternate |
 ```
 
-The editor's **Table** button inserts this complete pattern. Replace the sample
-caption, headings, and cells rather than removing the caption line.
+The editor's **Table** button inserts an untitled table. Add the optional
+`Table: ` line yourself only when the table needs context beyond its section
+heading.
 
 These HTML wrappers are intentionally allowed:
 
