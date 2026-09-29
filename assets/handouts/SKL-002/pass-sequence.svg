@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="410" viewBox="0 0 1400 410" role="img" aria-labelledby="title desc">
+  <title id="title">PASS fire extinguisher sequence</title>
+  <desc id="desc">Four numbered grayscale panels show pulling the pin, aiming at the base of a fire, squeezing the handle, and sweeping side to side.</desc>
+  <defs>
+    <style>
+      .panel{fill:#fff;stroke:#222;stroke-width:4}.head{fill:#222}.letter{font:700 54px sans-serif;fill:#fff}.label{font:700 32px sans-serif;fill:#111}.note{font:24px sans-serif;fill:#222}.line{fill:none;stroke:#222;stroke-width:10;stroke-linecap:round;stroke-linejoin:round}.thin{fill:none;stroke:#222;stroke-width:6;stroke-linecap:round;stroke-linejoin:round}.shade{fill:#ddd;stroke:#222;stroke-width:5}.arrow{fill:none;stroke:#222;stroke-width:7;stroke-linecap:round;stroke-linejoin:round;marker-end:url(#arrow)}
+    </style>
+    <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5 0 10Z" fill="#222"/></marker>
+  </defs>
+
+  <g transform="translate(10 10)">
+    <rect class="panel" width="330" height="390" rx="14"/><path class="head" d="M0 14Q0 0 14 0H316Q330 0 330 14V78H0Z"/>
+    <text class="letter" x="24" y="58">P</text><text class="label" x="82" y="53" fill="#fff">PULL</text>
+    <path class="shade" d="M106 160h104l18 159H88Z"/><path class="line" d="M103 158q51-56 108 0M127 137v-28h65v31"/>
+    <circle cx="161" cy="104" r="13" fill="#fff" stroke="#222" stroke-width="6"/><path class="arrow" d="M161 103V142"/>
+    <text class="note" x="165" y="362" text-anchor="middle">Pull the pin</text>
+  </g>
+
+  <g transform="translate(360 10)">
+    <rect class="panel" width="330" height="390" rx="14"/><path class="head" d="M0 14Q0 0 14 0H316Q330 0 330 14V78H0Z"/>
+    <text class="letter" x="24" y="58">A</text><text class="label" x="82" y="53" fill="#fff">AIM</text>
+    <path class="shade" d="M36 162h72l14 139H22Z"/><path class="line" d="M37 161q35-43 70 0M85 171q67 6 102 64"/>
+    <path class="thin" d="M234 145q-35 38-11 72-42 25-13 72h88q30-49-13-72 20-35-13-72-7 25-19 36-2-22-19-36Z"/>
+    <path class="arrow" d="M185 235L235 264"/>
+    <text class="note" x="165" y="340" text-anchor="middle">Aim at the base</text><text class="note" x="165" y="369" text-anchor="middle">of the fire</text>
+  </g>
+
+  <g transform="translate(710 10)">
+    <rect class="panel" width="330" height="390" rx="14"/><path class="head" d="M0 14Q0 0 14 0H316Q330 0 330 14V78H0Z"/>
+    <text class="letter" x="24" y="58">S</text><text class="label" x="82" y="53" fill="#fff">SQUEEZE</text>
+    <path class="shade" d="M105 176h111l19 143H88Z"/><path class="line" d="M105 174q55-57 111 0M123 151h85M126 123h81M130 124l-8 27M204 124l5 27"/>
+    <path class="arrow" d="M165 94v37"/>
+    <text class="note" x="165" y="362" text-anchor="middle">Squeeze evenly</text>
+  </g>
+
+  <g transform="translate(1060 10)">
+    <rect class="panel" width="330" height="390" rx="14"/><path class="head" d="M0 14Q0 0 14 0H316Q330 0 330 14V78H0Z"/>
+    <text class="letter" x="24" y="58">S</text><text class="label" x="82" y="53" fill="#fff">SWEEP</text>
+    <path class="thin" d="M230 147q-32 37-10 69-39 23-12 67h81q28-46-12-67 18-33-12-69-6 24-17 34-2-20-18-34Z"/>
+    <path class="line" d="M42 225h54"/><path class="thin" d="M95 225l118 40M95 225l118-8"/>
+    <path class="arrow" d="M114 300q61 34 125 0"/><path class="arrow" d="M239 322q-61 34-125 0"/>
+    <text class="note" x="165" y="362" text-anchor="middle">Sweep side to side</text>
+  </g>
+</svg>
