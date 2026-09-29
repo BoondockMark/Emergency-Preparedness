@@ -4,6 +4,7 @@ import os from 'node:os';
 import path from 'node:path';
 import test from 'node:test';
 import { validateAssetEntry } from '../scripts/lib/asset-validation.mjs';
+import { generateTableOfContentsPages } from '../scripts/lib/binder-generation.mjs';
 import { formatAccessibilityIssue } from '../scripts/lib/accessibility-validation.mjs';
 import { escapeHtml, renderHandout, renderMarkdown } from '../scripts/lib/content-rendering.mjs';
 import { discoverDocuments } from '../scripts/lib/filesystem-discovery.mjs';
@@ -240,4 +241,20 @@ test('generated binder index orders codes consistently', () => {
   });
   const index = generateBinderIndex([{ meta: meta('STH-020') }, { meta: meta('STH-003') }]);
   assert.ok(index.indexOf('| STH-003 |') < index.indexOf('| STH-020 |'));
+});
+
+test('table of contents lists documents in binder order with cumulative page ranges', () => {
+  const document = (code, title, sectionNumber, pageCount) => ({
+    meta: { code, title, section: `Section ${sectionNumber}`, sectionNumber, pageCount }
+  });
+  const html = generateTableOfContentsPages([
+    document('COM-001', 'Call for help', 2, 1),
+    document('STH-002', 'Second start', 1, 2),
+    document('STH-001', 'First start', 1, 1)
+  ]);
+  assert.ok(html.indexOf('STH-001') < html.indexOf('STH-002'));
+  assert.ok(html.indexOf('STH-002') < html.indexOf('COM-001'));
+  assert.match(html, /First start<\/td><td>Section 1<\/td><td class="toc-pages">2<\/td>/);
+  assert.match(html, /Second start<\/td><td>Section 1<\/td><td class="toc-pages">3–4<\/td>/);
+  assert.match(html, /Call for help<\/td><td>Section 2<\/td><td class="toc-pages">5<\/td>/);
 });
