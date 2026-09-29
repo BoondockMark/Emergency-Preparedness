@@ -56,7 +56,6 @@ sources:
 <div class="warning"><strong>During an emergency, current instructions from local authorities take priority over this worksheet.</strong> General preparedness guidance helps you plan; it does not set local evacuation zones, routes, shelter locations, alert thresholds, or re-entry rules.</div>
 
 ## 1. List the places to check
-
 <table>
 <thead><tr><th>Place</th><th>Address or route</th><th>People, animals, access, or transport needs</th></tr></thead>
 <tbody>

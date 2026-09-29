@@ -74,6 +74,8 @@ ________________________________________________________________________________
 <li>My communication device, charger, batteries, adapters, and low-tech backup travel with me.</li>
 </ul></div>
 
+<!-- pagebreak -->
+
 ## 2. Mobility, transfer, and wayfinding
 
 **How I move or navigate; mobility devices I use:** ____________________________________
@@ -126,6 +128,8 @@ ________________________________________________________________________________
 <li>I know how supplies and equipment will travel with me, not in a separate vehicle unless I choose and can remain safe.</li>
 <li>I have written shutdown, transport, storage, cleaning, and restart instructions for exact equipment models.</li>
 </ul></div>
+
+<!-- pagebreak -->
 
 ## 4. Personal assistance and backup people
 
@@ -189,6 +193,8 @@ ________________________________________________________________________________
 
 **Destination features to confirm:** accessible route and entrance; toilet and bathing access; cot or sleeping arrangement; communication access; charging or backup power; refrigeration; personal assistance; service-animal relief area; and any other support I need.
 
+<!-- pagebreak -->
+
 **My requirements and confirmation notes:**
 
 ____________________________________________________________________________________
@@ -207,6 +213,8 @@ Phone/website: ____________________ Eligibility or admission rules: ____________
 Accessibility and support features confirmed: _________________________________________<br>
 Confirmed by responsible organization/representative: __________________ Date: __________<br><br>
 <strong>Registration is not a guarantee of rescue, transportation, priority power restoration, admission, or a particular service.</strong> Keep a primary and backup plan and request help early.</div>
+
+<!-- pagebreak -->
 
 ## 7. Equipment identification and handling notes
 
@@ -234,10 +242,10 @@ Ask each person first. A confirmation means the person understands and accepts t
 
 | Person and relationship | Contact method(s) | Location | Agreed role | Backup if unavailable | Confirmed/date |
 |---|---|---|---|---|---|
-| __________________ | __________________ | __________________ | __________________ | __________________ | __________ |
-| __________________ | __________________ | __________________ | __________________ | __________________ | __________ |
-| __________________ | __________________ | __________________ | __________________ | __________________ | __________ |
-| __________________ | __________________ | __________________ | __________________ | __________________ | __________ |
+| _____________ | _______________ | _______________ | _______________ | ____________ | _______ |
+| _____________ | _______________ | _______________ | _______________ | ____________ | _______ |
+| _____________ | _______________ | _______________ | _______________ | ____________ | _______ |
+| _____________ | _______________ | _______________ | _______________ | ____________ | ______
 
 **Who checks on me first:** ____________________  **When:** ______________________________
 
@@ -282,7 +290,7 @@ Practice communication, check-in, route, loading, equipment, destination, and re
 ## Keep this plan usable
 
 Review it after every practice, move, change in support, medicine or equipment change, and at the interval you choose. Protect private information; carry only what you need and share it only with people you choose.
-
+<!-- pagebreak -->
 ## Related handouts
 
 Use this worksheet with <a id="sth-004" href="#sth-004">STH-004 — Disability &amp; Access Planning</a>; caregivers may also use <a id="sth-005" href="#sth-005">STH-005 — Child &amp; Caregiver Planning</a>. For readiness, go-bags, leave-early decisions, routes, transportation, and children or animals, see <a id="evs-001" href="#evs-001">EVS-001</a>, <a id="evs-002" href="#evs-002">EVS-002</a>, <a id="evs-003" href="#evs-003">EVS-003</a>, <a id="evs-004" href="#evs-004">EVS-004</a>, <a id="evs-005" href="#evs-005">EVS-005</a>, and <a id="evs-006" href="#evs-006">EVS-006</a>. Check the binder index for availability; handouts still in development may not yet appear there.

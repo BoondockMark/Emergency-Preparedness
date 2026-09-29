@@ -59,6 +59,9 @@ Think through each activity you may need to do at home, while leaving, in transi
 
 <div class="warning warning--caution"><strong>Do not assume a shelter has the support or equipment you need.</strong> Ask the responsible local authority before an emergency, and keep an alternate destination and transportation plan.</div>
 
+
+<!-- pagebreak -->
+
 ## Build a support network
 
 Choose people you trust—near home, work, or other regular locations. A network member should agree before being included.
@@ -69,8 +72,6 @@ Choose people you trust—near home, work, or other regular locations. A network
 <li>Show helpers how you prefer to communicate and how to assist with mobility or transfers; do not let anyone guess or improvise unsafe techniques.</li>
 <li>Practice contacting one another and review the plan at least when information or needs change.</li>
 </ul></div>
-
-<!-- pagebreak -->
 
 ## Plan for health, equipment, and power
 
@@ -85,6 +86,8 @@ Choose people you trust—near home, work, or other regular locations. A network
 <li>Use a cooler or discard a product only according to verified product-specific instructions. Do not guess from appearance or a general time limit.</li>
 <li>Plan how medicines and supplies will travel with you, within required temperature limits and legal requirements.</li>
 </ul></div>
+
+<!-- pagebreak -->
 
 ## Durable medical equipment and electricity
 
@@ -170,6 +173,8 @@ __________________________________________________________________________
 
 __________________________________________________________________________
 
+<!-- pagebreak -->
+
 ## Protect this information
 
 <div class="checklist"><ul>
@@ -210,6 +215,8 @@ Written instructions should be specific to you and the exact product or support.
 ## Related Start Here handouts
 
 Continue with <a id="sth-001" href="#sth-001">STH-001 — Emergency Preparedness Quick Start</a>, <a id="sth-002" href="#sth-002">STH-002 — Build a Two-Week Preparedness Kit</a>, <a id="sth-003" href="#sth-003">STH-003 — Know Your Local Hazards</a>, and <a id="sth-007" href="#sth-007">STH-007 — Annual Binder & Kit Review</a>.
+
+<!-- pagebreak -->
 
 <div class="sources"><strong>Sources and further planning tools</strong><br>
 U.S. Department of Homeland Security, Ready.gov, <a href="https://www.ready.gov/disability">“Individuals with Disabilities”</a>.<br>
