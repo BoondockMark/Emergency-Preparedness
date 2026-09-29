@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="330" viewBox="0 0 960 330" role="img" aria-labelledby="title desc">
+  <title id="title">Safer setup and lift sequence</title>
+  <desc id="desc">Four grayscale panels show testing a container before lifting, placing feet around the load, holding it close while rising, and turning by stepping instead of twisting.</desc>
+  <defs>
+    <style>
+      .panel{fill:#fff;stroke:#222;stroke-width:3}.line{fill:none;stroke:#111;stroke-width:8;stroke-linecap:round;stroke-linejoin:round}.thin{fill:none;stroke:#333;stroke-width:4;stroke-linecap:round;stroke-linejoin:round}.load{fill:#d9d9d9;stroke:#111;stroke-width:5}.label{font:700 23px Arial,sans-serif;fill:#111}.small{font:18px Arial,sans-serif;fill:#111}.num{fill:#111}.numtext{font:700 20px Arial,sans-serif;fill:#fff;text-anchor:middle}.dash{fill:none;stroke:#555;stroke-width:4;stroke-dasharray:10 8}.x{stroke:#111;stroke-width:7}
+    </style>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0 0L9 3 0 6Z" fill="#333"/></marker>
+  </defs>
+  <rect class="panel" x="3" y="3" width="231" height="324" rx="8"/><rect class="panel" x="244" y="3" width="231" height="324" rx="8"/><rect class="panel" x="485" y="3" width="231" height="324" rx="8"/><rect class="panel" x="726" y="3" width="231" height="324" rx="8"/>
+  <circle class="num" cx="28" cy="28" r="18"/><text class="numtext" x="28" y="35">1</text><text class="label" x="52" y="35">TEST</text>
+  <rect class="load" x="76" y="180" width="90" height="70" rx="5"/><path class="thin" d="M97 180q24-28 48 0"/>
+  <path class="line" d="M66 83a16 16 0 1 0 1 0M66 101l7 59 34 23M74 128l49 9"/><path class="thin" d="M123 137l20 40"/>
+  <path class="thin" d="M74 259q42 13 84 0" marker-end="url(#arrow)"/><text class="small" x="40" y="294">Tilt or slide first.</text>
+  <circle class="num" cx="269" cy="28" r="18"/><text class="numtext" x="269" y="35">2</text><text class="label" x="293" y="35">SET FEET</text>
+  <ellipse class="load" cx="359" cy="169" rx="42" ry="31"/><rect class="load" x="317" y="169" width="84" height="48"/>
+  <path class="thin" d="M295 238q26-17 55 0v26q-31 10-55 0ZM369 238q27-17 55 0v26q-31 10-55 0Z"/>
+  <path class="dash" d="M311 225v-86M408 225v-86"/><text class="small" x="272" y="294">Stable, wide stance.</text>
+  <circle class="num" cx="510" cy="28" r="18"/><text class="numtext" x="510" y="35">3</text><text class="label" x="534" y="35">KEEP CLOSE</text>
+  <circle class="line" cx="591" cy="84" r="17"/><path class="line" d="M591 102l-2 88M589 125l-40 44M590 126l47 31M589 190l-31 56M589 190l42 56"/>
+  <rect class="load" x="543" y="144" width="91" height="65" rx="5"/><path class="thin" d="M563 144q25-27 49 0"/>
+  <path class="thin" d="M654 212V119" marker-end="url(#arrow)"/><text class="small" x="522" y="294">Rise smoothly; no jerk.</text>
+  <circle class="num" cx="751" cy="28" r="18"/><text class="numtext" x="751" y="35">4</text><text class="label" x="775" y="35">STEP TO TURN</text>
+  <circle class="line" cx="841" cy="87" r="17"/><path class="line" d="M841 104v85M841 127l-46 41M841 127l46 41M841 189l-31 58M841 189l40 54"/>
+  <rect class="load" x="795" y="145" width="92" height="62" rx="5"/>
+  <path class="thin" d="M792 269q49 25 102-2" marker-end="url(#arrow)"/><path class="x" d="M902 90l34 34M936 90l-34 34"/><text class="small" x="754" y="294">Move feet; do not twist.</text>
+</svg>
