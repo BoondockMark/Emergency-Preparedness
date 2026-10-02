@@ -3,12 +3,12 @@ code: SKL-001
 title: Sandbags for Home Runoff
 section: Hands-On Skills
 sectionNumber: 6
-status: draft
+status: approved
 version: 0.3
 lastReviewed: 2026-10-02
 reviewers:
-  editor: unassigned
-  subjectMatter: unassigned
+  editor: Mark Hughes
+  subjectMatter: None
 sources:
   - type: web
     title: Flood Fight Handbook, 2022 Edition
@@ -60,8 +60,6 @@ sources:
 </figure>
 </div>
 
-<div class="sources">U.S. Army Corps of Engineers, <em>Flood Fight Handbook</em> (2022), §2.1–2.3: www.mvp.usace.army.mil/Portals/57/MVP%20Flood%20Fight%20Handbook%202022.pdf. RiverOakRanch, “Filling Sandbags the Easy Way, With Sandbag Tubes” (2010): www.instructables.com/Filling-Sandbags-the-Easy-way-with-Sandbag-Tubes/. Accessed 2026-09-24.</div>
-
 <!-- pagebreak -->
 
 <p class="lede">Lift the fixture straight up, reset it for the next batch, and move completed bags clear.</p>
@@ -90,8 +88,6 @@ sources:
 <li><strong>Set the fixture upside down to prepare for more sandbags.</strong></li>
 <li><strong>Move the sandbags away from the work area.</strong> Flatten the sand toward the closed end; leave enough empty bag to fold underneath during placement.</li>
 </ol>
-
-<div class="sources">RiverOakRanch, “Filling Sandbags the Easy Way, With Sandbag Tubes” (2010): www.instructables.com/Filling-Sandbags-the-Easy-way-with-Sandbag-Tubes/. Accessed 2026-09-24.</div>
 
 <!-- pagebreak -->
 
@@ -122,5 +118,11 @@ sources:
 </figure>
 
 <p><strong>Recheck from safe ground:</strong> check for water around the ends, through gaps, or pooling behind the line. Bags redirect shallow water but do not form a watertight seal. Leave if conditions worsen.</p>
+
+<!-- pagebreak -->
+
+<div class="sources">RiverOakRanch, “Filling Sandbags the Easy Way, With Sandbag Tubes” (2010): www.instructables.com/Filling-Sandbags-the-Easy-way-with-Sandbag-Tubes/. Accessed 2026-09-24.</div>
+
+<div class="sources">U.S. Army Corps of Engineers, <em>Flood Fight Handbook</em> (2022), §2.1–2.3: www.mvp.usace.army.mil/Portals/57/MVP%20Flood%20Fight%20Handbook%202022.pdf. RiverOakRanch, “Filling Sandbags the Easy Way, With Sandbag Tubes” (2010): www.instructables.com/Filling-Sandbags-the-Easy-way-with-Sandbag-Tubes/. Accessed 2026-09-24.</div>
 
 <div class="sources">USACE, <em>Flood Fight Handbook</em> (2022), §2.2–2.3: www.mvp.usace.army.mil/Portals/57/MVP%20Flood%20Fight%20Handbook%202022.pdf.</div>
