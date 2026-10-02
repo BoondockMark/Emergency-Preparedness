@@ -5,7 +5,7 @@ import path from 'node:path';
 import os from 'node:os';
 import puppeteer from 'puppeteer';
 import { browserOptions, copyAssets, openPrintPage, prepareDirectories, prepareDocumentValidation, validateDocument } from './artifact-generation.mjs';
-import { loadAssetManifests } from './asset-validation.mjs';
+import { loadAssetManifests, readAssetBytes } from './asset-validation.mjs';
 import { renderHandoutSource } from './content-rendering.mjs';
 import { discoverDocuments } from './filesystem-discovery.mjs';
 import { loadDocument } from './metadata.mjs';
@@ -184,11 +184,13 @@ export async function createEditorServer({ root }) {
       if (request.method === 'GET' && url.pathname.startsWith('/assets/handouts/')) {
         const match = decodeURIComponent(url.pathname).match(/^\/assets\/handouts\/([^/]+)\/([^/]+)$/);
         if (!match || !manifests.get(match[1])?.has(match[2])) return json(response, 404, { error: 'Unknown asset' });
-        const file = path.join(root, 'assets', 'handouts', match[1], match[2]);
+        const directory = path.join(root, 'assets', 'handouts', match[1]);
+        const file = path.join(directory, match[2]);
         const types = { '.svg': 'image/svg+xml', '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg' };
         const contentType = types[path.extname(file).toLowerCase()];
         if (!contentType) return json(response, 404, { error: 'Unknown asset' });
-        return serve(response, file, contentType);
+        response.writeHead(200, { 'content-type': contentType, 'cache-control': 'no-store' });
+        return response.end(await readAssetBytes(directory, match[2], `${match[1]}/${match[2]}`));
       }
       json(response, 404, { error: 'Not found' });
     } catch (error) {

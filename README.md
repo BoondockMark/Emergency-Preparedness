@@ -114,7 +114,11 @@ metadata, insert an existing asset, and adjust full/half width, left/right
 alignment, crop ratio, and crop focus. Cropping changes CSS positioning without
 altering the original file. Place the source cursor inside a figure to change or
 remove it. Permanent deletion is allowed only after every reference has been
-removed and the handout saved.
+removed and the handout saved. New uploads are stored as GitHub-safe Base64 text
+files (such as `photo.jpg.base64`) while manifests and handouts continue to use
+the ordinary `photo.jpg` name; builds decode them automatically. This avoids
+binary-file upload restrictions and unsafe-SVG attachment handling. See the
+[graphics and assets guide](docs/contributors/ASSETS.md#github-compatible-storage).
 
 ## Source choice
 

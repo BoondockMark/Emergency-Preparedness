@@ -12,7 +12,7 @@ import {
   generateTableOfContentsHtml,
   TABLE_OF_CONTENTS_CODE
 } from './binder-generation.mjs';
-import { sanitizeSvg } from './asset-validation.mjs';
+import { readAssetBytes, sanitizeSvg } from './asset-validation.mjs';
 import { createCalibrationPdf } from './calibration-pdf.mjs';
 import { parseHandoutSource, renderHandout } from './content-rendering.mjs';
 import { generateBinderIndex, generateMoodleIndex } from './index-generation.mjs';
@@ -51,12 +51,12 @@ export async function copyAssets(root, outputRoot, manifests) {
     const destination = path.join(outputRoot, 'assets/handouts', code);
     await fs.mkdir(destination, { recursive: true });
     for (const file of entries.keys()) {
-      const source = path.join(root, 'assets/handouts', code, file);
       const target = path.join(destination, file);
+      const bytes = await readAssetBytes(path.join(root, 'assets/handouts', code), file, `${code}/${file}`);
       if (path.extname(file).toLowerCase() === '.svg') {
-        await fs.writeFile(target, sanitizeSvg(await fs.readFile(source, 'utf8'), `${code}/${file}`));
+        await fs.writeFile(target, sanitizeSvg(bytes.toString('utf8'), `${code}/${file}`));
       } else {
-        await fs.copyFile(source, target);
+        await fs.writeFile(target, bytes);
       }
     }
   }
