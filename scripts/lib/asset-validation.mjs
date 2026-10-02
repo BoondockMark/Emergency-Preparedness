@@ -51,7 +51,11 @@ function jpegSize(buffer) {
 }
 
 export function sanitizeSvg(source, label) {
-  const unsafe = !/^\s*<svg\b/i.test(source)
+  // XML declarations and leading comments are valid in standalone SVG files.
+  // Inspect past them when locating the root element, while still scanning the
+  // complete source below for active or externally referenced content.
+  const hasSvgRoot = /^\uFEFF?\s*(?:<\?xml\s[^?]*\?>\s*)?(?:<!--[\s\S]*?-->\s*)*<svg\b/i.test(source);
+  const unsafe = !hasSvgRoot
     || /<!DOCTYPE|<!ENTITY/i.test(source)
     || /<\/?(?:script|foreignObject|iframe|object|embed|audio|video)\b/i.test(source)
     || /\son[a-z]+\s*=/i.test(source)
