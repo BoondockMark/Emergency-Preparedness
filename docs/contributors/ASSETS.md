@@ -13,11 +13,11 @@ Give each handout an asset directory whose name exactly matches its metadata
 assets/handouts/
 ├── COM-001/
 │   ├── manifest.json
-│   ├── smoke-column.jpg
-│   └── smoke-column-source.svg
+│   ├── smoke-column.jpg.base64
+│   └── smoke-column-source.svg.base64
 └── EVA-002/
     ├── manifest.json
-    └── evacuation-route.svg
+    └── evacuation-route.svg.base64
 ```
 
 Use descriptive, lower-case file names. Keep editable originals alongside the
@@ -28,6 +28,22 @@ directories contain generated output.
 
 Published graphics may be SVG, PNG, or JPEG. Use SVG for diagrams. GIF, WebP,
 BMP, PDF, and office-document images are not supported.
+
+### GitHub-compatible storage
+
+The repository stores newly uploaded graphics as Base64 text so GitHub and
+text-only contribution tools never have to accept a binary file or render an
+SVG attachment. Keep the graphic's normal published name (for example,
+`smoke-column.jpg`) in `manifest.json` and handout markup; its repository file
+is that name plus `.base64` (`smoke-column.jpg.base64`). The build validates and
+decodes the text into the ignored `build/` directory before rendering.
+
+You do not need to encode files by hand. Run `npm run editor`, open **Images**,
+and upload the original PNG, JPEG, or SVG. The editor sanitizes SVG, verifies
+PNG/JPEG signatures, and writes the GitHub-safe `.base64` text file. Existing
+unencoded assets remain supported, but new editor uploads always use the text
+format. Do not put a Data URL prefix in a `.base64` file or change the logical
+filename in the manifest.
 
 ## Asset manifest
 
@@ -80,7 +96,7 @@ omit the `alt` attribute.
 ## Add a graphic to a handout
 
 The local visual editor (`npm run editor`) provides an **Images** panel for this
-workflow. It writes the uploaded file and manifest entry together, then inserts
+workflow. It writes the text-encoded upload and manifest entry together, then inserts
 the same documented figure markup shown below. Its crop and alignment controls
 change only the figure classes and `--crop-position`; they never resample or
 overwrite the original image. All creator, source, license, and alternative-text

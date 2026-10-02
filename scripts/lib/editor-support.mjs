@@ -1,7 +1,7 @@
 import { createHash } from 'node:crypto';
 import fs from 'node:fs/promises';
 import path from 'node:path';
-import { sanitizeSvg, validateAssetEntry } from './asset-validation.mjs';
+import { encodedAssetName, sanitizeSvg, validateAssetEntry } from './asset-validation.mjs';
 
 const IMAGE_TYPES = new Map([
   ['image/png', '.png'],
@@ -82,12 +82,14 @@ export async function addAsset(root, code, request) {
   validateAssetEntry(entry, code);
   const bytes = decodeImage(request.dataUrl, request.mimeType, `${code}/${file}`);
   await fs.mkdir(directory, { recursive: true });
-  await fs.writeFile(path.join(directory, file), bytes, { flag: 'wx' });
+  const storedFile = path.join(directory, encodedAssetName(file));
+  const encoded = `${bytes.toString('base64').match(/.{1,76}/g).join('\n')}\n`;
+  await fs.writeFile(storedFile, encoded, { flag: 'wx' });
   try {
     manifest.assets.push(entry);
     await writeJsonAtomic(manifestFile, manifest);
   } catch (error) {
-    await fs.rm(path.join(directory, file), { force: true });
+    await fs.rm(storedFile, { force: true });
     throw error;
   }
   return entry;
@@ -103,6 +105,7 @@ export async function deleteAsset(root, code, file, handoutSource) {
   record.manifest.assets.splice(index, 1);
   await writeJsonAtomic(record.file, record.manifest);
   await fs.rm(path.join(record.directory, file), { force: true });
+  await fs.rm(path.join(record.directory, encodedAssetName(file)), { force: true });
 }
 
 export function figureMarkup(code, asset, options = {}) {

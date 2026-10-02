@@ -1,6 +1,32 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 
+export const encodedAssetName = file => `${file}.base64`;
+
+export async function readAssetBytes(directory, file, label = file) {
+  try {
+    return await fs.readFile(path.join(directory, file));
+  } catch (error) {
+    if (error.code !== 'ENOENT') throw error;
+  }
+
+  const encodedFile = path.join(directory, encodedAssetName(file));
+  let source;
+  try {
+    source = await fs.readFile(encodedFile, 'ascii');
+  } catch (error) {
+    if (error.code === 'ENOENT') throw Error(`${label}: asset file is missing`);
+    throw error;
+  }
+  const compact = source.replace(/\s/g, '');
+  if (!compact || compact.length % 4 || !/^[A-Za-z0-9+/]*={0,2}$/.test(compact)) {
+    throw Error(`${label}: invalid Base64 asset data`);
+  }
+  const bytes = Buffer.from(compact, 'base64');
+  if (bytes.toString('base64') !== compact) throw Error(`${label}: invalid Base64 asset data`);
+  return bytes;
+}
+
 function pngSize(buffer) {
   if (buffer.length < 24 || buffer.toString('hex', 0, 8) !== '89504e470d0a1a0a') return null;
   return { width: buffer.readUInt32BE(16), height: buffer.readUInt32BE(20) };
@@ -94,12 +120,7 @@ export async function loadAssetManifests(root) {
       validateAssetEntry(entry, code);
       if (entries.has(entry.file)) throw Error(`${code}: asset file names must be unique`);
       const extension = path.extname(entry.file).toLowerCase();
-      let bytes;
-      try {
-        bytes = await fs.readFile(path.join(location, entry.file));
-      } catch {
-        throw Error(`${code}: manifest asset is missing: ${entry.file}`);
-      }
+      const bytes = await readAssetBytes(location, entry.file, `${code}/${entry.file}`);
       if (extension === '.svg') {
         sanitizeSvg(bytes.toString('utf8'), `${code}/${entry.file}`);
       } else if (!(extension === '.png' ? pngSize(bytes) : jpegSize(bytes))) {

@@ -288,11 +288,14 @@ test('editor uploads, manifests, serves, and safely deletes an image asset', asy
   assert.equal(uploaded.asset.file, 'route-dot.svg');
   assert.match(uploaded.markup, /figure--half figure--left figure--contain/);
   assert.equal((await fetch(`${base}/assets/handouts/STH-001/route-dot.svg`)).status, 200);
+  const storedAsset = await fs.readFile(path.join(root, 'assets/handouts/STH-001/route-dot.svg.base64'), 'ascii');
+  assert.equal(Buffer.from(storedAsset.replace(/\s/g, ''), 'base64').toString(), svg);
+  await assert.rejects(fs.access(path.join(root, 'assets/handouts/STH-001/route-dot.svg')));
   const manifest = JSON.parse(await fs.readFile(path.join(root, 'assets/handouts/STH-001/manifest.json')));
   assert.equal(manifest.assets.find(asset => asset.file === 'route-dot.svg').alt, 'A route dot.');
   const removed = await fetch(`${base}/api/assets`, { method: 'DELETE', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ path: 'handouts/section/example.md', file: 'route-dot.svg' }) });
   assert.equal(removed.status, 200, await removed.text());
-  await assert.rejects(fs.access(path.join(root, 'assets/handouts/STH-001/route-dot.svg')));
+  await assert.rejects(fs.access(path.join(root, 'assets/handouts/STH-001/route-dot.svg.base64')));
 });
 
 test('browser editor opens, switches, saves, reverts, reports conflicts, and recovers drafts', { timeout: 45_000 }, async t => {
