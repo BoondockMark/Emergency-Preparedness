@@ -50,3 +50,19 @@ export function handoutOptionLabel(handout) {
   const status = handout.status === 'approved' ? 'release' : handout.status;
   return `${indicator} ${handout.code} — ${handout.title} · ${status}`;
 }
+
+export const HANDOUT_STATUSES = ['draft', 'under-review', 'approved'];
+
+export function readHandoutStatus(source) {
+  const frontMatter = source.match(/^---\r?\n([\s\S]*?)\r?\n---(?:\r?\n|$)/);
+  if (!frontMatter) return '';
+  return frontMatter[1].match(/^status:\s*(draft|under-review|approved)\s*$/m)?.[1] || '';
+}
+
+export function setHandoutStatus(source, status) {
+  if (!HANDOUT_STATUSES.includes(status)) return source;
+  const frontMatter = source.match(/^---\r?\n([\s\S]*?)\r?\n---(?:\r?\n|$)/);
+  if (!frontMatter || !/^status:\s*.*$/m.test(frontMatter[1])) return source;
+  const updated = frontMatter[0].replace(/^status:\s*.*$/m, `status: ${status}`);
+  return updated + source.slice(frontMatter[0].length);
+}

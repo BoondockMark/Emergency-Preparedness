@@ -109,6 +109,11 @@ are never converted or normalized. Preview rendering uses the same parser,
 `templates/handout.html`, and `assets/styles/print.css` as the build. The editor
 is a local authoring aid; generated PDFs still require `npm run build`.
 
+The header's **Status** menu updates the front matter to one of the three workflow
+states: **Draft**, **Under review**, or **Approved**. Approval is not a validation
+bypass: the handout must still name both reviewers, provide complete sources and
+a proof record, and pass the approval-specific checks before it can be published.
+
 The **Images** panel can upload a PNG, JPEG, or SVG, record its required manifest
 metadata, insert an existing asset, and adjust full/half width, left/right
 alignment, crop ratio, and crop focus. Cropping changes CSS positioning without

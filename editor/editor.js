@@ -1,4 +1,4 @@
-import { handoutNeedsFixing, handoutOptionLabel, indentSelection, prefixLines, selectionDetails } from './editor-model.js';
+import { handoutNeedsFixing, handoutOptionLabel, indentSelection, prefixLines, readHandoutStatus, selectionDetails, setHandoutStatus } from './editor-model.js';
 
 const select = document.querySelector('#handout');
 const needsFixing = document.querySelector('#needs-fixing');
@@ -11,6 +11,7 @@ const issues = document.querySelector('#issues');
 const validationState = document.querySelector('#validation-state');
 const validationPanel = document.querySelector('#validation');
 const cursorStatus = document.querySelector('#cursor-status');
+const documentStatus = document.querySelector('#document-status');
 const draftRecovery = document.querySelector('#draft-recovery');
 const imageDialog = document.querySelector('#image-dialog');
 const assetList = document.querySelector('#asset-list');
@@ -78,6 +79,11 @@ function updateCursorStatus() {
   const details = selectionDetails(source.value, source.selectionStart, source.selectionEnd);
   const selection = details.selected ? ` · ${details.selected} selected` : '';
   cursorStatus.textContent = `Line ${details.line}, column ${details.column} · ${details.words} words · ${details.characters} characters${selection}`;
+}
+function updateStatusControl() {
+  const status = readHandoutStatus(source.value);
+  documentStatus.disabled = !status;
+  if (status) documentStatus.value = status;
 }
 
 async function request(url, options) {
@@ -179,7 +185,7 @@ async function openHandout({ discardCurrentDraft = false } = {}) {
   try {
     if (discardCurrentDraft) clearDraft();
     opened = await request(`/api/handout?path=${encodeURIComponent(select.value)}`);
-    source.value = opened.source; selectedAsset = ''; showAssets(); dirty();
+    source.value = opened.source; selectedAsset = ''; showAssets(); updateStatusControl(); dirty();
     const draft = readDraft(opened.path);
     const canRestore = draft && typeof draft.source === 'string' && draft.source !== opened.source;
     draftRecovery.hidden = !canRestore;
@@ -321,6 +327,17 @@ document.querySelector('#toolbar').addEventListener('click', event => { if (even
 document.querySelector('#save').addEventListener('click', save);
 document.querySelector('#revert').addEventListener('click', () => openHandout({ discardCurrentDraft: true }));
 select.addEventListener('change', openHandout); source.addEventListener('input', renderSoon);
+source.addEventListener('input', updateStatusControl);
+documentStatus.addEventListener('change', () => {
+  const updated = setHandoutStatus(source.value, documentStatus.value);
+  if (updated === source.value) return updateStatusControl();
+  const start = source.selectionStart;
+  const end = source.selectionEnd;
+  source.value = updated;
+  source.setSelectionRange(start, end);
+  renderSoon();
+  message.textContent = `Status changed to ${documentStatus.selectedOptions[0].textContent}. Save to keep this change.`;
+});
 needsFixing.addEventListener('change', async () => {
   const previous = select.value;
   populateHandouts(previous);
