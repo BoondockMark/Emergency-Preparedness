@@ -9,7 +9,7 @@ import { renderHandout, parseHandoutSource, renderHandoutSource } from '../scrip
 import { createEditorServer } from '../scripts/lib/editor-server.mjs';
 import { browserOptions, prepareDocumentValidation } from '../scripts/lib/artifact-generation.mjs';
 import { figureMarkup, safeAssetName } from '../scripts/lib/editor-support.mjs';
-import { handoutNeedsFixing, handoutOptionLabel, indentSelection, prefixLines, selectionDetails } from '../editor/editor-model.js';
+import { HANDOUT_STATUSES, handoutNeedsFixing, handoutOptionLabel, indentSelection, prefixLines, readHandoutStatus, selectionDetails, setHandoutStatus } from '../editor/editor-model.js';
 
 const repository = path.resolve(import.meta.dirname, '..');
 const fixture = () => fs.readFile(path.join(repository, 'test/unit-fixtures/front-matter.md'), 'utf8');
@@ -95,6 +95,17 @@ test('editor handout labels expose release and formatting state and can filter w
   assert.equal(handoutOptionLabel({ ...release, formatting: 'checking' }), '🟡 STH-001 — Ready · release');
   assert.equal(handoutNeedsFixing({ ...release, formatting: 'checking' }), true);
   assert.equal(handoutNeedsFixing({ ...release, formatting: 'unavailable' }), true);
+});
+
+test('editor status helpers expose every workflow option and only edit front matter', async () => {
+  const source = await fixture();
+  assert.deepEqual(HANDOUT_STATUSES, ['draft', 'under-review', 'approved']);
+  assert.equal(readHandoutStatus(source), 'draft');
+  const updated = setHandoutStatus(`${source}\nstatus: body text`, 'under-review');
+  assert.equal(readHandoutStatus(updated), 'under-review');
+  assert.match(updated, /\nstatus: body text$/);
+  assert.equal(setHandoutStatus(source, 'published'), source);
+  assert.equal(readHandoutStatus('No front matter'), '');
 });
 
 test('handout list includes workflow and formatting state', async t => {
@@ -301,6 +312,13 @@ test('editor uploads, manifests, serves, and safely deletes an image asset', asy
 test('browser editor opens, switches, saves, reverts, reports conflicts, and recovers drafts', { timeout: 45_000 }, async t => {
   const { page, file } = await openEditor(t);
   assert.match(await value(page, '#source'), /title: Fixture/);
+  assert.equal(await value(page, '#document-status'), 'draft');
+  await page.select('#document-status', 'under-review');
+  assert.match(await value(page, '#source'), /^status: under-review$/m);
+  await waitForText(page, '#state', 'Unsaved changes');
+  await page.click('#save');
+  await waitForText(page, '#message', 'Saved atomically.');
+  assert.match(await fs.readFile(file, 'utf8'), /^status: under-review$/m);
 
   await appendSource(page, '\nSaved with button.');
   await waitForText(page, '#state', 'Unsaved changes');
