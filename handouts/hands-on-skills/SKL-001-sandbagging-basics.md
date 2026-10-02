@@ -4,8 +4,8 @@ title: Sandbags for Home Runoff
 section: Hands-On Skills
 sectionNumber: 6
 status: draft
-version: 0.2
-lastReviewed: 2026-09-24
+version: 0.3
+lastReviewed: 2026-10-02
 reviewers:
   editor: unassigned
   subjectMatter: unassigned
@@ -22,36 +22,76 @@ sources:
     publicationDate: 2010-03-15
     accessDate: 2026-09-24
 ---
-<p class="lede">Fill, fold, and stage bags before the rain. Turn over for placement at a house or driveway.</p>
+<p class="lede">Use a multi-bag filling fixture to hold bags open, fill them evenly, and clear the work area for the next batch.</p>
 
 <div class="warning warning--caution">Work on level, dry ground. Wear gloves and sturdy shoes; use eye protection when sand is dusty. A filled bag may weigh 35–40 lb—use a partner or lighter bags if needed.</div>
 
-## 1. Fill bags so they flatten
+## Fill sandbags with the fixture
 
 <ol class="procedure">
-<li>Use clean sand if available. Hold the bag open with its rim rolled outward, or slide it over a stable filling tube.</li>
-<li>Shovel in sand until the bag is about <strong>half full</strong>; leave the upper half empty so the fill can spread flat. Do not pack it full.</li>
-<li>If using tubes, fill each to the same level and lift the rack straight up. Check each bag's weight and fill; tube dimensions do not guarantee the right amount.</li>
+<li><strong>Invert the fixture.</strong></li>
+<li><strong>Put a sandbag on each pipe.</strong> Pull each bag far enough over its pipe to keep it in place.</li>
 </ol>
 
-## 2. Fold the open end
-
-<p>Flatten the sand toward the closed end. Fold the empty top underneath the filled portion. For a temporary barrier, leave the bag untied so it molds against the next bag.</p>
-
-<figure class="figure figure--full figure--diagram figure--contain" aria-labelledby="prep-caption">
-  <img src="../assets/handouts/SKL-001/fill-fold-pallet.svg" style="height: 2in" alt="Three line drawings show a half-filled bag or filling tube, the empty end folded under a flat bag, and alternating flat layers centered on a pallet.">
-  <figcaption id="prep-caption"><strong>Fill → fold → pallet.</strong> Keep bags flat and the pallet load centered. <span class="credit">Original Fire Watch diagram, based on the sources below.</span></figcaption>
+<div class="grid">
+<figure class="figure figure--full figure--diagram figure--contain">
+  <img src="../assets/handouts/SKL-001/step-1-invert-fixture.svg" style="height: 2.25in" alt="The sandbag filling fixture is upside down with its three pipes pointing upward.">
+  <figcaption><strong>1. Invert the fixture.</strong></figcaption>
 </figure>
+<figure class="figure figure--full figure--diagram figure--contain">
+  <img src="../assets/handouts/SKL-001/step-2-bags-on-pipes.svg" style="height: 2.25in" alt="One empty sandbag is pulled over each of the fixture's three upright pipes.">
+  <figcaption><strong>2. Put a sandbag on each pipe.</strong></figcaption>
+</figure>
+</div>
 
-## 3. Stack on a pallet
-
-<ol class="procedure">
-<li>Set a sound pallet on firm, level ground where it will stay dry and accessible.</li>
-<li>Lay bags flat, snug, and entirely inside the pallet edges. Turn the next layer across the first to interlock the stack.</li>
-<li>Keep the pile low and stable; do not exceed the pallet or moving equipment's rated load. Secure it before moving; keep people clear of a shifting stack.</li>
+<ol class="procedure" start="3">
+<li><strong>Turn the fixture right side up.</strong></li>
+<li><strong>Fill to the top with sand.</strong> Keep the fill even among the three openings.</li>
 </ol>
+
+<div class="grid">
+<figure class="figure figure--full figure--diagram figure--contain">
+  <img src="../assets/handouts/SKL-001/step-3-turn-upright.svg" style="height: 2.1in" alt="The fixture has been turned right side up, with one empty bag hanging beneath each opening.">
+  <figcaption><strong>3. Turn the fixture right side up.</strong></figcaption>
+</figure>
+<figure class="figure figure--full figure--diagram figure--contain">
+  <img src="../assets/handouts/SKL-001/step-4-fill-with-sand.svg" style="height: 2.1in" alt="Sand fills all three fixture openings to the top while the bags hang below.">
+  <figcaption><strong>4. Fill to the top with sand.</strong></figcaption>
+</figure>
+</div>
 
 <div class="sources">U.S. Army Corps of Engineers, <em>Flood Fight Handbook</em> (2022), §2.1–2.3: www.mvp.usace.army.mil/Portals/57/MVP%20Flood%20Fight%20Handbook%202022.pdf. RiverOakRanch, “Filling Sandbags the Easy Way, With Sandbag Tubes” (2010): www.instructables.com/Filling-Sandbags-the-Easy-way-with-Sandbag-Tubes/. Accessed 2026-09-24.</div>
+
+<!-- pagebreak -->
+
+<p class="lede">Lift the fixture straight up, reset it for the next batch, and move completed bags clear.</p>
+
+<ol class="procedure" start="5">
+<li><strong>Lift the fixture and allow the sand to remain behind in the bags.</strong> Use a partner and lift together.</li>
+</ol>
+
+<figure class="figure figure--full figure--diagram figure--contain">
+  <img src="../assets/handouts/SKL-001/step-5-lift-fixture.svg" style="height: 2.25in" alt="Two gloved hands lift the fixture straight upward while three filled sandbags remain on the ground.">
+  <figcaption><strong>5. Lift the fixture.</strong> Let the filled bags remain on the ground.</figcaption>
+</figure>
+
+<div class="grid">
+<figure class="figure figure--full figure--diagram figure--contain">
+  <img src="../assets/handouts/SKL-001/step-6-reset-fixture.svg" style="height: 2.2in" alt="The fixture is set upside down with its pipes upright beside the filled bags, ready for another batch.">
+  <figcaption><strong>6. Set the fixture upside down.</strong> Prepare for more sandbags.</figcaption>
+</figure>
+<figure class="figure figure--full figure--diagram figure--contain">
+  <img src="../assets/handouts/SKL-001/step-7-move-sandbags.svg" style="height: 2.2in" alt="Four completed sandbags have been moved into a line away from the filling fixture.">
+  <figcaption><strong>7. Move the sandbags away.</strong> Keep the work area clear.</figcaption>
+</figure>
+</div>
+
+<ol class="procedure" start="6">
+<li><strong>Set the fixture upside down to prepare for more sandbags.</strong></li>
+<li><strong>Move the sandbags away from the work area.</strong> Flatten the sand toward the closed end; leave enough empty bag to fold underneath during placement.</li>
+</ol>
+
+<div class="sources">RiverOakRanch, “Filling Sandbags the Easy Way, With Sandbag Tubes” (2010): www.instructables.com/Filling-Sandbags-the-Easy-way-with-Sandbag-Tubes/. Accessed 2026-09-24.</div>
 
 <!-- pagebreak -->
 

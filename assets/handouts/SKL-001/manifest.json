@@ -1,13 +1,73 @@
 {
   "assets": [
     {
-      "file": "fill-fold-pallet.svg",
+      "file": "step-1-invert-fixture.svg",
       "type": "diagram",
       "creator": "La Habra Heights Fire Watch handout contributors",
-      "source": "Original diagram for SKL-001, 2026-09-24",
+      "source": "Original diagram for SKL-001, 2026-10-02",
       "license": "Repository license",
-      "alt": "Three line drawings show a half-filled bag or filling tube, the empty end folded under a flat bag, and alternating flat layers centered on a pallet.",
-      "caption": "Fill, fold, and stage bags on a pallet.",
+      "alt": "The sandbag filling fixture is upside down with its three pipes pointing upward.",
+      "caption": "Invert the fixture.",
+      "decorative": false
+    },
+    {
+      "file": "step-2-bags-on-pipes.svg",
+      "type": "diagram",
+      "creator": "La Habra Heights Fire Watch handout contributors",
+      "source": "Original diagram for SKL-001, 2026-10-02",
+      "license": "Repository license",
+      "alt": "One empty sandbag is pulled over each of the fixture's three upright pipes.",
+      "caption": "Put a sandbag on each pipe.",
+      "decorative": false
+    },
+    {
+      "file": "step-3-turn-upright.svg",
+      "type": "diagram",
+      "creator": "La Habra Heights Fire Watch handout contributors",
+      "source": "Original diagram for SKL-001, 2026-10-02",
+      "license": "Repository license",
+      "alt": "The fixture has been turned right side up, with one empty bag hanging beneath each opening.",
+      "caption": "Turn the fixture right side up.",
+      "decorative": false
+    },
+    {
+      "file": "step-4-fill-with-sand.svg",
+      "type": "diagram",
+      "creator": "La Habra Heights Fire Watch handout contributors",
+      "source": "Original diagram for SKL-001, 2026-10-02",
+      "license": "Repository license",
+      "alt": "Sand fills all three fixture openings to the top while the bags hang below.",
+      "caption": "Fill to the top with sand.",
+      "decorative": false
+    },
+    {
+      "file": "step-5-lift-fixture.svg",
+      "type": "diagram",
+      "creator": "La Habra Heights Fire Watch handout contributors",
+      "source": "Original diagram for SKL-001, 2026-10-02",
+      "license": "Repository license",
+      "alt": "Two gloved hands lift the fixture straight upward while three filled sandbags remain on the ground.",
+      "caption": "Lift the fixture and leave the sand in the bags.",
+      "decorative": false
+    },
+    {
+      "file": "step-6-reset-fixture.svg",
+      "type": "diagram",
+      "creator": "La Habra Heights Fire Watch handout contributors",
+      "source": "Original diagram for SKL-001, 2026-10-02",
+      "license": "Repository license",
+      "alt": "The fixture is set upside down with its pipes upright beside the filled bags, ready for another batch.",
+      "caption": "Reset the fixture for more sandbags.",
+      "decorative": false
+    },
+    {
+      "file": "step-7-move-sandbags.svg",
+      "type": "diagram",
+      "creator": "La Habra Heights Fire Watch handout contributors",
+      "source": "Original diagram for SKL-001, 2026-10-02",
+      "license": "Repository license",
+      "alt": "Four completed sandbags have been moved into a line away from the filling fixture.",
+      "caption": "Move completed sandbags away from the work area.",
       "decorative": false
     },
     {
