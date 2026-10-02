@@ -6,6 +6,7 @@ import test from 'node:test';
 import { sanitizeSvg, validateAssetEntry } from '../scripts/lib/asset-validation.mjs';
 import { generateTableOfContentsPages } from '../scripts/lib/binder-generation.mjs';
 import { formatAccessibilityIssue } from '../scripts/lib/accessibility-validation.mjs';
+import { reportAccessibilityWarnings } from '../scripts/lib/artifact-generation.mjs';
 import { escapeHtml, renderHandout, renderMarkdown } from '../scripts/lib/content-rendering.mjs';
 import { discoverDocuments } from '../scripts/lib/filesystem-discovery.mjs';
 import { generateBinderIndex } from '../scripts/lib/index-generation.mjs';
@@ -180,6 +181,26 @@ test('accessibility diagnostics identify the page and exact authoring line', () 
     message,
     'TST-001 page 2 (handouts/test.md:42): heading-order at h3 (heading level jumps from h1 to h3)'
   );
+});
+
+test('accessibility findings are saved and reported as non-fatal warnings', async t => {
+  const diagnostics = await fs.mkdtemp(path.join(os.tmpdir(), 'accessibility-warning-'));
+  t.after(() => fs.rm(diagnostics, { recursive: true, force: true }));
+  const issues = [{
+    code: 'TST-001', page: 2, type: 'heading-order', selector: 'h3',
+    detail: 'heading level jumps from h1 to h3'
+  }];
+  const warnings = [];
+
+  await reportAccessibilityWarnings(issues, 'TST-001', diagnostics, warning => warnings.push(warning));
+
+  assert.deepEqual(
+    JSON.parse(await fs.readFile(path.join(diagnostics, 'TST-001-accessibility.json'), 'utf8')),
+    issues
+  );
+  assert.equal(warnings.length, 1);
+  assert.match(warnings[0], /^Accessibility validation warning:/);
+  assert.match(warnings[0], /TST-001 page 2.*heading-order/);
 });
 
 test('handout pages use their section slot and show the document code', () => {

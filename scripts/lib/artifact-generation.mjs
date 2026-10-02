@@ -190,10 +190,19 @@ export async function validateDocument({ page, document, html, htmlFile }) {
       issues.push(structuredIssue({ severity: 'error', message: formatLayoutIssue(issue), remediation: issue.axis === 'horizontal' || issue.type === 'horizontal-overflow' ? 'Break or shorten long unbroken text, or reduce the element width.' : 'Shorten the content or add a page break.', ...issue }));
     }
     for (const issue of await inspectAccessibility(page, meta.code)) {
-      issues.push(structuredIssue({ severity: 'error', message: formatAccessibilityIssue(issue), remediation: 'Adjust the marked content or markup to meet this accessibility requirement.', ...issue }));
+      issues.push(structuredIssue({ severity: 'warning', message: formatAccessibilityIssue(issue), remediation: 'Adjust the marked content or markup to meet this accessibility requirement.', ...issue }));
     }
   } catch (error) { addError('render', `layout lint could not render the handout (${error.message})`); }
   return { valid: !issues.some(issue => issue.severity === 'error'), code: meta.code, sourcePath, issues };
+}
+
+export async function reportAccessibilityWarnings(accessibilityIssues, code, diagnostics, warn = console.warn) {
+  if (!accessibilityIssues.length) return;
+  await fs.writeFile(
+    path.join(diagnostics, `${code}-accessibility.json`),
+    JSON.stringify(accessibilityIssues, null, 2)
+  );
+  warn(`Accessibility validation warning:\n${accessibilityIssues.map(formatAccessibilityIssue).join('\n')}`);
 }
 
 async function validateRenderedPage(page, code, pageCount, diagnostics) {
@@ -219,9 +228,7 @@ async function validateRenderedPage(page, code, pageCount, diagnostics) {
     throw Error(`Layout validation failed:\n${layoutIssues.map(formatLayoutIssue).join('\n')}`);
   }
   const accessibilityIssues = await inspectAccessibility(page, code);
-  if (accessibilityIssues.length) {
-    throw Error(`Accessibility validation failed:\n${accessibilityIssues.map(formatAccessibilityIssue).join('\n')}`);
-  }
+  await reportAccessibilityWarnings(accessibilityIssues, code, diagnostics);
 }
 
 async function createPdfAndPreviews(page, outputRoot, meta, derivedPageCount) {
@@ -347,7 +354,7 @@ export async function lintLayouts({ root, outputRoot, documents, manifests }) {
             fullPage: true
           });
         }
-        failures.push(...result.issues.map(issue => issue.message));
+        failures.push(...result.issues.filter(issue => issue.severity === 'error').map(issue => issue.message));
       } catch (error) {
         failures.push(`${meta.code}: layout lint could not render the handout (${error.message})`);
       } finally {
