@@ -3,7 +3,7 @@ import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import test from 'node:test';
-import { validateAssetEntry } from '../scripts/lib/asset-validation.mjs';
+import { sanitizeSvg, validateAssetEntry } from '../scripts/lib/asset-validation.mjs';
 import { generateTableOfContentsPages } from '../scripts/lib/binder-generation.mjs';
 import { formatAccessibilityIssue } from '../scripts/lib/accessibility-validation.mjs';
 import { escapeHtml, renderHandout, renderMarkdown } from '../scripts/lib/content-rendering.mjs';
@@ -227,6 +227,16 @@ test('image metadata fixture validates and image markup requires alt text', asyn
   validateAssetEntry(JSON.parse(await fixture('image-metadata.json')), 'STH-001');
   assert.deepEqual(imageReferences('<img src="x.svg" alt="Route">', 'STH-001'), [{ src: 'x.svg', alt: 'Route' }]);
   assert.throws(() => imageReferences('<img src="x.svg">', 'STH-001'), /must have alt/);
+});
+
+test('SVG validation accepts a standard XML prolog and leading comments', () => {
+  const svg = '<?xml version="1.0" encoding="UTF-8"?>\n<!-- Generated illustration -->\n<svg xmlns="http://www.w3.org/2000/svg"><path d="M0 0"/></svg>';
+  assert.equal(sanitizeSvg(svg, 'illustration.svg'), svg);
+});
+
+test('SVG validation still rejects active content after an XML prolog', () => {
+  const svg = '<?xml version="1.0"?>\n<svg xmlns="http://www.w3.org/2000/svg"><script>alert(1)</script></svg>';
+  assert.throws(() => sanitizeSvg(svg, 'unsafe.svg'), /disallowed active or external content/);
 });
 
 test('generated binder index orders codes consistently', () => {
