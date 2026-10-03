@@ -3,6 +3,11 @@ import { handoutNeedsFixing, handoutOptionLabel, indentSelection, prefixLines, r
 const select = document.querySelector('#handout');
 const needsFixing = document.querySelector('#needs-fixing');
 const source = document.querySelector('#source');
+const visual = document.querySelector('#visual');
+const visualMode = document.querySelector('#visual-mode');
+const sourceMode = document.querySelector('#source-mode');
+const editorLabel = document.querySelector('#editor-label');
+const visualHelp = document.querySelector('#visual-help');
 const preview = document.querySelector('#preview');
 const state = document.querySelector('#state');
 const scanState = document.querySelector('#scan-state');
@@ -28,6 +33,55 @@ let renderSequence = 0;
 let renderController;
 const session = crypto.randomUUID();
 let handouts = [];
+let editorMode = 'visual';
+
+function frontMatter(sourceText) {
+  const match = sourceText.match(/^---\n[\s\S]*?\n---(?:\n|$)/);
+  return match?.[0] || '';
+}
+function authoredHtml(document) {
+  return [...document.querySelectorAll('.sheet .content')].map(content => {
+    const clone = content.cloneNode(true);
+    clone.querySelectorAll('.kicker, h1, .footer').forEach(element => element.remove());
+    clone.querySelectorAll('[data-source-path], [data-source-line], [contenteditable]').forEach(element => {
+      element.removeAttribute('data-source-path'); element.removeAttribute('data-source-line'); element.removeAttribute('contenteditable');
+    });
+    return clone.innerHTML.trim();
+  }).join('\n\n<!-- pagebreak -->\n\n');
+}
+function attachVisualEditor() {
+  const document = visual.contentDocument;
+  if (!document) return;
+  document.querySelectorAll('.content').forEach(content => {
+    content.contentEditable = 'true';
+    content.querySelectorAll(':scope > .kicker, :scope > h1, :scope > .footer').forEach(element => { element.contentEditable = 'false'; });
+  });
+  const style = document.createElement('style');
+  style.textContent = '.content[contenteditable="true"] { outline: 2px solid transparent; } .content[contenteditable="true"]:focus { outline-color: #2563eb; outline-offset: -3px; }';
+  document.head.append(style);
+  document.body.addEventListener('input', () => {
+    source.value = `${frontMatter(source.value)}${authoredHtml(document)}\n`;
+    updateStatusControl(); renderSoon();
+  });
+}
+function showEditorMode(mode) {
+  editorMode = mode;
+  const isVisual = mode === 'visual';
+  visual.hidden = !isVisual; source.hidden = isVisual; visualHelp.hidden = !isVisual;
+  visualMode.classList.toggle('active', isVisual); sourceMode.classList.toggle('active', !isVisual);
+  visualMode.setAttribute('aria-pressed', String(isVisual)); sourceMode.setAttribute('aria-pressed', String(!isVisual));
+  editorLabel.textContent = isVisual ? 'Visual editor' : 'Markdown / HTML source';
+  cursorStatus.hidden = isVisual;
+  if (isVisual) renderVisual(); else source.focus();
+}
+async function renderVisual() {
+  try {
+    const html = await request('/api/render', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ path: select.value, source: source.value }) });
+    if (editorMode !== 'visual') return;
+    visual.addEventListener('load', attachVisualEditor, { once: true });
+    visual.srcdoc = html;
+  } catch (error) { message.textContent = `Visual editor: ${error.message}. Switch to Source to correct the document.`; }
+}
 
 function populateHandouts(preferredPath = select.value) {
   const visible = needsFixing.checked ? handouts.filter(handoutNeedsFixing) : handouts;
@@ -190,7 +244,7 @@ async function openHandout({ discardCurrentDraft = false } = {}) {
     const canRestore = draft && typeof draft.source === 'string' && draft.source !== opened.source;
     draftRecovery.hidden = !canRestore;
     draftRecovery.dataset.path = canRestore ? opened.path : '';
-    renderSoon(); source.focus();
+    renderSoon(); showEditorMode(editorMode);
   } catch (error) { message.textContent = error.message; }
 }
 async function save() {
@@ -323,7 +377,23 @@ document.querySelector('#delete-image').addEventListener('click', async () => {
     opened.assets = opened.assets.filter(asset => asset.file !== selectedAsset); selectedAsset = ''; showAssets(); renderSoon(); imageDialog.close(); message.textContent = 'Asset deleted.';
   } catch (error) { message.textContent = `Asset not deleted: ${error.message}`; }
 });
-document.querySelector('#toolbar').addEventListener('click', event => { if (event.target.matches('button:not(#images)')) insert(event.target); });
+document.querySelector('#toolbar').addEventListener('click', event => {
+  if (!event.target.matches('button:not(#images):not(#visual-mode):not(#source-mode)')) return;
+  if (editorMode === 'visual') {
+    const commands = { '**|**': 'bold', '*|*': 'italic', '- ': 'insertUnorderedList', '## ': 'formatBlock' };
+    const key = event.target.dataset.wrap || event.target.dataset.before;
+    if (commands[key]) {
+      visual.contentDocument.execCommand(commands[key], false, key === '## ' ? 'h2' : null);
+      visual.contentDocument.body.dispatchEvent(new Event('input', { bubbles: true }));
+      visual.contentWindow.focus(); return;
+    }
+    showEditorMode('source');
+    message.textContent = 'Switched to Source for this structural editing tool.';
+  }
+  insert(event.target);
+});
+visualMode.addEventListener('click', () => showEditorMode('visual'));
+sourceMode.addEventListener('click', () => showEditorMode('source'));
 document.querySelector('#save').addEventListener('click', save);
 document.querySelector('#revert').addEventListener('click', () => openHandout({ discardCurrentDraft: true }));
 select.addEventListener('change', openHandout); source.addEventListener('input', renderSoon);
