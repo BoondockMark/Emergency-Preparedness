@@ -89,11 +89,11 @@ test('editor handout labels expose release and formatting state and can filter w
   const release = { code: 'STH-001', title: 'Ready', status: 'approved', formatting: 'valid' };
   const draft = { code: 'STH-002', title: 'Work', status: 'draft', formatting: 'valid' };
   const broken = { code: 'STH-003', title: 'Broken', status: 'approved', formatting: 'error' };
-  assert.equal(handoutOptionLabel(release), '🟢 STH-001 — Ready · release');
+  assert.equal(handoutOptionLabel(release), '🟢 STH-001 — Ready · release · formatting valid');
   assert.equal(handoutNeedsFixing(release), false);
   assert.equal(handoutNeedsFixing(draft), true);
   assert.equal(handoutNeedsFixing(broken), true);
-  assert.equal(handoutOptionLabel({ ...release, formatting: 'checking' }), '🟡 STH-001 — Ready · release');
+  assert.equal(handoutOptionLabel({ ...release, formatting: 'checking' }), '🟡 STH-001 — Ready · release · formatting check in progress');
   assert.equal(handoutNeedsFixing({ ...release, formatting: 'checking' }), true);
   assert.equal(handoutNeedsFixing({ ...release, formatting: 'unavailable' }), true);
 });
@@ -117,6 +117,31 @@ test('handout list includes workflow and formatting state', async t => {
   assert.deepEqual(handouts.map(({ status, formatting }) => ({ status, formatting })), [
     { status: 'draft', formatting: 'unchecked' }, { status: 'draft', formatting: 'unchecked' }
   ]);
+});
+
+test('browser handout search filters, groups, navigates, and preserves selection while scans update', { timeout: 45_000 }, async t => {
+  const { page } = await openEditor(t);
+  assert.equal(await page.$eval('#handout-search', input => input.getAttribute('aria-label') || document.querySelector(`label[for="${input.id}"]`)?.textContent), 'Search handouts by code or title');
+  assert.equal(await page.$eval('#handout', element => element.getAttribute('aria-label')), 'Handout search results');
+  assert.ok((await page.$$eval('#handout optgroup', groups => groups.map(group => group.label))).some(label => label === 'section · draft'));
+
+  await page.focus('#handout-search');
+  await page.keyboard.type('sEcOnD FIXTURE');
+  assert.deepEqual(await page.$$eval('#handout option', options => options.map(option => option.value)), ['handouts/section/second.md']);
+  assert.match(await text(page, '#handout-results'), /1 handout found/);
+  await page.keyboard.press('ArrowDown');
+  await page.keyboard.press('Enter');
+  await page.waitForFunction(() => document.querySelector('#source').value.includes('STH-002'));
+
+  await page.$eval('#handout-search', input => { input.value = 'nothing matches'; input.dispatchEvent(new Event('input', { bubbles: true })); });
+  assert.equal(await text(page, '#handout-results'), 'No handouts match your search.');
+  assert.equal(await page.$$eval('#handout option', options => options.length), 0);
+  assert.ok((await value(page, '#source')).includes('STH-002'));
+
+  await page.$eval('#handout-search', input => { input.value = ''; input.dispatchEvent(new Event('input', { bubbles: true })); });
+  await waitForText(page, '#scan-state', 'Scan complete');
+  assert.equal(await value(page, '#handout'), 'handouts/section/second.md');
+  assert.match(await page.$eval('#handout option:checked', option => option.textContent), /formatting (?:valid|errors)/);
 });
 
 test('editor scan validates a handout from disk without opening it', async t => {

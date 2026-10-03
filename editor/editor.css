@@ -2,7 +2,9 @@
 * { box-sizing: border-box; }
 body { margin: 0; background: #e5e7eb; }
 header, nav { display: flex; align-items: center; gap: .5rem; padding: .6rem 1rem; background: #17202a; color: white; }
-header select { min-width: 24rem; } button, select { padding: .4rem .65rem; }
+.handout-picker { display: grid; grid-template-columns: minmax(10rem, 15rem) minmax(20rem, 1fr); gap: .35rem; align-items: center; }
+.handout-picker input, .handout-picker select { min-width: 0; padding: .4rem .65rem; }
+#handout-results { grid-column: 1 / -1; font-size: .8rem; color: #dbeafe; }
 .needs-fixing-filter { display: inline-flex; align-items: center; gap: .3rem; white-space: nowrap; }
 .status-control { display: inline-flex; align-items: center; gap: .35rem; white-space: nowrap; }
 .status-control select { min-width: 8.5rem; }
@@ -59,4 +61,4 @@ fieldset label { display: grid; gap: .15rem; }
 .image-help { color: #475569; }
 .dialog-actions { justify-content: flex-end; }
 .danger { color: #991b1b; }
-@media (max-width: 850px) { main { grid-template-columns: 1fr; height: auto; } textarea, iframe { height: 70vh; flex: none; } header select { min-width: 0; flex: 1; } }
+@media (max-width: 850px) { main { grid-template-columns: 1fr; height: auto; } textarea, iframe { height: 70vh; flex: none; } .handout-picker { grid-template-columns: 1fr; flex: 1; } #handout-results { grid-column: 1; } }

@@ -1,6 +1,8 @@
 import { handoutNeedsFixing, handoutOptionLabel, indentSelection, prefixLines, readHandoutStatus, selectionDetails, setHandoutStatus } from './editor-model.js';
 
 const select = document.querySelector('#handout');
+const handoutSearch = document.querySelector('#handout-search');
+const handoutResults = document.querySelector('#handout-results');
 const needsFixing = document.querySelector('#needs-fixing');
 const source = document.querySelector('#source');
 const visual = document.querySelector('#visual');
@@ -154,16 +156,34 @@ async function renderVisual() {
 }
 
 function populateHandouts(preferredPath = select.value) {
-  const visible = needsFixing.checked ? handouts.filter(handoutNeedsFixing) : handouts;
-  select.replaceChildren(...visible.map(item => new Option(handoutOptionLabel(item), item.path)));
+  const query = handoutSearch.value.trim().toLocaleLowerCase();
+  const visible = handouts.filter(item => (!needsFixing.checked || handoutNeedsFixing(item))
+    && (!query || item.code.toLocaleLowerCase().includes(query) || item.title.toLocaleLowerCase().includes(query)));
+  const groups = new Map();
+  for (const item of visible) {
+    const section = item.path.split('/').slice(1, -1).join(' / ') || 'Unsectioned';
+    const status = item.status === 'approved' ? 'Release' : item.status.replace('-', ' ');
+    const label = `${section} · ${status}`;
+    if (!groups.has(label)) groups.set(label, []);
+    groups.get(label).push(item);
+  }
+  select.replaceChildren(...[...groups].map(([label, items]) => {
+    const group = document.createElement('optgroup'); group.label = label;
+    group.append(...items.map(item => new Option(handoutOptionLabel(item), item.path)));
+    return group;
+  }));
   if (visible.some(item => item.path === preferredPath)) select.value = preferredPath;
+  else select.selectedIndex = -1;
+  handoutResults.textContent = visible.length ? `${visible.length} handout${visible.length === 1 ? '' : 's'} found` : 'No handouts match your search.';
 }
 function updateHandout(path, changes) {
   const item = handouts.find(candidate => candidate.path === path);
   if (!item) return;
   Object.assign(item, changes);
-  if (needsFixing.checked && path === select.value && !handoutNeedsFixing(item)) needsFixing.checked = false;
-  populateHandouts(path);
+  const option = [...select.options].find(candidate => candidate.value === path);
+  const onlyIndicatorChanged = Object.keys(changes).every(key => ['formatting', 'issueCount'].includes(key));
+  if (onlyIndicatorChanged && option) option.textContent = handoutOptionLabel(item);
+  else populateHandouts(opened.path || path);
 }
 
 async function scanHandouts() {
@@ -282,10 +302,10 @@ function selectIssue(issue) {
   }
 }
 function bufferSnapshot() {
-  return { path: select.value, source: source.value, session };
+  return { path: opened.path || select.value, source: source.value, session };
 }
 function isCurrentBuffer(snapshot) {
-  return snapshot.path === select.value && snapshot.source === source.value;
+  return snapshot.path === (opened.path || select.value) && snapshot.source === source.value;
 }
 function matchesBuffer(validation, snapshot) {
   return validation?.path === snapshot.path && validation.source === snapshot.source;
@@ -301,7 +321,7 @@ async function syntaxForSave(snapshot) {
 }
 async function validate() {
   const sequence = ++validationSequence;
-  const payload = { path: select.value, source: source.value, session, requestId: sequence };
+  const payload = { path: opened.path || select.value, source: source.value, session, requestId: sequence };
   try {
     const syntax = await validateSyntax(payload);
     if (sequence !== validationSequence) return;
@@ -324,7 +344,7 @@ async function render() {
   renderController?.abort();
   renderController = new AbortController();
   try {
-    const html = await request('/api/render', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ path: select.value, source: source.value }), signal: renderController.signal });
+    const html = await request('/api/render', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ path: opened.path || select.value, source: source.value }), signal: renderController.signal });
     if (sequence !== renderSequence) return;
     preview.srcdoc = html;
     message.textContent = '';
@@ -513,6 +533,25 @@ sourceMode.addEventListener('click', () => showEditorMode('source'));
 document.querySelector('#save').addEventListener('click', save);
 document.querySelector('#revert').addEventListener('click', () => openHandout({ discardCurrentDraft: true }));
 select.addEventListener('change', openHandout); source.addEventListener('input', renderSoon);
+handoutSearch.addEventListener('input', () => populateHandouts(opened.path));
+handoutSearch.addEventListener('keydown', async event => {
+  if (event.key === 'Escape') {
+    event.preventDefault(); handoutSearch.value = ''; populateHandouts(opened.path); return;
+  }
+  if (!['ArrowDown', 'ArrowUp', 'Enter'].includes(event.key) || !select.options.length) return;
+  event.preventDefault();
+  if (event.key === 'Enter') {
+    if (select.value && select.value !== opened.path) await openHandout();
+    else select.focus();
+    return;
+  }
+  const paths = [...select.options].map(option => option.value);
+  const current = paths.indexOf(select.value);
+  const next = event.key === 'ArrowDown'
+    ? (current + 1 + paths.length) % paths.length
+    : (current <= 0 ? paths.length - 1 : current - 1);
+  select.value = paths[next];
+});
 source.addEventListener('input', updateStatusControl);
 documentStatus.addEventListener('change', () => {
   const updated = setHandoutStatus(source.value, documentStatus.value);
@@ -526,12 +565,8 @@ documentStatus.addEventListener('change', () => {
 });
 needsFixing.addEventListener('change', async () => {
   const previous = select.value;
-  populateHandouts(previous);
-  if (!select.value && handouts.length) {
-    needsFixing.checked = false;
-    populateHandouts(previous);
-    message.textContent = 'No handouts currently need fixing.';
-  } else if (select.value !== previous) await openHandout();
+  populateHandouts(opened.path || previous);
+  if (!select.options.length) message.textContent = 'No handouts currently match the filters.';
 });
 source.addEventListener('click', updateCursorStatus);
 source.addEventListener('keyup', updateCursorStatus);
