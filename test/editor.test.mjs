@@ -39,13 +39,14 @@ async function setup(t) {
   return { root, source, base: `http://127.0.0.1:${server.address().port}`, file: path.join(root, 'handouts/section/example.md') };
 }
 
-async function openEditor(t) {
+async function openEditor(t, { mode = 'source' } = {}) {
   const context = await setup(t);
   const browser = await puppeteer.launch(browserOptions());
   t.after(() => browser.close());
   const page = await browser.newPage();
   await page.goto(context.base, { waitUntil: 'networkidle0' });
   await page.waitForFunction(() => document.querySelector('#source').value.includes('code: STH-001'));
+  if (mode === 'source') await page.click('#source-mode');
   return { ...context, page };
 }
 
@@ -173,6 +174,21 @@ test('editor open/save round trip is atomic and stale writes are rejected', asyn
   const stale = await fetch(`${base}/api/save`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(opened) });
   assert.equal(stale.status, 409);
   assert.deepEqual((await fs.readdir(path.dirname(file))).filter(name => name.endsWith('.tmp')), []);
+});
+
+test('browser editor defaults to a visual canvas and synchronizes edits to source', { timeout: 45_000 }, async t => {
+  const { page } = await openEditor(t, { mode: 'visual' });
+  assert.equal(await page.$eval('#visual-mode', button => button.getAttribute('aria-pressed')), 'true');
+  await page.waitForFunction(() => document.querySelector('#visual').contentDocument?.querySelector('.content[contenteditable="true"]'));
+  await page.$eval('#visual', frame => {
+    const paragraph = [...frame.contentDocument.querySelectorAll('.content p')].find(element => element.textContent.includes('First page.'));
+    paragraph.textContent = 'Visually edited first page.';
+    paragraph.dispatchEvent(new Event('input', { bubbles: true }));
+  });
+  await page.click('#source-mode');
+  assert.match(await value(page, '#source'), /<p>Visually edited first page\.<\/p>/);
+  assert.match(await value(page, '#source'), /^---\ncode: STH-001/m);
+  assert.match(await value(page, '#source'), /<!-- pagebreak -->/);
 });
 
 test('browser editor validates valid buffers before saving', { timeout: 45_000 }, async t => {

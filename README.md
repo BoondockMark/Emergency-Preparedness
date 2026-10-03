@@ -91,8 +91,9 @@ Open the printed URL. For an immediate visual proof, open `docs/previews/COM-001
 
 Run `npm run editor`, then open **http://127.0.0.1:4174**. The server binds only
 to the loopback interface and lists only the Markdown files it discovered under
-`handouts/` at startup. Select a handout, edit its canonical Markdown/HTML source,
-and compare it with the debounced print-sized preview. **Save** (or Ctrl/Cmd+S)
+`handouts/` at startup. Select a handout and edit it in the visual, print-styled
+editor beside the live preview. Toggle **Source** when you need direct access to
+the canonical Markdown/HTML and YAML metadata. **Save** (or Ctrl/Cmd+S)
 writes through a temporary file and rename. A save is refused if another program
 changed the file since it was opened; use **Revert** to load the disk version.
 Unsaved edits are also kept as a per-handout browser draft, so an accidental
@@ -102,10 +103,10 @@ word count, and character count. Tab and Shift+Tab indent or outdent every line
 in a selection, and list or heading tools apply their prefix to every selected
 line.
 
-The toolbar inserts the supported headings, emphasis, lists, component wrappers,
-and page breaks into source. It is deliberately not a generic visual editor:
-YAML front matter, arbitrary HTML, and unknown blocks remain source-only text and
-are never converted or normalized. Preview rendering uses the same parser,
+The toolbar applies headings, emphasis, and lists directly in Visual mode. Tools
+for component wrappers, tables, images, and page breaks automatically move to
+Source mode so their exact structure remains visible. Visual edits retain the
+YAML front matter and serialize the handout body as supported HTML. Preview rendering uses the same parser,
 `templates/handout.html`, and `assets/styles/print.css` as the build. The editor
 is a local authoring aid; generated PDFs still require `npm run build`.
 
