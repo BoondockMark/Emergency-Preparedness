@@ -10,6 +10,7 @@ import { renderHandoutSource } from './content-rendering.mjs';
 import { discoverDocuments } from './filesystem-discovery.mjs';
 import { loadDocument } from './metadata.mjs';
 import { commitHandoutWithAssets, deleteAsset, figureMarkup, stageAsset } from './editor-support.mjs';
+import { readHandoutStatus } from '../../editor/editor-model.js';
 
 const json = (response, status, value) => {
   response.writeHead(status, { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' });
@@ -209,6 +210,10 @@ export async function createEditorServer({ root }) {
         const value = await body(request);
         const file = safeFile(value.path);
         if (!file || typeof value.source !== 'string' || typeof value.revision !== 'string') return json(response, 400, { error: 'Invalid save' });
+        const syntax = await validateSource({ ...value, phase: 'syntax' });
+        if (!syntax.valid && readHandoutStatus(value.source) === 'approved') {
+          return json(response, 422, { error: 'Approved handouts must pass validation. Change the status to draft or under-review, or complete the approval requirements.' });
+        }
         const current = await fs.readFile(file, 'utf8');
         if (revision(current) !== value.revision) return json(response, 409, { error: 'File changed on disk; revert before saving' });
         requireSession(value);
