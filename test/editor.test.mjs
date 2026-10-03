@@ -96,6 +96,7 @@ test('editor handout labels expose release and formatting state and can filter w
   assert.equal(handoutOptionLabel({ ...release, formatting: 'checking' }), '🟡 STH-001 — Ready · release · formatting check in progress');
   assert.equal(handoutNeedsFixing({ ...release, formatting: 'checking' }), true);
   assert.equal(handoutNeedsFixing({ ...release, formatting: 'unavailable' }), true);
+  assert.equal(handoutOptionLabel({ ...broken, issueCount: 2 }), '🔴 STH-003 — Broken · release · formatting errors (2 issues)');
 });
 
 test('editor status helpers expose every workflow option and only edit front matter', async () => {
@@ -142,6 +143,10 @@ test('browser handout search filters, groups, navigates, and preserves selection
   await waitForText(page, '#scan-state', 'Scan complete');
   assert.equal(await value(page, '#handout'), 'handouts/section/second.md');
   assert.match(await page.$eval('#handout option:checked', option => option.textContent), /formatting (?:valid|errors)/);
+
+  await page.focus('#handout-search');
+  await page.keyboard.press('ArrowUp');
+  assert.equal(await value(page, '#handout'), 'handouts/section/example.md', 'ArrowUp moves to the previous result');
 });
 
 test('editor scan validates a handout from disk without opening it', async t => {

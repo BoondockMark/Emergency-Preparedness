@@ -161,10 +161,13 @@ async function renderVisual() {
   }
 }
 
-function populateHandouts(preferredPath = select.value) {
+function handoutMatchesFilters(item) {
   const query = handoutSearch.value.trim().toLocaleLowerCase();
-  const visible = handouts.filter(item => (!needsFixing.checked || handoutNeedsFixing(item))
-    && (!query || item.code.toLocaleLowerCase().includes(query) || item.title.toLocaleLowerCase().includes(query)));
+  return (!needsFixing.checked || handoutNeedsFixing(item))
+    && (!query || item.code.toLocaleLowerCase().includes(query) || item.title.toLocaleLowerCase().includes(query));
+}
+function populateHandouts(preferredPath = select.value) {
+  const visible = handouts.filter(handoutMatchesFilters);
   const groups = new Map();
   for (const item of visible) {
     const section = item.path.split('/').slice(1, -1).join(' / ') || 'Unsectioned';
@@ -185,11 +188,18 @@ function populateHandouts(preferredPath = select.value) {
 function updateHandout(path, changes) {
   const item = handouts.find(candidate => candidate.path === path);
   if (!item) return;
+  const wasVisible = handoutMatchesFilters(item);
   Object.assign(item, changes);
   const option = [...select.options].find(candidate => candidate.value === path);
   const onlyIndicatorChanged = Object.keys(changes).every(key => ['formatting', 'issueCount'].includes(key));
-  if (onlyIndicatorChanged && option) option.textContent = handoutOptionLabel(item);
-  else populateHandouts(opened.path || path);
+  const isVisible = handoutMatchesFilters(item);
+  if (onlyIndicatorChanged && wasVisible === isVisible) {
+    // Keep the native control and its selection intact when the filters still
+    // admit the same items. An off-screen result needs no DOM update at all.
+    if (option) option.textContent = handoutOptionLabel(item);
+    return;
+  }
+  populateHandouts(opened.path || path);
 }
 
 async function scanHandouts() {
