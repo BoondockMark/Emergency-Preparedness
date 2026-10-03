@@ -257,6 +257,13 @@ test('browser editor controls remain reachable without horizontal overflow at re
   }
 
   await page.setViewport({ width: 390, height: 844 });
+  assert.equal(await page.$eval('#images', button => button.closest('.tool-overflow') === null), true, 'Images is hidden in the overflow menu');
+  const imageButtonBounds = await page.$eval('#images', element => {
+    const rect = element.getBoundingClientRect();
+    return { left: rect.left, right: rect.right, width: rect.width, display: getComputedStyle(element).display };
+  });
+  assert.notEqual(imageButtonBounds.display, 'none');
+  assert.ok(imageButtonBounds.width > 0 && imageButtonBounds.left >= 0 && imageButtonBounds.right <= 390, 'Images is not visible at mobile width');
   await page.$eval('.tool-overflow', element => { element.open = true; });
   await page.click('#images');
   assert.equal(await page.$eval('#image-dialog', element => element.scrollWidth <= element.clientWidth), true, 'mobile image dialog has horizontal overflow');
