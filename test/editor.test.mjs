@@ -249,7 +249,7 @@ test('browser editor controls remain reachable without horizontal overflow at re
     await page.evaluate(() => window.scrollTo(0, 0));
     assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth), true, `${viewport.name} page has horizontal overflow`);
 
-    for (const selector of ['#save', '#revert', '.mode-switch', '#validation']) {
+    for (const selector of ['#save', '#revert', '#document-status', '.mode-switch', '#validation']) {
       const bounds = await page.$eval(selector, element => {
         element.scrollIntoView({ block: 'nearest' });
         const rect = element.getBoundingClientRect();
@@ -261,7 +261,32 @@ test('browser editor controls remain reachable without horizontal overflow at re
     }
   }
 
+  await page.setViewport({ width: 1440, height: 900 });
+  const desktopShell = await page.evaluate(() => {
+    const main = document.querySelector('main').getBoundingClientRect();
+    return { bodyHeight: document.body.getBoundingClientRect().height, mainBottom: main.bottom, viewportHeight: innerHeight };
+  });
+  assert.equal(desktopShell.bodyHeight, desktopShell.viewportHeight, 'desktop shell matches the viewport height');
+  assert.equal(desktopShell.mainBottom, desktopShell.viewportHeight, 'editor consumes the actual remaining viewport height');
+
+  await page.setViewport({ width: 900, height: 800 });
+  const tabletRows = await page.$eval('header', header => {
+    const picker = header.querySelector('.handout-picker').getBoundingClientRect();
+    const save = header.querySelector('#save').getBoundingClientRect();
+    return { pickerTop: picker.top, saveBottom: save.bottom };
+  });
+  assert.ok(tabletRows.pickerTop >= tabletRows.saveBottom, 'tablet handout picker wraps below primary actions');
+
   await page.setViewport({ width: 390, height: 844 });
+  const mobilePicker = await page.$eval('.handout-picker', picker => {
+    const search = picker.querySelector('#handout-search').getBoundingClientRect();
+    const select = picker.querySelector('#handout').getBoundingClientRect();
+    return { pickerWidth: picker.getBoundingClientRect().width, searchTop: search.top, selectTop: select.top };
+  });
+  assert.ok(mobilePicker.pickerWidth > 300, 'mobile handout controls occupy their own full-width row');
+  assert.ok(mobilePicker.selectTop > mobilePicker.searchTop, 'mobile search and handout selection stack without squeezing');
+  assert.equal(await page.$eval('.tool-overflow summary', summary => getComputedStyle(summary).display !== 'none'), true, 'mobile lower-frequency tools use an overflow disclosure');
+  assert.equal(await page.$eval('.tool-overflow-menu', menu => getComputedStyle(menu).display), 'none', 'mobile lower-frequency tools start collapsed');
   assert.equal(await page.$eval('#images', button => button.closest('.tool-overflow') === null), true, 'Images is hidden in the overflow menu');
   const imageButtonBounds = await page.$eval('#images', element => {
     const rect = element.getBoundingClientRect();
