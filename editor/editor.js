@@ -39,24 +39,51 @@ let handouts = [];
 let editorMode = 'visual';
 const attachedVisualDocuments = new WeakSet();
 
-function frontMatter(sourceText) {
-  const match = sourceText.match(/^---\n[\s\S]*?\n---(?:\n|$)/);
-  return match?.[0] || '';
+function authoredHtml(element) {
+  const clone = element.cloneNode(true);
+  [clone, ...clone.querySelectorAll('*')].forEach(candidate => {
+    candidate.removeAttribute('data-source-path');
+    candidate.removeAttribute('data-source-line');
+    candidate.removeAttribute('data-visual-block');
+    candidate.removeAttribute('contenteditable');
+  });
+  return clone.outerHTML;
 }
-function authoredHtml(document) {
-  return [...document.querySelectorAll('.sheet .content')].map(content => {
-    const clone = content.cloneNode(true);
-    clone.querySelectorAll('.kicker, h1, .footer').forEach(element => element.remove());
-    clone.querySelectorAll('[data-source-path], [data-source-line], [contenteditable]').forEach(element => {
-      element.removeAttribute('data-source-path'); element.removeAttribute('data-source-line'); element.removeAttribute('contenteditable');
-    });
-    return clone.innerHTML.trim();
-  }).join('\n\n<!-- pagebreak -->\n\n');
+function lineOffset(value, line) {
+  let offset = 0;
+  for (let current = 1; current < line; current += 1) {
+    const newline = value.indexOf('\n', offset);
+    if (newline < 0) return value.length;
+    offset = newline + 1;
+  }
+  return offset;
+}
+function visualBlocks(document, sourceText) {
+  const elements = [...document.querySelectorAll('.sheet .content')]
+    .flatMap(content => [...content.children])
+    .filter(element => !element.matches('.kicker, h1:not([data-source-line]), .footer'));
+  const records = elements.map((element, index) => {
+    const annotated = element.hasAttribute('data-source-line') ? element : element.querySelector('[data-source-line]');
+    const line = Number(annotated?.dataset.sourceLine);
+    if (!line) return null;
+    element.dataset.visualBlock = String(index);
+    return { element, start: lineOffset(sourceText, line), end: sourceText.length };
+  }).filter(Boolean);
+  records.forEach((record, index) => {
+    let boundary = records[index + 1]?.start ?? sourceText.length;
+    const pageBreak = sourceText.slice(record.start, boundary).search(/^<!--\s*pagebreak\s*-->\s*$/mi);
+    if (pageBreak >= 0) boundary = record.start + pageBreak;
+    const candidate = sourceText.slice(record.start, boundary);
+    record.end = record.start + candidate.trimEnd().length;
+  });
+  return records;
 }
 function attachVisualEditor() {
   const document = visual.contentDocument;
   if (!document || attachedVisualDocuments.has(document)) return;
   attachedVisualDocuments.add(document);
+  const blocks = visualBlocks(document, source.value);
+  const blockByElement = new Map(blocks.map(block => [block.element, block]));
   document.querySelectorAll('.content').forEach(content => {
     content.contentEditable = 'true';
     content.querySelectorAll(':scope > .kicker, :scope > h1, :scope > .footer').forEach(element => { element.contentEditable = 'false'; });
@@ -64,8 +91,25 @@ function attachVisualEditor() {
   const style = document.createElement('style');
   style.textContent = '.content[contenteditable="true"] { outline: 2px solid transparent; } .content[contenteditable="true"]:focus { outline-color: #2563eb; outline-offset: -3px; }';
   document.head.append(style);
-  document.body.addEventListener('input', () => {
-    source.value = `${frontMatter(source.value)}${authoredHtml(document)}\n`;
+  document.body.addEventListener('input', event => {
+    const element = event.target.nodeType === Node.ELEMENT_NODE ? event.target : event.target.parentElement;
+    const blockElement = element?.closest('[data-visual-block]');
+    const block = blockByElement.get(blockElement);
+    if (!block) {
+      message.textContent = 'This Visual edit could not be mapped safely. Switch to Source to make this change.';
+      renderVisual();
+      return;
+    }
+    const replacement = authoredHtml(block.element);
+    source.value = source.value.slice(0, block.start) + replacement + source.value.slice(block.end);
+    const difference = replacement.length - (block.end - block.start);
+    block.end = block.start + replacement.length;
+    for (const following of blocks) {
+      if (following !== block && following.start > block.start) {
+        following.start += difference;
+        following.end += difference;
+      }
+    }
     updateStatusControl(); renderSoon();
   });
   document.addEventListener('keydown', event => {

@@ -194,7 +194,7 @@ test('save validation override follows each workflow status', async t => {
 });
 
 test('browser editor defaults to a visual canvas and synchronizes edits to source', { timeout: 45_000 }, async t => {
-  const { page } = await openEditor(t, { mode: 'visual' });
+  const { page, source } = await openEditor(t, { mode: 'visual' });
   assert.equal(await page.$eval('#visual-mode', button => button.getAttribute('aria-pressed')), 'true');
   await page.waitForFunction(() => document.querySelector('#visual').contentDocument?.querySelector('.content[contenteditable="true"]'));
   await page.$eval('#visual', frame => {
@@ -203,9 +203,21 @@ test('browser editor defaults to a visual canvas and synchronizes edits to sourc
     paragraph.dispatchEvent(new Event('input', { bubbles: true }));
   });
   await page.click('#source-mode');
-  assert.match(await value(page, '#source'), /<p>Visually edited first page\.<\/p>/);
-  assert.match(await value(page, '#source'), /^---\ncode: STH-001/m);
-  assert.match(await value(page, '#source'), /<!-- pagebreak -->/);
+  assert.equal(await value(page, '#source'), source.replace('First page.', '<p>Visually edited first page.</p>'));
+});
+
+test('an isolated Visual edit preserves unrelated Markdown, custom HTML, and page breaks verbatim', { timeout: 45_000 }, async t => {
+  const { page, source } = await openEditor(t, { mode: 'visual' });
+  await page.waitForFunction(() => document.querySelector('#visual').contentDocument?.querySelector('.content[contenteditable="true"]'));
+  await page.$eval('#visual', frame => {
+    const paragraph = [...frame.contentDocument.querySelectorAll('.content p')].find(element => element.textContent === 'Second page.');
+    paragraph.textContent = 'Only this block changed.';
+    paragraph.dispatchEvent(new Event('input', { bubbles: true }));
+  });
+  const changed = await value(page, '#source');
+  assert.equal(changed, source.replace('Second page.', '<p>Only this block changed.</p>'));
+  assert.ok(changed.includes('<div class="custom">Keep **raw** HTML</div>'));
+  assert.ok(changed.includes('\n<!-- pagebreak -->\n'));
 });
 
 test('browser visual editor ignores a delayed render from an older buffer', { timeout: 45_000 }, async t => {
