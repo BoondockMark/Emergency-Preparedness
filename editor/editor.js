@@ -34,6 +34,7 @@ let renderController;
 const session = crypto.randomUUID();
 let handouts = [];
 let editorMode = 'visual';
+const attachedVisualDocuments = new WeakSet();
 
 function frontMatter(sourceText) {
   const match = sourceText.match(/^---\n[\s\S]*?\n---(?:\n|$)/);
@@ -51,7 +52,8 @@ function authoredHtml(document) {
 }
 function attachVisualEditor() {
   const document = visual.contentDocument;
-  if (!document) return;
+  if (!document || attachedVisualDocuments.has(document)) return;
+  attachedVisualDocuments.add(document);
   document.querySelectorAll('.content').forEach(content => {
     content.contentEditable = 'true';
     content.querySelectorAll(':scope > .kicker, :scope > h1, :scope > .footer').forEach(element => { element.contentEditable = 'false'; });
@@ -62,6 +64,12 @@ function attachVisualEditor() {
   document.body.addEventListener('input', () => {
     source.value = `${frontMatter(source.value)}${authoredHtml(document)}\n`;
     updateStatusControl(); renderSoon();
+  });
+  document.addEventListener('keydown', event => {
+    if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 's') {
+      event.preventDefault();
+      save();
+    }
   });
 }
 function showEditorMode(mode) {

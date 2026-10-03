@@ -191,6 +191,25 @@ test('browser editor defaults to a visual canvas and synchronizes edits to sourc
   assert.match(await value(page, '#source'), /<!-- pagebreak -->/);
 });
 
+test('browser editor saves Visual mode edits with platform shortcuts while iframe retains focus', { timeout: 45_000 }, async t => {
+  const { page, file } = await openEditor(t, { mode: 'visual' });
+  await page.waitForFunction(() => document.querySelector('#visual').contentDocument?.querySelector('.content[contenteditable="true"]'));
+
+  for (const [modifier, contents] of [['Control', 'Saved visually with Ctrl+S.'], ['Meta', 'Saved visually with Cmd+S.']]) {
+    await page.$eval('#visual', (frame, next) => {
+      const document = frame.contentDocument;
+      const paragraph = [...document.querySelectorAll('.content p')].find(element => element.textContent.includes('First page.') || element.textContent.includes('Saved visually'));
+      paragraph.textContent = next;
+      paragraph.dispatchEvent(new Event('input', { bubbles: true }));
+      paragraph.closest('.content').focus();
+    }, contents);
+    assert.equal(await page.evaluate(() => document.activeElement?.id), 'visual');
+    assert.equal(await page.$eval('#visual', frame => frame.contentDocument.activeElement?.classList.contains('content')), true);
+    await saveWithShortcut(page, modifier);
+    assert.ok((await fs.readFile(file, 'utf8')).includes(contents));
+  }
+});
+
 test('browser editor validates valid buffers before saving', { timeout: 45_000 }, async t => {
   const { page, file } = await openEditor(t);
   await page.evaluate(() => {
