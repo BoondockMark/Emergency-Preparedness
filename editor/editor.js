@@ -33,7 +33,8 @@ let renderSequence = 0;
 let renderController;
 let visualRenderSequence = 0;
 let visualRenderController;
-const session = crypto.randomUUID();
+const session = sessionStorage.getItem('handout-editor:session') || crypto.randomUUID();
+sessionStorage.setItem('handout-editor:session', session);
 let handouts = [];
 let editorMode = 'visual';
 const attachedVisualDocuments = new WeakSet();
@@ -237,7 +238,7 @@ function selectIssue(issue) {
   }
 }
 function bufferSnapshot() {
-  return { path: select.value, source: source.value };
+  return { path: select.value, source: source.value, session };
 }
 function isCurrentBuffer(snapshot) {
   return snapshot.path === select.value && snapshot.source === source.value;
@@ -286,11 +287,16 @@ async function render() {
   } catch (error) { if (error.name !== 'AbortError' && sequence === renderSequence) message.textContent = `Preview: ${error.message}`; }
 }
 async function openHandout({ discardCurrentDraft = false } = {}) {
-  if (dirty() && !confirm('Discard unsaved changes?')) { select.value = opened.path; return; }
+  const previousPath = opened.path;
+  const hasPendingAssets = opened.assets?.some(asset => asset.pending);
+  if ((dirty() || hasPendingAssets) && !confirm('Discard unsaved changes and pending assets?')) { select.value = opened.path; return; }
   invalidateVisualRender();
   try {
-    if (discardCurrentDraft) clearDraft();
-    opened = await request(`/api/handout?path=${encodeURIComponent(select.value)}`);
+    if (previousPath && (discardCurrentDraft || select.value !== previousPath)) {
+      await discardAssets(previousPath);
+      if (discardCurrentDraft) clearDraft(previousPath);
+    }
+    opened = await request(`/api/handout?path=${encodeURIComponent(select.value)}&session=${encodeURIComponent(session)}`);
     source.value = opened.source; selectedAsset = ''; showAssets(); updateStatusControl(); dirty();
     const draft = readDraft(opened.path);
     const canRestore = draft && typeof draft.source === 'string' && draft.source !== opened.source;
@@ -319,7 +325,7 @@ async function save() {
       }
     }
     const result = await request('/api/save', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ ...snapshot, revision: opened.revision }) });
-    opened = { ...opened, ...snapshot, revision: result.revision }; updateHandout(snapshot.path, { status: result.status }); clearDraft(); dirty(); message.textContent = 'Saved atomically.'; return true;
+    opened = { ...opened, ...snapshot, revision: result.revision, assets: opened.assets.map(asset => ({ ...asset, pending: false })) }; showAssets(); updateHandout(snapshot.path, { status: result.status }); clearDraft(); dirty(); message.textContent = 'Saved atomically with pending assets.'; return true;
   } catch (error) { message.textContent = `Not saved: ${error.message}`; return false; }
 }
 function insert(button) {
@@ -365,16 +371,21 @@ function selectedFigure() {
 function showAssets() {
   assetList.replaceChildren(...(opened.assets || []).map(asset => {
     const button = document.createElement('button');
-    button.type = 'button'; button.className = `asset${selectedAsset === asset.file ? ' selected' : ''}`;
+    button.type = 'button'; button.className = `asset${selectedAsset === asset.file ? ' selected' : ''}${asset.pending ? ' pending' : ''}`;
     const image = document.createElement('img');
-    image.src = `/assets/handouts/${encodeURIComponent(opened.code)}/${encodeURIComponent(asset.file)}`; image.alt = '';
+    image.src = `/assets/handouts/${encodeURIComponent(opened.code)}/${encodeURIComponent(asset.file)}?session=${encodeURIComponent(session)}&path=${encodeURIComponent(opened.path)}`; image.alt = '';
     button.append(image, document.createTextNode(asset.file));
+    if (asset.pending) { const badge = document.createElement('span'); badge.className = 'pending-label'; badge.textContent = 'Pending save'; button.append(badge); }
     button.addEventListener('click', () => { selectedAsset = asset.file; showAssets(); });
     return button;
   }));
 }
 async function figureMarkup(file) {
-  return request('/api/figure', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ path: select.value, file, options: imageOptions() }) });
+  return request('/api/figure', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ path: select.value, session, file, options: imageOptions() }) });
+}
+async function discardAssets(handoutPath = opened.path) {
+  if (!handoutPath) return;
+  await request('/api/assets/discard', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ path: handoutPath, session }) });
 }
 async function insertAsset(file) {
   const result = await figureMarkup(file);
@@ -396,7 +407,7 @@ document.querySelector('#image-form').addEventListener('submit', async event => 
     const dataUrl = await new Promise((resolve, reject) => { const reader = new FileReader(); reader.onload = () => resolve(reader.result); reader.onerror = reject; reader.readAsDataURL(file); });
     const decorative = document.querySelector('#image-decorative').checked;
     const result = await request('/api/assets', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({
-      path: select.value, name: file.name, mimeType: file.type, dataUrl,
+      path: select.value, session, name: file.name, mimeType: file.type, dataUrl,
       type: document.querySelector('#image-type').value, alt: decorative ? '' : document.querySelector('#image-alt').value,
       decorative, caption: document.querySelector('#image-caption').value, creator: document.querySelector('#image-creator').value,
       source: document.querySelector('#image-source').value, license: document.querySelector('#image-license').value, options: imageOptions()
@@ -485,9 +496,20 @@ document.querySelector('#restore-draft').addEventListener('click', () => {
   source.value = draft.source; draftRecovery.hidden = true; renderSoon(); source.focus();
   message.textContent = 'Browser draft restored. Review and save when ready.';
 });
-document.querySelector('#discard-draft').addEventListener('click', () => { clearDraft(); message.textContent = 'Browser draft discarded.'; });
+document.querySelector('#discard-draft').addEventListener('click', async () => { await discardAssets(); opened.assets = opened.assets.filter(asset => !asset.pending); showAssets(); clearDraft(); message.textContent = 'Browser draft and pending assets discarded.'; });
+document.querySelector('#cancel-assets').addEventListener('click', async () => {
+  if (!opened.assets.some(asset => asset.pending) || confirm('Discard all pending asset uploads?')) {
+    const pendingFiles = opened.assets.filter(asset => asset.pending).map(asset => asset.file);
+    for (const file of pendingFiles) {
+      const escaped = file.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      source.value = source.value.replace(new RegExp(`\\n?<figure[^>]*>[\\s\\S]*?assets/handouts/[^/]+/${escaped}[\\s\\S]*?</figure>(?:\\n<div class="figure-clear"></div>)?\\n?`, 'g'), '\n');
+    }
+    await discardAssets(); opened.assets = opened.assets.filter(asset => !asset.pending); selectedAsset = ''; showAssets(); renderSoon(); imageDialog.close();
+    message.textContent = 'Pending assets discarded.';
+  }
+});
 document.addEventListener('keydown', event => { if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 's') { event.preventDefault(); save(); } });
-window.addEventListener('beforeunload', event => { if (dirty()) event.preventDefault(); });
+window.addEventListener('beforeunload', event => { if (dirty() || opened.assets?.some(asset => asset.pending)) event.preventDefault(); });
 
 handouts = await request('/api/handouts');
 populateHandouts();

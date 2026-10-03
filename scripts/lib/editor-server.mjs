@@ -9,7 +9,7 @@ import { loadAssetManifests, readAssetBytes } from './asset-validation.mjs';
 import { renderHandoutSource } from './content-rendering.mjs';
 import { discoverDocuments } from './filesystem-discovery.mjs';
 import { loadDocument } from './metadata.mjs';
-import { addAsset, deleteAsset, figureMarkup } from './editor-support.mjs';
+import { commitHandoutWithAssets, deleteAsset, figureMarkup, stageAsset } from './editor-support.mjs';
 
 const json = (response, status, value) => {
   response.writeHead(status, { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' });
@@ -21,6 +21,28 @@ export async function createEditorServer({ root }) {
   const handoutsRoot = path.resolve(root, 'handouts');
   const realHandoutsRoot = await fs.realpath(handoutsRoot);
   let manifests = await loadAssetManifests(root);
+  const stagingRoot = await fs.mkdtemp(path.join(os.tmpdir(), 'handout-editor-assets-'));
+  const staged = new Map();
+  const stageKey = (session, handoutPath) => `${session}\0${handoutPath}`;
+  const stagedFor = value => staged.get(stageKey(value.session, value.path)) ?? [];
+  const requireSession = value => {
+    if (typeof value.session !== 'string' || !/^[a-zA-Z0-9-]{8,100}$/.test(value.session)) throw Object.assign(Error('A valid editor session is required'), { status: 400 });
+  };
+  const combinedManifests = value => {
+    const combined = new Map([...manifests].map(([code, assets]) => [code, new Map(assets)]));
+    const document = documents.find(item => item.sourcePath === value.path);
+    if (document) for (const item of stagedFor(value)) {
+      if (!combined.has(document.meta.code)) combined.set(document.meta.code, new Map());
+      combined.get(document.meta.code).set(item.entry.file, item.entry);
+    }
+    return combined;
+  };
+  async function discardStaged(value) {
+    requireSession(value);
+    const key = stageKey(value.session, value.path);
+    for (const item of staged.get(key) ?? []) await fs.rm(item.stagedFile, { force: true });
+    staged.delete(key);
+  }
   const documents = await discoverDocuments(root, manifests);
   const discovered = new Map();
   for (const { sourcePath } of documents) {
@@ -79,12 +101,19 @@ export async function createEditorServer({ root }) {
       const prepared = prepareDocumentValidation({ source: value.source, sourcePath: value.path, template, manifests });
       return { phase: 'syntax', valid: false, issues: prepared.issues };
     }
-    const prepared = prepareDocumentValidation({ source: value.source, sourcePath: value.path, template, manifests });
+    const requestManifests = combinedManifests(value);
+    const prepared = prepareDocumentValidation({ source: value.source, sourcePath: value.path, template, manifests: requestManifests });
     if (prepared.issues.length || value.phase === 'syntax') {
       return { phase: 'syntax', valid: !prepared.issues.length, issues: prepared.issues };
     }
     const generation = requestId;
     const resources = await validationResources();
+    const documentCode = prepared.document.meta.code;
+    for (const item of stagedFor(value)) {
+      const directory = path.join(resources.validationRoot, 'assets', 'handouts', documentCode);
+      await fs.mkdir(directory, { recursive: true });
+      await fs.writeFile(path.join(directory, item.entry.file), item.bytes);
+    }
     const htmlFile = path.join(resources.validationRoot, 'html', `${prepared.document.meta.code}-${generation}-${randomUUID()}.html`);
     await fs.writeFile(htmlFile, prepared.html);
     let page;
@@ -111,24 +140,35 @@ export async function createEditorServer({ root }) {
         if (!file) return json(response, 404, { error: 'Unknown handout path' });
         const source = await fs.readFile(file, 'utf8');
         const document = documents.find(item => item.sourcePath === relative);
-        const assets = [...(manifests.get(document.meta.code)?.values() ?? [])];
+        const session = url.searchParams.get('session');
+        const pending = session ? stagedFor({ session, path: relative }) : [];
+        const assets = [...(manifests.get(document.meta.code)?.values() ?? []), ...pending.map(item => ({ ...item.entry, pending: true }))];
         return json(response, 200, { path: relative, source, revision: revision(source), code: document.meta.code, assets });
       }
       if (request.method === 'POST' && url.pathname === '/api/assets') {
         const value = await body(request);
+        requireSession(value);
         const file = safeFile(value.path);
         if (!file) return json(response, 404, { error: 'Unknown handout path' });
         const document = documents.find(item => item.sourcePath === value.path);
-        const asset = await addAsset(root, document.meta.code, value);
-        await refreshAssets();
-        return json(response, 201, { asset, markup: figureMarkup(document.meta.code, asset, value.options) });
+        const key = stageKey(value.session, value.path);
+        const items = staged.get(key) ?? [];
+        const item = await stageAsset(path.join(stagingRoot, value.session, createHash('sha256').update(value.path).digest('hex')), root, document.meta.code, value, items.map(candidate => candidate.entry.file));
+        items.push(item); staged.set(key, items);
+        return json(response, 201, { asset: { ...item.entry, pending: true }, markup: figureMarkup(document.meta.code, item.entry, value.options) });
       }
       if (request.method === 'POST' && url.pathname === '/api/figure') {
         const value = await body(request);
         const document = documents.find(item => item.sourcePath === value.path);
-        const asset = manifests.get(document?.meta.code)?.get(value.file);
+        const asset = combinedManifests(value).get(document?.meta.code)?.get(value.file);
         if (!document || !asset) return json(response, 404, { error: 'Unknown handout asset' });
         return json(response, 200, { markup: figureMarkup(document.meta.code, asset, value.options) });
+      }
+      if (request.method === 'POST' && url.pathname === '/api/assets/discard') {
+        const value = await body(request);
+        if (!safeFile(value.path)) return json(response, 404, { error: 'Unknown handout path' });
+        await discardStaged(value);
+        return json(response, 200, { discarded: true });
       }
       if (request.method === 'DELETE' && url.pathname === '/api/assets') {
         const value = await body(request);
@@ -143,8 +183,12 @@ export async function createEditorServer({ root }) {
       if (request.method === 'POST' && url.pathname === '/api/render') {
         const value = await body(request);
         if (!safeFile(value.path) || typeof value.source !== 'string') return json(response, 400, { error: 'Invalid handout' });
-        const html = renderHandoutSource(template, value.source, { sourcePath: value.path, manifests })
+        let html = renderHandoutSource(template, value.source, { sourcePath: value.path, manifests: combinedManifests(value) })
           .replace('../assets/print.css', '/assets/styles/print.css');
+        for (const item of stagedFor(value)) {
+          const original = `../assets/handouts/${documents.find(entry => entry.sourcePath === value.path).meta.code}/${item.entry.file}`;
+          html = html.replaceAll(original, `${original}?session=${encodeURIComponent(value.session)}&path=${encodeURIComponent(value.path)}`);
+        }
         response.writeHead(200, { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store' });
         return response.end(html);
       }
@@ -167,11 +211,11 @@ export async function createEditorServer({ root }) {
         if (!file || typeof value.source !== 'string' || typeof value.revision !== 'string') return json(response, 400, { error: 'Invalid save' });
         const current = await fs.readFile(file, 'utf8');
         if (revision(current) !== value.revision) return json(response, 409, { error: 'File changed on disk; revert before saving' });
-        const temporary = path.join(path.dirname(file), `.${path.basename(file)}.${randomUUID()}.tmp`);
-        try {
-          await fs.writeFile(temporary, value.source, { flag: 'wx' });
-          await fs.rename(temporary, file);
-        } finally { await fs.rm(temporary, { force: true }); }
+        requireSession(value);
+        const pending = stagedFor(value);
+        await commitHandoutWithAssets(root, file, value.source, documents.find(item => item.sourcePath === value.path).meta.code, pending);
+        await discardStaged(value);
+        await refreshAssets();
         const savedStatus = value.source.match(/^status:\s*(draft|under-review|approved)\s*$/m)?.[1]
           ?? documents.find(item => item.sourcePath === value.path)?.meta.status;
         return json(response, 200, { revision: revision(value.source), status: savedStatus });
@@ -183,7 +227,16 @@ export async function createEditorServer({ root }) {
       if (request.method === 'GET' && url.pathname === '/assets/styles/print.css') return serve(response, path.join(root, 'assets/styles/print.css'), 'text/css; charset=utf-8');
       if (request.method === 'GET' && url.pathname.startsWith('/assets/handouts/')) {
         const match = decodeURIComponent(url.pathname).match(/^\/assets\/handouts\/([^/]+)\/([^/]+)$/);
-        if (!match || !manifests.get(match[1])?.has(match[2])) return json(response, 404, { error: 'Unknown asset' });
+        if (!match) return json(response, 404, { error: 'Unknown asset' });
+        const session = url.searchParams.get('session');
+        const handoutPath = url.searchParams.get('path');
+        const pending = session && handoutPath ? stagedFor({ session, path: handoutPath }).find(item => item.entry.file === match[2]) : null;
+        if (pending) {
+          const types = { '.svg': 'image/svg+xml', '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg' };
+          response.writeHead(200, { 'content-type': types[path.extname(match[2]).toLowerCase()], 'cache-control': 'no-store' });
+          return response.end(pending.bytes);
+        }
+        if (!manifests.get(match[1])?.has(match[2])) return json(response, 404, { error: 'Unknown asset' });
         const directory = path.join(root, 'assets', 'handouts', match[1]);
         const file = path.join(directory, match[2]);
         const types = { '.svg': 'image/svg+xml', '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg' };
@@ -200,6 +253,7 @@ export async function createEditorServer({ root }) {
   server.on('close', () => {
     browser?.close().catch(() => {});
     if (validationRoot) fs.rm(validationRoot, { recursive: true, force: true }).catch(() => {});
+    fs.rm(stagingRoot, { recursive: true, force: true }).catch(() => {});
   });
   return server;
 }

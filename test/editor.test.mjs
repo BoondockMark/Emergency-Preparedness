@@ -168,10 +168,10 @@ test('editor open/save round trip is atomic and stale writes are rejected', asyn
   const { base, file } = await setup(t);
   const opened = await (await fetch(`${base}/api/handout?path=handouts%2Fsection%2Fexample.md`)).json();
   const changed = `${opened.source}\n`;
-  const saved = await fetch(`${base}/api/save`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ ...opened, source: changed }) });
+  const saved = await fetch(`${base}/api/save`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ ...opened, session: 'test-session', source: changed }) });
   assert.equal(saved.status, 200);
   assert.equal(await fs.readFile(file, 'utf8'), changed);
-  const stale = await fetch(`${base}/api/save`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(opened) });
+  const stale = await fetch(`${base}/api/save`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ ...opened, session: 'test-session' }) });
   assert.equal(stale.status, 409);
   assert.deepEqual((await fs.readdir(path.dirname(file))).filter(name => name.endsWith('.tmp')), []);
 });
@@ -382,11 +382,11 @@ test('image helpers normalize names and generate supported crop and alignment ma
   assert.match(markup, /figure-clear/);
 });
 
-test('editor uploads, manifests, serves, and safely deletes an image asset', async t => {
+test('editor stages an upload until save, then manifests, serves, and deletes it', async t => {
   const { base, root } = await setup(t);
   const svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10"><title>Dot</title><desc>A dot</desc><circle cx="5" cy="5" r="4"/></svg>';
   const upload = await fetch(`${base}/api/assets`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({
-    path: 'handouts/section/example.md', name: 'Route Dot.svg', mimeType: 'image/svg+xml',
+    path: 'handouts/section/example.md', session: 'asset-test-session', name: 'Route Dot.svg', mimeType: 'image/svg+xml',
     dataUrl: `data:image/svg+xml;base64,${Buffer.from(svg).toString('base64')}`,
     type: 'diagram', creator: 'Test creator', source: 'Original test art', license: 'Test license',
     alt: 'A route dot.', caption: 'Route marker.', decorative: false,
@@ -397,15 +397,46 @@ test('editor uploads, manifests, serves, and safely deletes an image asset', asy
   const uploaded = JSON.parse(uploadBody);
   assert.equal(uploaded.asset.file, 'route-dot.svg');
   assert.match(uploaded.markup, /figure--half figure--left figure--contain/);
+  assert.equal((await fetch(`${base}/assets/handouts/STH-001/route-dot.svg`)).status, 404);
+  assert.equal((await fetch(`${base}/assets/handouts/STH-001/route-dot.svg?session=asset-test-session&path=handouts%2Fsection%2Fexample.md`)).status, 200);
+  await assert.rejects(fs.access(path.join(root, 'assets/handouts/STH-001/route-dot.svg.base64')));
+  let manifest = JSON.parse(await fs.readFile(path.join(root, 'assets/handouts/STH-001/manifest.json')));
+  assert.equal(manifest.assets.some(asset => asset.file === 'route-dot.svg'), false);
+  const opened = await (await fetch(`${base}/api/handout?path=handouts%2Fsection%2Fexample.md`)).json();
+  const saved = await fetch(`${base}/api/save`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ ...opened, session: 'asset-test-session' }) });
+  assert.equal(saved.status, 200, await saved.text());
   assert.equal((await fetch(`${base}/assets/handouts/STH-001/route-dot.svg`)).status, 200);
   const storedAsset = await fs.readFile(path.join(root, 'assets/handouts/STH-001/route-dot.svg.base64'), 'ascii');
   assert.equal(Buffer.from(storedAsset.replace(/\s/g, ''), 'base64').toString(), svg);
   await assert.rejects(fs.access(path.join(root, 'assets/handouts/STH-001/route-dot.svg')));
-  const manifest = JSON.parse(await fs.readFile(path.join(root, 'assets/handouts/STH-001/manifest.json')));
+  manifest = JSON.parse(await fs.readFile(path.join(root, 'assets/handouts/STH-001/manifest.json')));
   assert.equal(manifest.assets.find(asset => asset.file === 'route-dot.svg').alt, 'A route dot.');
   const removed = await fetch(`${base}/api/assets`, { method: 'DELETE', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ path: 'handouts/section/example.md', file: 'route-dot.svg' }) });
   assert.equal(removed.status, 200, await removed.text());
   await assert.rejects(fs.access(path.join(root, 'assets/handouts/STH-001/route-dot.svg.base64')));
+});
+
+test('staged assets survive save conflicts and can be explicitly discarded', async t => {
+  const { base, root, file } = await setup(t);
+  const handoutPath = 'handouts/section/example.md';
+  const session = 'failed-save-session';
+  const opened = await (await fetch(`${base}/api/handout?path=${encodeURIComponent(handoutPath)}`)).json();
+  const svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2 2"><title>Pending</title><desc>Pending dot</desc><circle cx="1" cy="1" r="1"/></svg>';
+  const upload = await fetch(`${base}/api/assets`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({
+    path: handoutPath, session, name: 'Pending.svg', mimeType: 'image/svg+xml', dataUrl: `data:image/svg+xml;base64,${Buffer.from(svg).toString('base64')}`,
+    type: 'diagram', creator: 'Test', source: 'Test', license: 'Test', alt: 'Pending dot.', decorative: false
+  }) });
+  assert.equal(upload.status, 201, await upload.text());
+  await fs.appendFile(file, '\nExternal edit.');
+  const failed = await fetch(`${base}/api/save`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ ...opened, session }) });
+  assert.equal(failed.status, 409);
+  assert.equal((await fetch(`${base}/assets/handouts/STH-001/pending.svg?session=${session}&path=${encodeURIComponent(handoutPath)}`)).status, 200);
+  await assert.rejects(fs.access(path.join(root, 'assets/handouts/STH-001/pending.svg.base64')));
+  const recovered = await (await fetch(`${base}/api/handout?path=${encodeURIComponent(handoutPath)}&session=${session}`)).json();
+  assert.equal(recovered.assets.find(asset => asset.file === 'pending.svg')?.pending, true);
+  const discarded = await fetch(`${base}/api/assets/discard`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ path: handoutPath, session }) });
+  assert.equal(discarded.status, 200);
+  assert.equal((await fetch(`${base}/assets/handouts/STH-001/pending.svg?session=${session}&path=${encodeURIComponent(handoutPath)}`)).status, 404);
 });
 
 test('browser editor opens, switches, saves, reverts, reports conflicts, and recovers drafts', { timeout: 45_000 }, async t => {
