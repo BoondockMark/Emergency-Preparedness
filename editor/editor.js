@@ -173,16 +173,42 @@ function showIssues(findings) {
   }));
 }
 function selectIssue(issue) {
-  if (issue.sourceLine) {
-    const lines = source.value.split('\n');
-    const start = lines.slice(0, issue.sourceLine - 1).reduce((length, line) => length + line.length + 1, 0);
-    source.focus(); source.setSelectionRange(start, start + (lines[issue.sourceLine - 1]?.length ?? 0));
+  const matchingElement = document => document && issue.sourcePath && issue.sourceLine
+    ? [...document.querySelectorAll('[data-source-path][data-source-line]')].find(candidate => candidate.dataset.sourcePath === issue.sourcePath && Number(candidate.dataset.sourceLine) === issue.sourceLine)
+    : null;
+  const previewDocument = preview.contentDocument;
+  previewDocument?.querySelectorAll('[data-validation-outline]').forEach(element => { element.style.outline = ''; element.removeAttribute('data-validation-outline'); });
+  const previewElement = matchingElement(previewDocument);
+  if (previewElement) {
+    previewElement.dataset.validationOutline = 'true'; previewElement.style.outline = '3px solid #dc2626'; previewElement.style.outlineOffset = '2px';
+    previewElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
   }
-  const document = preview.contentDocument;
-  document?.querySelectorAll('[data-validation-outline]').forEach(element => { element.style.outline = ''; element.removeAttribute('data-validation-outline'); });
-  if (document && issue.sourcePath && issue.sourceLine) {
-    const element = [...document.querySelectorAll('[data-source-path][data-source-line]')].find(candidate => candidate.dataset.sourcePath === issue.sourcePath && Number(candidate.dataset.sourceLine) === issue.sourceLine);
-    if (element) { element.dataset.validationOutline = 'true'; element.style.outline = '3px solid #dc2626'; element.style.outlineOffset = '2px'; element.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
+
+  const visualElement = editorMode === 'visual' ? matchingElement(visual.contentDocument) : null;
+  if (visualElement) {
+    if (!visualElement.hasAttribute('tabindex')) visualElement.setAttribute('tabindex', '-1');
+    visualElement.focus({ preventScroll: true });
+    visualElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    message.textContent = `Navigated to ${issue.type} in the Visual editor.`;
+    return;
+  }
+  if (editorMode === 'visual' && previewElement) {
+    message.textContent = `Navigated to ${issue.type} in the preview.`;
+    return;
+  }
+  if (issue.sourceLine) {
+    showEditorMode('source');
+    const lines = source.value.split('\n');
+    const lineIndex = Math.max(0, Math.min(issue.sourceLine - 1, lines.length - 1));
+    const start = lines.slice(0, lineIndex).reduce((length, line) => length + line.length + 1, 0);
+    source.setSelectionRange(start, start + lines[lineIndex].length);
+    const style = getComputedStyle(source);
+    const lineHeight = Number.parseFloat(style.lineHeight) || Number.parseFloat(style.fontSize) * 1.2;
+    source.scrollTop = Math.max(0, lineIndex * lineHeight - (source.clientHeight - lineHeight) / 2);
+    source.scrollLeft = 0;
+    message.textContent = `Navigated to ${issue.type} on source line ${issue.sourceLine}.`;
+  } else {
+    message.textContent = `Could not locate ${issue.type} in the document.`;
   }
 }
 function bufferSnapshot() {

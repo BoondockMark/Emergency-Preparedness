@@ -440,6 +440,8 @@ test('browser editor navigates validation results and inserts and removes figure
   await page.click('#issues button');
   const selectedLine = await page.$eval('#source', element => element.value.slice(element.selectionStart, element.selectionEnd));
   assert.equal(selectedLine, 'title:');
+  assert.equal(await page.$eval('#source-mode', button => button.getAttribute('aria-pressed')), 'true');
+  assert.match(await text(page, '#message'), /Navigated to metadata on source line/);
 
   await replaceSource(page, `${original}\n### Skipped heading`);
   await page.waitForFunction(() => {
@@ -482,4 +484,25 @@ test('browser editor navigates validation results and inserts and removes figure
   await page.click('#save');
   await page.waitForFunction(() => document.querySelector('#state').textContent === 'Saved');
   assert.doesNotMatch(await fs.readFile(file, 'utf8'), /route\.svg/);
+});
+
+test('browser editor focuses source-mapped findings in the Visual editor', { timeout: 60_000 }, async t => {
+  const { page } = await openEditor(t, { mode: 'visual' });
+  const original = await value(page, '#source');
+  await replaceSource(page, `${original}\n### Skipped heading`);
+  await page.waitForFunction(() => {
+    const state = document.querySelector('#validation-state').textContent;
+    return state !== 'Checking layout' && (state.includes('issue') || state.includes('Validation unavailable'));
+  }, { timeout: 30_000 });
+  const layoutState = await text(page, '#validation-state');
+  if (/Validation unavailable:.*Could not find Chrome/.test(layoutState)) return t.skip('Puppeteer browser for layout validation is not installed');
+
+  const headingIssueIndex = await page.$$eval('#issues button', buttons => buttons.findIndex(button => button.textContent.includes('heading-order')));
+  assert.notEqual(headingIssueIndex, -1);
+  const headingIssues = await page.$$('#issues button');
+  await headingIssues[headingIssueIndex].click();
+  assert.equal(await page.$eval('#visual-mode', button => button.getAttribute('aria-pressed')), 'true');
+  assert.equal(await page.$eval('#visual', frame => frame.contentDocument.activeElement?.textContent), 'Skipped heading');
+  assert.match(await text(page, '#message'), /Navigated to heading-order in the Visual editor/);
+  await page.waitForFunction(() => document.querySelector('#preview').contentDocument?.querySelector('[data-validation-outline="true"]'));
 });
