@@ -202,7 +202,7 @@ test('editor open/save round trip is atomic and stale writes are rejected', asyn
 });
 
 test('save validation override follows each workflow status', async t => {
-  const { base } = await setup(t);
+  const { base, file, source: original } = await setup(t);
   for (const [status, expectedStatus] of [['draft', 200], ['under-review', 200], ['approved', 422]]) {
     await t.test(status, async () => {
       const opened = await (await fetch(`${base}/api/handout?path=handouts%2Fsection%2Fexample.md`)).json();
@@ -214,8 +214,24 @@ test('save validation override follows each workflow status', async t => {
       const responseBody = await response.text();
       assert.equal(response.status, expectedStatus, responseBody);
       if (status === 'approved') assert.match(JSON.parse(responseBody).error, /Approved handouts must pass validation/);
+      assert.equal(await fs.readFile(file, 'utf8'), expectedStatus === 200 ? invalid : original);
+      if (expectedStatus === 200) await fs.writeFile(file, original);
     });
   }
+});
+
+test('save validation override rejects crafted requests without a valid workflow status', async t => {
+  const { base, file, source: original } = await setup(t);
+  const opened = await (await fetch(`${base}/api/handout?path=handouts%2Fsection%2Fexample.md`)).json();
+  const invalid = opened.source.replace(/^status:.*$/m, 'status: bypassed').replace(/^title:.*$/m, 'title:');
+  const response = await fetch(`${base}/api/save`, {
+    method: 'POST', headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ ...opened, source: invalid, session: 'invalid-status' })
+  });
+  const responseBody = await response.text();
+  assert.equal(response.status, 422, responseBody);
+  assert.match(JSON.parse(responseBody).error, /invalid or missing status metadata/);
+  assert.equal(await fs.readFile(file, 'utf8'), original);
 });
 
 test('browser editor defaults to a visual canvas and synchronizes edits to source', { timeout: 45_000 }, async t => {

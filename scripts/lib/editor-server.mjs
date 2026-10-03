@@ -211,8 +211,12 @@ export async function createEditorServer({ root }) {
         const file = safeFile(value.path);
         if (!file || typeof value.source !== 'string' || typeof value.revision !== 'string') return json(response, 400, { error: 'Invalid save' });
         const syntax = await validateSource({ ...value, phase: 'syntax' });
-        if (!syntax.valid && readHandoutStatus(value.source) === 'approved') {
-          return json(response, 422, { error: 'Approved handouts must pass validation. Change the status to draft or under-review, or complete the approval requirements.' });
+        const status = readHandoutStatus(value.source);
+        if (!syntax.valid && !['draft', 'under-review'].includes(status)) {
+          const error = status === 'approved'
+            ? 'Approved handouts must pass validation. Change the status to draft or under-review, or complete the approval requirements.'
+            : 'Handouts with invalid or missing status metadata must pass validation. Change the status to draft or under-review, then correct the remaining validation errors.';
+          return json(response, 422, { error });
         }
         const current = await fs.readFile(file, 'utf8');
         if (revision(current) !== value.revision) return json(response, 409, { error: 'File changed on disk; revert before saving' });
