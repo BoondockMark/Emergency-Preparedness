@@ -31,6 +31,8 @@ let validationSequence = 0;
 let completedSyntaxValidation;
 let renderSequence = 0;
 let renderController;
+let visualRenderSequence = 0;
+let visualRenderController;
 const session = crypto.randomUUID();
 let handouts = [];
 let editorMode = 'visual';
@@ -80,15 +82,30 @@ function showEditorMode(mode) {
   visualMode.setAttribute('aria-pressed', String(isVisual)); sourceMode.setAttribute('aria-pressed', String(!isVisual));
   editorLabel.textContent = isVisual ? 'Visual editor' : 'Markdown / HTML source';
   cursorStatus.hidden = isVisual;
-  if (isVisual) renderVisual(); else source.focus();
+  if (isVisual) renderVisual();
+  else { invalidateVisualRender(); source.focus(); }
+}
+function invalidateVisualRender() {
+  visualRenderSequence += 1;
+  visualRenderController?.abort();
+  visualRenderController = undefined;
 }
 async function renderVisual() {
+  const sequence = ++visualRenderSequence;
+  const snapshot = bufferSnapshot();
+  visualRenderController?.abort();
+  const controller = new AbortController();
+  visualRenderController = controller;
   try {
-    const html = await request('/api/render', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ path: select.value, source: source.value }) });
-    if (editorMode !== 'visual') return;
+    const html = await request('/api/render', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(snapshot), signal: controller.signal });
+    if (sequence !== visualRenderSequence || editorMode !== 'visual' || !isCurrentBuffer(snapshot)) return;
     visual.addEventListener('load', attachVisualEditor, { once: true });
     visual.srcdoc = html;
-  } catch (error) { message.textContent = `Visual editor: ${error.message}. Switch to Source to correct the document.`; }
+  } catch (error) {
+    if (error.name !== 'AbortError' && sequence === visualRenderSequence) message.textContent = `Visual editor: ${error.message}. Switch to Source to correct the document.`;
+  } finally {
+    if (visualRenderController === controller) visualRenderController = undefined;
+  }
 }
 
 function populateHandouts(preferredPath = select.value) {
@@ -270,6 +287,7 @@ async function render() {
 }
 async function openHandout({ discardCurrentDraft = false } = {}) {
   if (dirty() && !confirm('Discard unsaved changes?')) { select.value = opened.path; return; }
+  invalidateVisualRender();
   try {
     if (discardCurrentDraft) clearDraft();
     opened = await request(`/api/handout?path=${encodeURIComponent(select.value)}`);

@@ -191,6 +191,70 @@ test('browser editor defaults to a visual canvas and synchronizes edits to sourc
   assert.match(await value(page, '#source'), /<!-- pagebreak -->/);
 });
 
+test('browser visual editor ignores a delayed render from an older buffer', { timeout: 45_000 }, async t => {
+  const { page, source } = await openEditor(t);
+  await page.evaluate(() => {
+    const actualFetch = window.fetch.bind(window);
+    let release;
+    window.releaseDelayedVisualRender = () => release?.();
+    window.fetch = (url, options) => {
+      const body = options?.body && JSON.parse(options.body);
+      if (url === '/api/render' && body?.source.includes('Older visual buffer')) {
+        window.delayedVisualRenderStarted = true;
+        const response = actualFetch(url, { ...options, signal: undefined });
+        return new Promise((resolve, reject) => {
+          release = () => response.then(resolve, reject);
+        });
+      }
+      return actualFetch(url, options);
+    };
+  });
+
+  await replaceSource(page, `${source}\nOlder visual buffer`);
+  await page.click('#visual-mode');
+  await page.waitForFunction(() => window.delayedVisualRenderStarted);
+  await page.click('#source-mode');
+  await replaceSource(page, `${source}\nNewer visual buffer`);
+  await page.click('#visual-mode');
+  await page.waitForFunction(() => document.querySelector('#visual').contentDocument?.body.textContent.includes('Newer visual buffer'));
+  await page.evaluate(() => window.releaseDelayedVisualRender());
+  await new Promise(resolve => setTimeout(resolve, 100));
+  assert.equal(await page.$eval('#visual', frame => frame.contentDocument.body.textContent.includes('Newer visual buffer')), true);
+  assert.equal(await page.$eval('#visual', frame => frame.contentDocument.body.textContent.includes('Older visual buffer')), false);
+});
+
+test('browser visual editor ignores a delayed render after changing handouts', { timeout: 45_000 }, async t => {
+  const { page } = await openEditor(t, { mode: 'visual' });
+  await page.waitForFunction(() => document.querySelector('#visual').contentDocument?.body.textContent.includes('Fixture'));
+  await page.evaluate(() => {
+    const actualFetch = window.fetch.bind(window);
+    let release;
+    window.delayFirstHandoutRender = true;
+    window.releaseDelayedHandoutRender = () => release?.();
+    window.fetch = (url, options) => {
+      const body = options?.body && JSON.parse(options.body);
+      if (window.delayFirstHandoutRender && url === '/api/render' && body?.path.endsWith('/example.md')) {
+        window.delayFirstHandoutRender = false;
+        window.delayedHandoutRenderStarted = true;
+        const response = actualFetch(url, { ...options, signal: undefined });
+        return new Promise((resolve, reject) => {
+          release = () => response.then(resolve, reject);
+        });
+      }
+      return actualFetch(url, options);
+    };
+  });
+
+  await page.click('#source-mode');
+  await page.click('#visual-mode');
+  await page.waitForFunction(() => window.delayedHandoutRenderStarted);
+  await page.select('#handout', 'handouts/section/second.md');
+  await page.waitForFunction(() => document.querySelector('#visual').contentDocument?.body.textContent.includes('Second fixture'));
+  await page.evaluate(() => window.releaseDelayedHandoutRender());
+  await new Promise(resolve => setTimeout(resolve, 100));
+  assert.equal(await page.$eval('#visual', frame => frame.contentDocument.body.textContent.includes('Second fixture')), true);
+});
+
 test('browser editor saves Visual mode edits with platform shortcuts while iframe retains focus', { timeout: 45_000 }, async t => {
   const { page, file } = await openEditor(t, { mode: 'visual' });
   await page.waitForFunction(() => document.querySelector('#visual').contentDocument?.querySelector('.content[contenteditable="true"]'));
