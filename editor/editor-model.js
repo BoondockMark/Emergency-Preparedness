@@ -48,7 +48,11 @@ export function handoutNeedsFixing(handout) {
 export function handoutOptionLabel(handout) {
   const indicator = handout.formatting === 'error' ? '🔴' : handout.formatting === 'valid' ? '🟢' : handout.formatting === 'checking' ? '🟡' : handout.formatting === 'unavailable' ? '⚠️' : '⚪';
   const status = handout.status === 'approved' ? 'release' : handout.status;
-  return `${indicator} ${handout.code} — ${handout.title} · ${status}`;
+  const formatting = handout.formatting === 'error' ? `formatting errors${Number.isInteger(handout.issueCount) ? ` (${handout.issueCount} issue${handout.issueCount === 1 ? '' : 's'})` : ''}`
+    : handout.formatting === 'valid' ? 'formatting valid'
+      : handout.formatting === 'checking' ? 'formatting check in progress'
+        : handout.formatting === 'unavailable' ? 'formatting check unavailable' : 'formatting not checked';
+  return `${indicator} ${handout.code} — ${handout.title} · ${status} · ${formatting}`;
 }
 
 export const HANDOUT_STATUSES = ['draft', 'under-review', 'approved'];
