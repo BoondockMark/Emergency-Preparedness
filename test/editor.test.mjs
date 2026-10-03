@@ -231,6 +231,38 @@ test('browser editor defaults to a visual canvas and synchronizes edits to sourc
   assert.equal(await value(page, '#source'), source.replace('First page.', '<p>Visually edited first page.</p>'));
 });
 
+test('browser editor controls remain reachable without horizontal overflow at responsive widths', { timeout: 60_000 }, async t => {
+  const { page } = await openEditor(t, { mode: 'visual' });
+  const viewports = [
+    { name: 'desktop', width: 1440, height: 900 },
+    { name: 'tablet', width: 900, height: 800 },
+    { name: 'mobile', width: 390, height: 844 }
+  ];
+
+  for (const viewport of viewports) {
+    await page.setViewport(viewport);
+    await page.evaluate(() => window.scrollTo(0, 0));
+    assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth), true, `${viewport.name} page has horizontal overflow`);
+
+    for (const selector of ['#save', '#revert', '.mode-switch', '#validation']) {
+      const bounds = await page.$eval(selector, element => {
+        element.scrollIntoView({ block: 'nearest' });
+        const rect = element.getBoundingClientRect();
+        return { left: rect.left, right: rect.right, top: rect.top, bottom: rect.bottom, width: rect.width, display: getComputedStyle(element).display };
+      });
+      assert.notEqual(bounds.display, 'none', `${selector} is hidden at ${viewport.name}`);
+      assert.ok(bounds.width > 0 && bounds.left >= 0 && bounds.right <= viewport.width, `${selector} is not horizontally reachable at ${viewport.name}`);
+      assert.ok(bounds.bottom > 0 && bounds.top < viewport.height, `${selector} cannot be scrolled into view at ${viewport.name}`);
+    }
+  }
+
+  await page.setViewport({ width: 390, height: 844 });
+  await page.$eval('.tool-overflow', element => { element.open = true; });
+  await page.click('#images');
+  assert.equal(await page.$eval('#image-dialog', element => element.scrollWidth <= element.clientWidth), true, 'mobile image dialog has horizontal overflow');
+  assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth), true, 'open mobile dialog causes page overflow');
+});
+
 test('an isolated Visual edit preserves unrelated Markdown, custom HTML, and page breaks verbatim', { timeout: 45_000 }, async t => {
   const { page, source } = await openEditor(t, { mode: 'visual' });
   await page.waitForFunction(() => document.querySelector('#visual').contentDocument?.querySelector('.content[contenteditable="true"]'));
