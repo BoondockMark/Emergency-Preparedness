@@ -319,7 +319,16 @@ async function save() {
       validationState.textContent = 'Fix syntax / metadata';
       validationState.className = '';
       validationPanel.focus();
-      if (!confirm('Syntax or metadata errors remain. Save this incomplete draft anyway?')) {
+      const status = readHandoutStatus(snapshot.source);
+      if (status === 'approved') {
+        message.textContent = 'Not saved: Approved handouts must pass validation. Change the status to Draft or Under review, or complete the approval requirements.';
+        return false;
+      }
+      if (!['draft', 'under-review'].includes(status)) {
+        message.textContent = 'Not saved: Fix the status metadata and the remaining validation errors before saving.';
+        return false;
+      }
+      if (!confirm(`Syntax or metadata errors remain. Save this incomplete ${status === 'draft' ? 'draft' : 'under-review handout'} anyway?`)) {
         message.textContent = 'Save canceled. Review the Validation panel.';
         return false;
       }

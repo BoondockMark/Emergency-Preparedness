@@ -176,6 +176,23 @@ test('editor open/save round trip is atomic and stale writes are rejected', asyn
   assert.deepEqual((await fs.readdir(path.dirname(file))).filter(name => name.endsWith('.tmp')), []);
 });
 
+test('save validation override follows each workflow status', async t => {
+  const { base } = await setup(t);
+  for (const [status, expectedStatus] of [['draft', 200], ['under-review', 200], ['approved', 422]]) {
+    await t.test(status, async () => {
+      const opened = await (await fetch(`${base}/api/handout?path=handouts%2Fsection%2Fexample.md`)).json();
+      const invalid = opened.source.replace(/^status:.*$/m, `status: ${status}`).replace(/^title:.*$/m, 'title:');
+      const response = await fetch(`${base}/api/save`, {
+        method: 'POST', headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ ...opened, source: invalid, session: `status-${status}` })
+      });
+      const responseBody = await response.text();
+      assert.equal(response.status, expectedStatus, responseBody);
+      if (status === 'approved') assert.match(JSON.parse(responseBody).error, /Approved handouts must pass validation/);
+    });
+  }
+});
+
 test('browser editor defaults to a visual canvas and synchronizes edits to source', { timeout: 45_000 }, async t => {
   const { page } = await openEditor(t, { mode: 'visual' });
   assert.equal(await page.$eval('#visual-mode', button => button.getAttribute('aria-pressed')), 'true');
@@ -293,7 +310,8 @@ test('browser editor validates valid buffers before saving', { timeout: 45_000 }
 
 test('browser editor saves invalid drafts only after explicit confirmation', { timeout: 45_000 }, async t => {
   const { page, file } = await openEditor(t);
-  await replaceSource(page, 'not valid front matter');
+  const invalidDraft = (await value(page, '#source')).replace('title: Fixture', 'title:');
+  await replaceSource(page, invalidDraft);
   const confirmation = new Promise(resolve => page.once('dialog', async dialog => {
     assert.match(dialog.message(), /Save this incomplete draft anyway/);
     await dialog.accept();
@@ -302,12 +320,38 @@ test('browser editor saves invalid drafts only after explicit confirmation', { t
   await page.click('#save');
   await confirmation;
   await waitForText(page, '#message', 'Saved atomically.');
-  assert.equal(await fs.readFile(file, 'utf8'), 'not valid front matter');
+  assert.equal(await fs.readFile(file, 'utf8'), invalidDraft);
+});
+
+test('browser editor saves invalid under-review handouts only after explicit confirmation', { timeout: 45_000 }, async t => {
+  const { page, file } = await openEditor(t);
+  const invalid = (await value(page, '#source')).replace('status: draft', 'status: under-review').replace('title: Fixture', 'title:');
+  await replaceSource(page, invalid);
+  const confirmation = new Promise(resolve => page.once('dialog', async dialog => {
+    assert.match(dialog.message(), /Save this incomplete under-review handout anyway/);
+    await dialog.accept();
+    resolve();
+  }));
+  await page.click('#save');
+  await confirmation;
+  await waitForText(page, '#message', 'Saved atomically.');
+  assert.equal(await fs.readFile(file, 'utf8'), invalid);
+});
+
+test('browser editor refuses invalid approved handouts and focuses Validation', { timeout: 45_000 }, async t => {
+  const { page, file, source: original } = await openEditor(t);
+  const invalid = (await value(page, '#source')).replace('status: draft', 'status: approved').replace('title: Fixture', 'title:');
+  await replaceSource(page, invalid);
+  await page.click('#save');
+  await waitForText(page, '#message', 'Approved handouts must pass validation');
+  assert.equal(await page.evaluate(() => document.activeElement.id), 'validation');
+  assert.match(await text(page, '#message'), /Change the status to Draft or Under review, or complete the approval requirements/);
+  assert.equal(await fs.readFile(file, 'utf8'), original);
 });
 
 test('browser editor cancels invalid saves and focuses Validation', { timeout: 45_000 }, async t => {
   const { page, file, source: original } = await openEditor(t);
-  await replaceSource(page, 'not valid front matter');
+  await replaceSource(page, original.replace('title: Fixture', 'title:'));
   page.once('dialog', dialog => dialog.dismiss());
   await page.click('#save');
   await waitForText(page, '#message', 'Save canceled');
@@ -328,7 +372,7 @@ test('browser editor validates edits made while an older validation is pending',
         window.delayedValidationStarted = true;
         return new Promise(resolve => { release = () => resolve(actualFetch(url, options)); });
       }
-      if (url === '/api/validate' && body?.phase === 'syntax' && body.source === 'new invalid buffer') {
+      if (url === '/api/validate' && body?.phase === 'syntax' && body.source.includes('new invalid buffer')) {
         window.currentBufferValidationCount += 1;
       }
       return actualFetch(url, options);
@@ -336,7 +380,7 @@ test('browser editor validates edits made while an older validation is pending',
   });
   await appendSource(page, '\ndelayed validation');
   await page.waitForFunction(() => window.delayedValidationStarted);
-  await replaceSource(page, 'new invalid buffer');
+  await replaceSource(page, original.replace('title: Fixture', 'title:').replace('Fixture body.', 'new invalid buffer'));
   page.once('dialog', dialog => dialog.dismiss());
   await page.click('#save');
   await waitForText(page, '#message', 'Save canceled');
