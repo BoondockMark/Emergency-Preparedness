@@ -1,5 +1,6 @@
 import { createHash } from 'node:crypto';
 import fs from 'node:fs/promises';
+import { constants } from 'node:fs';
 import path from 'node:path';
 import { encodedAssetName, sanitizeSvg, validateAssetEntry } from './asset-validation.mjs';
 
@@ -93,6 +94,56 @@ export async function addAsset(root, code, request) {
     throw error;
   }
   return entry;
+}
+
+/** Prepare and validate an upload without changing the published asset tree. */
+export async function stageAsset(stagingDirectory, root, code, request, reservedFiles = []) {
+  const { manifest } = await readManifest(root, code);
+  const file = safeAssetName(request.name, request.mimeType);
+  if (manifest.assets.some(asset => asset.file === file) || reservedFiles.includes(file)) throw Error(`${file} already exists`);
+  const entry = {
+    file, type: request.type, creator: request.creator?.trim(), source: request.source?.trim(),
+    license: request.license?.trim(), alt: request.decorative ? '' : request.alt?.trim(),
+    ...(request.caption?.trim() ? { caption: request.caption.trim() } : {}), decorative: Boolean(request.decorative)
+  };
+  validateAssetEntry(entry, code);
+  const bytes = decodeImage(request.dataUrl, request.mimeType, `${code}/${file}`);
+  await fs.mkdir(stagingDirectory, { recursive: true });
+  const stagedFile = path.join(stagingDirectory, encodedAssetName(file));
+  const encoded = `${bytes.toString('base64').match(/.{1,76}/g).join('\n')}\n`;
+  await fs.writeFile(stagedFile, encoded, { flag: 'wx' });
+  return { entry, stagedFile, bytes };
+}
+
+/** Commit a handout and its staged assets as one recoverable filesystem operation. */
+export async function commitHandoutWithAssets(root, handoutFile, source, code, stagedAssets) {
+  const record = await readManifest(root, code);
+  const manifest = { ...record.manifest, assets: [...record.manifest.assets, ...stagedAssets.map(item => item.entry)] };
+  await fs.mkdir(record.directory, { recursive: true });
+  const token = `${process.pid}-${Date.now()}`;
+  const sourceTemporary = `${handoutFile}.${token}.tmp`;
+  const manifestTemporary = `${record.file}.${token}.tmp`;
+  const oldManifest = await fs.readFile(record.file).catch(error => error.code === 'ENOENT' ? null : Promise.reject(error));
+  const installed = [];
+  try {
+    await fs.writeFile(sourceTemporary, source, { flag: 'wx' });
+    await fs.writeFile(manifestTemporary, `${JSON.stringify(manifest, null, 2)}\n`, { flag: 'wx' });
+    for (const item of stagedAssets) {
+      const destination = path.join(record.directory, encodedAssetName(item.entry.file));
+      await fs.copyFile(item.stagedFile, destination, constants.COPYFILE_EXCL);
+      installed.push(destination);
+    }
+    await fs.rename(manifestTemporary, record.file);
+    await fs.rename(sourceTemporary, handoutFile);
+  } catch (error) {
+    await Promise.all(installed.map(file => fs.rm(file, { force: true })));
+    if (oldManifest === null) await fs.rm(record.file, { force: true });
+    else await fs.writeFile(record.file, oldManifest);
+    throw error;
+  } finally {
+    await fs.rm(sourceTemporary, { force: true });
+    await fs.rm(manifestTemporary, { force: true });
+  }
 }
 
 export async function deleteAsset(root, code, file, handoutSource) {
