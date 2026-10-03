@@ -89,6 +89,16 @@
       "alt": "Top view shows overlapping bags with folded ends facing incoming runoff; section view shows a wider base under a staggered second layer.",
       "caption": "Overlap and stagger bags.",
       "decorative": false
+    },
+    {
+      "file": "01-runoff-diversion-plan.svg",
+      "type": "photograph",
+      "creator": "Mark Hughes",
+      "source": "ChatGPT",
+      "license": "GPL",
+      "alt": "Place sandbags parallel to running water to help prevent overtopping",
+      "caption": "Place sandbags parallel to running water to help prevent overtopping",
+      "decorative": false
     }
   ]
 }
