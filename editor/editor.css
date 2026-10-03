@@ -83,7 +83,7 @@ fieldset label { display: grid; gap: .15rem; }
   dialog input:not([type="checkbox"]):not([type="range"]), dialog select { width: 100%; min-width: 0; }
 }
 @media (max-width: 600px) {
-  .tool-overflow { display: block; position: relative; margin-left: auto; }
+  .tool-overflow { display: block; position: relative; }
   .tool-overflow summary { display: block; }
   .tool-overflow-menu { position: absolute; z-index: 10; top: calc(100% + .3rem); right: 0; width: min(18rem, calc(100vw - 2rem)); padding: .5rem; display: grid; grid-template-columns: 1fr 1fr; gap: .4rem; border-radius: .35rem; background: #17202a; box-shadow: 0 6px 18px #0008; }
   .tool-overflow:not([open]) > .tool-overflow-menu { display: none; }
