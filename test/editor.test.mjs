@@ -221,7 +221,7 @@ test('save validation override follows each workflow status', async t => {
 test('browser editor defaults to a visual canvas and synchronizes edits to source', { timeout: 45_000 }, async t => {
   const { page, source } = await openEditor(t, { mode: 'visual' });
   assert.equal(await page.$eval('#visual-mode', button => button.getAttribute('aria-pressed')), 'true');
-  await page.waitForFunction(() => document.querySelector('#visual').contentDocument?.querySelector('.content[contenteditable="true"]'));
+  await page.waitForFunction(() => document.querySelector('#visual').contentDocument?.querySelector('[data-visual-block][contenteditable="true"]'));
   await page.$eval('#visual', frame => {
     const paragraph = [...frame.contentDocument.querySelectorAll('.content p')].find(element => element.textContent.includes('First page.'));
     paragraph.textContent = 'Visually edited first page.';
@@ -272,7 +272,7 @@ test('browser editor controls remain reachable without horizontal overflow at re
 
 test('an isolated Visual edit preserves unrelated Markdown, custom HTML, and page breaks verbatim', { timeout: 45_000 }, async t => {
   const { page, source } = await openEditor(t, { mode: 'visual' });
-  await page.waitForFunction(() => document.querySelector('#visual').contentDocument?.querySelector('.content[contenteditable="true"]'));
+  await page.waitForFunction(() => document.querySelector('#visual').contentDocument?.querySelector('[data-visual-block][contenteditable="true"]'));
   await page.$eval('#visual', frame => {
     const paragraph = [...frame.contentDocument.querySelectorAll('.content p')].find(element => element.textContent === 'Second page.');
     paragraph.textContent = 'Only this block changed.';
@@ -282,6 +282,21 @@ test('an isolated Visual edit preserves unrelated Markdown, custom HTML, and pag
   assert.equal(changed, source.replace('Second page.', '<p>Only this block changed.</p>'));
   assert.ok(changed.includes('<div class="custom">Keep **raw** HTML</div>'));
   assert.ok(changed.includes('\n<!-- pagebreak -->\n'));
+});
+
+test('a real contenteditable Visual input updates only its source block', { timeout: 45_000 }, async t => {
+  const { page, source } = await openEditor(t, { mode: 'visual' });
+  await page.waitForFunction(() => document.querySelector('#visual').contentDocument?.querySelector('[data-visual-block][contenteditable="true"]'));
+  await page.$eval('#visual', frame => {
+    const paragraph = [...frame.contentDocument.querySelectorAll('.content p')].find(element => element.textContent === 'First page.');
+    paragraph.focus();
+    const selection = frame.contentWindow.getSelection();
+    selection.removeAllRanges();
+    selection.selectAllChildren(paragraph);
+  });
+  await page.keyboard.type('Typed in Visual mode.');
+  const changed = await value(page, '#source');
+  assert.equal(changed, source.replace('First page.', '<p>Typed in Visual mode.</p>'));
 });
 
 test('browser visual editor ignores a delayed render from an older buffer', { timeout: 45_000 }, async t => {
@@ -350,7 +365,7 @@ test('browser visual editor ignores a delayed render after changing handouts', {
 
 test('browser editor saves Visual mode edits with platform shortcuts while iframe retains focus', { timeout: 45_000 }, async t => {
   const { page, file } = await openEditor(t, { mode: 'visual' });
-  await page.waitForFunction(() => document.querySelector('#visual').contentDocument?.querySelector('.content[contenteditable="true"]'));
+  await page.waitForFunction(() => document.querySelector('#visual').contentDocument?.querySelector('[data-visual-block][contenteditable="true"]'));
 
   for (const [modifier, contents] of [['Control', 'Saved visually with Ctrl+S.'], ['Meta', 'Saved visually with Cmd+S.']]) {
     await page.$eval('#visual', (frame, next) => {

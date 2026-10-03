@@ -64,12 +64,18 @@ function visualBlocks(document, sourceText) {
   const elements = [...document.querySelectorAll('.sheet .content')]
     .flatMap(content => [...content.children])
     .filter(element => !element.matches('.kicker, h1:not([data-source-line]), .footer'));
-  const records = elements.map((element, index) => {
-    const annotated = element.hasAttribute('data-source-line') ? element : element.querySelector('[data-source-line]');
-    const line = Number(annotated?.dataset.sourceLine);
-    if (!line) return null;
-    element.dataset.visualBlock = String(index);
-    return { element, start: lineOffset(sourceText, line), end: sourceText.length };
+  const identifiers = new Map();
+  const records = elements.map(element => {
+    const annotations = [element, ...element.querySelectorAll('[data-source-line]')]
+      .filter(candidate => candidate.dataset.sourcePath === opened.path && Number(candidate.dataset.sourceLine));
+    const line = Math.min(...annotations.map(candidate => Number(candidate.dataset.sourceLine)));
+    if (!Number.isFinite(line)) return null;
+    const key = `${opened.path}:${line}`;
+    const occurrence = identifiers.get(key) ?? 0;
+    identifiers.set(key, occurrence + 1);
+    const identifier = `${key}:${occurrence}`;
+    element.dataset.visualBlock = identifier;
+    return { element, identifier, start: lineOffset(sourceText, line), end: sourceText.length };
   }).filter(Boolean);
   records.forEach((record, index) => {
     let boundary = records[index + 1]?.start ?? sourceText.length;
@@ -85,18 +91,18 @@ function attachVisualEditor() {
   if (!document || attachedVisualDocuments.has(document)) return;
   attachedVisualDocuments.add(document);
   const blocks = visualBlocks(document, source.value);
-  const blockByElement = new Map(blocks.map(block => [block.element, block]));
+  const blockByIdentifier = new Map(blocks.map(block => [block.identifier, block]));
   document.querySelectorAll('.content').forEach(content => {
-    content.contentEditable = 'true';
-    content.querySelectorAll(':scope > .kicker, :scope > h1, :scope > .footer').forEach(element => { element.contentEditable = 'false'; });
+    content.contentEditable = 'false';
   });
+  blocks.forEach(block => { block.element.contentEditable = 'true'; });
   const style = document.createElement('style');
-  style.textContent = '.content[contenteditable="true"] { outline: 2px solid transparent; } .content[contenteditable="true"]:focus { outline-color: #2563eb; outline-offset: -3px; }';
+  style.textContent = '[data-visual-block][contenteditable="true"] { outline: 2px solid transparent; } [data-visual-block][contenteditable="true"]:focus { outline-color: #2563eb; outline-offset: 2px; }';
   document.head.append(style);
   document.body.addEventListener('input', event => {
     const element = event.target.nodeType === Node.ELEMENT_NODE ? event.target : event.target.parentElement;
     const blockElement = element?.closest('[data-visual-block]');
-    const block = blockByElement.get(blockElement);
+    const block = blockByIdentifier.get(blockElement?.dataset.visualBlock);
     if (!block) {
       message.textContent = 'This Visual edit could not be mapped safely. Switch to Source to make this change.';
       renderVisual();
