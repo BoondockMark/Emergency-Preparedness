@@ -9,6 +9,16 @@
       "alt": "Adapted UV-PRO channel editor shows SAVE, separate RX and TX frequencies, and separate DCS fields; device settings includes the channel-group control.",
       "caption": "Illustrated screen reference adapted from the supplied Android captures. The example TX digits are not the programming target.",
       "decorative": false
+    },
+    {
+      "file": "app-screen-reference-corrected.png",
+      "type": "illustration",
+      "creator": "Fire Watch project owner (original captures); OpenAI (illustrated adaptation and frequency correction)",
+      "source": "Project conversation: owner-requested correction to RX 462.38750 MHz and TX 467.38750 MHz. Standalone corrected version of app-screen-reference.png.",
+      "license": "User authorized reuse and adaptation of supplied captures for this repository in the project conversation.",
+      "alt": "UV-PRO channel editor showing RX FM 462.38750 MHz and TX FM 467.38750 MHz beside device settings.",
+      "caption": "Corrected frequency reference: RX 462.38750 MHz; TX 467.38750 MHz.",
+      "decorative": false
     }
   ]
 }
