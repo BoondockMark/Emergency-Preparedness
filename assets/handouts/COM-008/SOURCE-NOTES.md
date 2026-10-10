@@ -11,3 +11,7 @@ The original edit capture shows TX `467.387506 MHz`, whereas the project owner c
 The captures show `LHH FW` as the memory name, `High` as TX power, and `12.5KHz` as bandwidth. The guide uses `Heights 6` as the descriptive memory name and explains that `LHH FW` is the captured example label. Power and bandwidth remain subject to the radio lead's channel authorization. The supplied settings screen reports firmware `0.9.3`; the app version is not visible, so it is not inferred.
 
 The guide still requires the repository's editor and subject-matter review and a physical radio commissioning check before publication. Generated PDF/layout validation does not demonstrate programming on a physical UV-PRO.
+
+## Standalone corrected image
+
+`app-screen-reference-corrected.png` is the owner's requested edited version displaying RX `FM 462.38750 MHz` and TX `FM 467.38750 MHz`. It is published as a directly viewable PNG because the chat image display and workspace download links were not working for the owner. The original reference used in the draft PDF is retained; this standalone addition does not regenerate or change the PDF.
