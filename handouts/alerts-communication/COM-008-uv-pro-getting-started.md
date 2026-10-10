@@ -36,7 +36,7 @@ sources:
     url: https://baofengtech.com/product/uv-pro/
     accessDate: 2026-10-09
 ---
-<p class="lede">Set up a BTECH UV-PRO for Heights 6 using the phone app, then check that the radio works on its own.</p>
+<p class="lede">Set up a BTECH UV-PRO for La Habra Heights Firewatch use using the phone app, then check that the radio works on its own.</p>
 
 <div class="warning warning--caution"><strong>Draft for training review.</strong> A radio lead must check the equipment authorization, operating settings, and completed setup before duty. This guide programs only Heights 6.</div>
 
@@ -81,7 +81,7 @@ sources:
 ## 2. Connect and open the channel editor
 
 <ol class="procedure">
-<li><strong>Put the radio in pairing mode if needed.</strong> In the radio menu, use <strong>Connections → Pairing</strong>. Keep the radio powered on and near the phone.</li>
+<li><strong>Put the radio in pairing mode if needed.</strong> In the radio menu, use&nbsp;<br><strong>Connections → Pairing</strong>. [Green Rectangle Button][Up Button][Up Button][Green Rectangle Button]<br>Keep the radio powered on and near the phone.</li>
 <li><strong>Find the radio in the app.</strong> The manual's connection screen lists <strong>Bindable Device</strong>; select your UV-PRO. If several radios are nearby, confirm which one is yours with the lead.</li>
 <li><strong>Check the connection.</strong> The app should show the radio's operating screen and channel list. If it does not, open <strong>Connection management</strong> in device settings and check the selected device. Do not start editing a disconnected or unidentified radio.</li>
 <li><strong>Open the channel panel.</strong> In the supplied Android layout, tap the <strong>three-line menu at the upper left</strong> of the main map screen. The panel contains a numbered channel grid, volume slider, and TX Power / Work Mode controls.</li>
@@ -119,14 +119,14 @@ sources:
 
 <figure class="figure figure--full figure--contain" aria-labelledby="app-reference-caption">
 <img src="../assets/handouts/COM-008/app-screen-reference.png" alt="Adapted UV-PRO channel editor shows SAVE, separate RX and TX frequencies, and separate DCS fields; device settings includes the channel-group control.">
-<figcaption id="app-reference-caption"><strong>Figure 1.</strong> Illustrated screen reference adapted from supplied captures: channel editor on the left, device-settings choices on the right. <span class="credit">Original captures: project owner; illustrated adaptation: OpenAI.</span></figcaption>
+<figcaption id="app-reference-caption"><strong>Figure 1.</strong> Illustrated screen reference channel editor on the left, device-settings choices on the right. <span class="credit">Original captures: project owner; illustrated adaptation: OpenAI</span></figcaption>
 </figure>
 
-<div class="warning warning--caution"><strong>Use the channel card, not every example digit.</strong> The captured TX field reads <strong>467.387506 MHz</strong>. Enter the confirmed target <strong>467.38750 MHz</strong>. If extra digits return after saving, have the radio lead check the stored value; the captures do not establish why they appear.</div>
+<div class="warning warning--caution"><strong>Use the channel card.<br></strong>TX field reads <strong>467.38750 MHz</strong>. <br>RX field reads&nbsp;<strong>462.38750 MHz.&nbsp;&nbsp;</strong><div>TX/RX CTCSS/DCS<strong> </strong>should read<b>&nbsp;DCS-331N</b><br>Bandwidth is <b>12.5 kHz</b></div></div>
 
 <p><strong>Compare:</strong> RX starts with <strong>462</strong>, TX with <strong>467</strong>; both have <strong>.38750</strong> and use FM. <strong>462.3875</strong> and <strong>462.38750</strong> are the same frequency. Dropping a final zero is different from adding a nonzero digit.</p>
 
-<div class="sources">Sources: project-owner frequency confirmation and supplied channel-edit capture 6. Figure 1 is an illustrated adaptation, not a pixel-identical screenshot crop.</div>
+<div class="sources">Sources: project-owner frequency confirmation and supplied channel-edit capture image. Figure 1 is an illustrated adaptation, not a pixel-identical screenshot crop.</div>
 
 <!-- pagebreak -->
 
@@ -143,7 +143,7 @@ sources:
 <li><strong>Tap SAVE at the upper right.</strong> Keep the radio connected while saving. Do not tap <strong>SHARE</strong> or <strong>DELETE</strong>. If an error appears or the connection drops, reconnect and verify the entry before proceeding.</li>
 </ol>
 
-<div class="warning warning--caution"><strong>Caution: Talk Around changes repeater operation.</strong> BTECH's manual says Talk Around makes TX and RX the same frequency. Heights 6 uses separate frequencies; do not enable this option for the setup shown here.</div>
+<div class="warning warning--caution"><strong>Caution: Talk Around changes repeater operation.</strong>&nbsp;Talk Around makes TX and RX the same frequency. Heights 6 is a repeater that uses separate frequencies; do not enable this option for the setup shown here. <b>Only use talkaround in the event of repeater failure.</b></div>
 
 ## If editing is refused
 
