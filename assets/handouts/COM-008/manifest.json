@@ -1,0 +1,14 @@
+{
+  "assets": [
+    {
+      "file": "app-screen-reference.png",
+      "type": "illustration",
+      "creator": "Fire Watch project owner (original captures); OpenAI (illustrated adaptation)",
+      "source": "Project conversation, October 9, 2026; supplied captures 6 (channel edit) and 9 (device settings). Adapted with an image tool, not a pixel-identical crop.",
+      "license": "User authorized reuse and adaptation of supplied captures for this repository in the project conversation.",
+      "alt": "Adapted UV-PRO channel editor shows SAVE, separate RX and TX frequencies, and separate DCS fields; device settings includes the channel-group control.",
+      "caption": "Illustrated screen reference adapted from the supplied Android captures. The example TX digits are not the programming target.",
+      "decorative": false
+    }
+  ]
+}
