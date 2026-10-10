@@ -4,7 +4,7 @@ title: BTECH UV-PRO Getting Started
 section: Alerts & Communication
 sectionNumber: 2
 status: draft
-version: 0.2
+version: 0.3
 lastReviewed: 2026-10-09
 reviewers:
   editor: unassigned
@@ -25,6 +25,11 @@ sources:
     provider: Fire Watch project owner
     location: assets/handouts/COM-008/SOURCE-NOTES.md
     receivedDate: 2026-10-09
+  - type: local
+    title: UV-PRO front-view photograph for button identification
+    provider: Fire Watch project owner
+    location: Project conversation, October 9, 2026; supplied radio photograph
+    receivedDate: 2026-10-09
   - type: web
     title: BTECH UV-PRO User Manual, Revision 3
     organization: BTECH
@@ -36,195 +41,198 @@ sources:
     url: https://baofengtech.com/product/uv-pro/
     accessDate: 2026-10-09
 ---
-<p class="lede">Set up a BTECH UV-PRO for La Habra Heights Firewatch use using the phone app, then check that the radio works on its own.</p>
 
-<div class="warning warning--caution"><strong>Draft for training review.</strong> A radio lead must check the equipment authorization, operating settings, and completed setup before duty. This guide programs only Heights 6.</div>
+<p class="lede">Turn on your radio, connect your phone, and save Heights 6, the La Habra Heights Firewatch channel identified in this project's channel plan.</p>
 
-## 1. Prepare the radio and phone
+## 1. Find the controls first
 
-<div class="checklist"><ul>
-<li>UV-PRO, correct antenna, battery, and supplied charging equipment</li>
-<li>Compatible Android phone or iPhone with Bluetooth</li>
-<li>BTECH UV Programmer app from the manufacturer's official app links</li>
-<li>Your assigned callsign and the radio lead's current channel plan</li>
-</ul></div>
+<p>Hold the radio with the screen facing you, as in the supplied photo.</p>
+
+<table>
+<thead><tr><th scope="col">Control</th><th scope="col">Where to find it</th><th scope="col">What you will do</th></tr></thead>
+<tbody>
+<tr><th scope="row">Power / Volume</th><td>Top-right knob with orange stripe</td><td>Turn it to switch on and adjust sound.</td></tr>
+<tr><th scope="row">Menu / Confirm</th><td>Green button below the screen, on the left; overlapping rectangles</td><td>Press to open a menu or confirm a choice.</td></tr>
+<tr><th scope="row">Arrow pad</th><td>Four arrows below the screen, in the middle</td><td>Use up/down to move through choices; left/right as a menu requires.</td></tr>
+<tr><th scope="row">Return / Back</th><td>Red curved-arrow button below the screen, on the right</td><td>Press briefly to go back.</td></tr>
+<tr><th scope="row">Star (*)</th><td>Right end of the first number-key row</td><td>Hold to switch between frequency and saved-channel modes.</td></tr>
+<tr><th scope="row">Hash (#)</th><td>Bottom-right keypad button</td><td>If the keypad is locked, hold to unlock.</td></tr>
+<tr><th scope="row">PTT — push to talk</th><td>Long orange button on the left side</td><td>Leave it alone during setup. Use only for an authorized radio check.</td></tr>
+</tbody>
+</table>
+
+<p><strong>Press</strong> means press briefly and release. <strong>Hold</strong> means keep pressing until the mode changes. <strong>Tap</strong> means touch a control on your phone.</p>
+
+## 2. Turn on the radio
 
 <ol class="procedure">
-<li><strong>Fit the battery and antenna</strong> following the supplied instructions. Check for damage. Keep your fingers away from the side <strong>PTT</strong> (push-to-talk) button.</li>
-<li><strong>Charge the battery.</strong> The removable battery charges directly by USB-C. Use the supplied equipment and follow its charging instructions.</li>
-<li><strong>Power on.</strong> Turn the top <strong>Power/Volume</strong> knob clockwise past the click. Continue clockwise to increase volume. Turning counterclockwise past the click powers off.</li>
-<li><strong>Install BTECH UV Programmer.</strong> BTECH's manual identifies this app for both Google Play and the Apple App Store. Enable Bluetooth on your phone.</li>
+<li><strong>Attach the antenna and charged battery.</strong> Use the supplied charging instructions if the battery needs charging.</li>
+<li><strong>Turn the top-right knob clockwise past the click.</strong> Wait for the screen to start.</li>
+<li><strong>Turn the knob a little farther clockwise</strong> to raise the volume.</li>
+</ol>
+
+<p><strong>You should see:</strong> the radio's operating screen. To switch off later, turn the same knob counterclockwise past the click.</p>
+
+<div class="sources">Button locations: supplied radio photo; functions: BTECH UV-PRO Manual, pp. 4–7. Channel plan: COM-002 and project-owner confirmation, October 9, 2026. Draft for training review.</div>
+
+<!-- pagebreak -->
+
+<p class="lede">Connect the phone to your own radio before changing a channel.</p>
+
+## 3. Link the radio to your phone
+
+<ol class="procedure">
+<li><strong>Install BTECH UV Programmer</strong> on your Android phone or iPhone. Use the app links on <a href="https://baofengtech.com/product/uv-pro/">BTECH's UV-PRO product page</a>.</li>
+<li><strong>Turn on Bluetooth on your phone.</strong> Keep the phone beside the powered-on radio. Allow the app's requested Bluetooth or nearby-device permissions.</li>
+<li><strong>Open the radio menu.</strong> Press the green <strong>Menu / Confirm</strong> button.</li>
+<li><strong>Choose Connections, then Pairing.</strong> Use the arrow pad to highlight each choice and the green button to select it. The owner-confirmed shortcut from the operating screen is <strong>green button → up → up → green button</strong>; check that Pairing is selected. If pairing is already active, continue. The manual says the red and green indicator lights flash in pairing mode.</li>
+<li><strong>Open BTECH UV Programmer on the phone.</strong> Tap the <strong>three-line menu</strong> to find the connection panel. Look for <strong>Bindable Device</strong> and tap your UV-PRO. If several radios appear, ask the lead to identify yours.</li>
+<li><strong>Wait for the radio's operating screen and channel list in the app.</strong> If they do not appear, check <strong>Connection management</strong> in the app's device settings and select your radio.</li>
+</ol>
+
+<p><strong>You should see:</strong> the connected radio's controls and numbered channel tiles in the app.</p>
+
+## Recognize these phone controls
+
+<table>
+<thead><tr><th scope="col">Phone control</th><th scope="col">Use it for</th></tr></thead>
+<tbody>
+<tr><th scope="row">Three lines</th><td>Opening the panel with numbered channel tiles.</td></tr>
+<tr><th scope="row">Gear in that panel</th><td>Opening device settings, including Connection management and Channel &amp; Groups.</td></tr>
+<tr><th scope="row">Numbered channel tile</th><td>Tap to select; press and hold to open <strong>Edit channel</strong>.</td></tr>
+</tbody>
+</table>
+
+<p><strong>Screen differences:</strong> the supplied Android captures show the three-line menu at the upper left; older manual pictures show it at the lower left. Recognize the symbol. iPhone and newer app layouts may differ.</p>
+
+<div class="sources">BTECH UV-PRO Manual, pp. 11–15, 22, 26; supplied Android captures and project-owner confirmation of the press-and-hold gesture.</div>
+
+<!-- pagebreak -->
+
+<p class="lede">Heights 6 uses two frequencies: one to listen and one to transmit.</p>
+
+## 4. Open an unused channel and enter the frequencies
+
+<ol class="procedure">
+<li><strong>Tap the three-line menu</strong> to open the channel panel.</li>
+<li><strong>Find an unused numbered tile</strong> in the channel group assigned by your radio lead. The tile number does not need to be 6. Do not overwrite an existing channel.</li>
+<li><strong>Press and hold that tile.</strong> Tap <strong>Edit channel</strong> in the menu that appears.</li>
+<li><strong>Tap Title.</strong> Enter <strong>Heights 6</strong>.</li>
+<li><strong>Tap RX Freq.</strong> Enter <strong>462.38750 MHz</strong>. If asked for a mode, choose <strong>FM</strong>. Confirm the entry.</li>
+<li><strong>Tap TX Freq.</strong> Enter <strong>467.38750 MHz</strong>. Choose <strong>FM</strong> if asked, then confirm.</li>
 </ol>
 
 <div class="local-info">
-<p><strong>Heights 6 — confirmed by the project owner, October 9, 2026.</strong></p>
-<table>
-<thead><tr><th scope="col">Field</th><th scope="col">Enter</th></tr></thead>
-<tbody>
-<tr><th scope="row">Title</th><td>Heights 6</td></tr>
-<tr><th scope="row">RX Freq — listen</th><td>462.38750 MHz</td></tr>
-<tr><th scope="row">TX Freq — transmit</th><td>467.38750 MHz</td></tr>
-<tr><th scope="row">RX CTCSS/DCS</th><td>DCS 331N</td></tr>
-<tr><th scope="row">TX CTCSS/DCS</th><td>DCS 331N</td></tr>
-</tbody>
-</table>
+<p><strong>Heights 6 — project-owner-confirmed settings, October 9, 2026.</strong></p>
+<p><strong>RX / listen: 462.38750 MHz</strong><br><strong>TX / transmit: 467.38750 MHz</strong><br>Both receive and transmit DCS: <strong>331N</strong> (set on the next page).</p>
 </div>
 
-
-
-<div class="sources">Sources: BTECH manual, pp. 4–5, 11–15; product page; owner confirmation. Links: page 6.</div>
-
-<!-- pagebreak -->
-
-<p class="lede">Connect to your own radio, then choose an unused memory. The captures show Android with radio firmware 0.9.3; iPhone and newer layouts may differ.</p>
-
-## 2. Connect and open the channel editor
-
-<ol class="procedure">
-<li><strong>Put the radio in pairing mode if needed.</strong> In the radio menu, use&nbsp;<br><strong>Connections → Pairing</strong>. [Green Rectangle Button][Up Button][Up Button][Green Rectangle Button]<br>Keep the radio powered on and near the phone.</li>
-<li><strong>Find the radio in the app.</strong> The manual's connection screen lists <strong>Bindable Device</strong>; select your UV-PRO. If several radios are nearby, confirm which one is yours with the lead.</li>
-<li><strong>Check the connection.</strong> The app should show the radio's operating screen and channel list. If it does not, open <strong>Connection management</strong> in device settings and check the selected device. Do not start editing a disconnected or unidentified radio.</li>
-<li><strong>Open the channel panel.</strong> In the supplied Android layout, tap the <strong>three-line menu at the upper left</strong> of the main map screen. The panel contains a numbered channel grid, volume slider, and TX Power / Work Mode controls.</li>
-<li><strong>Choose an unused tile.</strong> Use the lead's assigned channel group and an empty numbered memory. The example uses tile 1, but do not overwrite it if your radio already uses it.</li>
-<li><strong>Press and hold the tile.</strong> In the menu that appears, tap <strong>Edit channel</strong>. The other choices shown are <strong>Bind network channel</strong> and <strong>Delete</strong>; neither is needed for this setup.</li>
-</ol>
-
-## Two menus with different jobs
-
-<table>
-<thead><tr><th scope="col">Where to open it</th><th scope="col">What it does</th></tr></thead>
-<tbody>
-<tr><th scope="row">Three-line menu</th><td>Shows the channel tiles. Press and hold a tile to edit it.</td></tr>
-<tr><th scope="row">Gear in the channel panel</th><td>Opens device settings, including Connection management and Channel &amp; Groups.</td></tr>
-<tr><th scope="row">Three-dot menu → Device settings</th><td>Another device-settings route shown in the captures.</td></tr>
-<tr><th scope="row">Global settings</th><td>Contains phone/app options. It is not the channel-tile editor used here.</td></tr>
-</tbody>
-</table>
-
-<div class="warning warning--caution"><strong>Caution: preserve existing settings.</strong> Do not use factory reset, delete channels, import an unknown list, or update firmware while following this guide. Older manual pictures place the three-line menu at the lower left; use the control's symbol to recognize it.</div>
-
-<div class="sources">Sources: BTECH UV-PRO Manual, pp. 11–15 and 22; supplied Android captures 2, 3, 5, and 9. The project owner confirmed press-and-hold opens the channel menu.</div>
-
-<!-- pagebreak -->
-
-<p class="lede">Give the memory a recognizable title, then enter the receive and transmit frequencies separately.</p>
-
-## 3. Enter the name and frequencies
-
-<ol class="procedure">
-<li><strong>Tap Title.</strong> Enter <strong>Heights 6</strong>. The captured example says <strong>LHH FW</strong>; it is not a different frequency assignment.</li>
-<li><strong>Tap RX Freq.</strong> Choose <strong>FM</strong> if the frequency dialog asks for a mode. Enter <strong>462.38750 MHz</strong>, then confirm the dialog. RX is the frequency your radio listens to.</li>
-<li><strong>Tap TX Freq.</strong> Use <strong>FM</strong> and enter <strong>467.38750 MHz</strong>, then confirm. TX is the frequency your radio transmits on. Do not reverse RX and TX.</li>
-</ol>
-
 <figure class="figure figure--full figure--contain" aria-labelledby="app-reference-caption">
-<img src="../assets/handouts/COM-008/app-screen-reference.png" alt="Adapted UV-PRO channel editor shows SAVE, separate RX and TX frequencies, and separate DCS fields; device settings includes the channel-group control.">
-<figcaption id="app-reference-caption"><strong>Figure 1.</strong> Illustrated screen reference channel editor on the left, device-settings choices on the right. <span class="credit">Original captures: project owner; illustrated adaptation: OpenAI</span></figcaption>
+<img src="../assets/handouts/COM-008/app-screen-reference-corrected.png" alt="UV-PRO channel editor showing RX FM 462.38750 MHz and TX FM 467.38750 MHz beside device settings.">
+<figcaption id="app-reference-caption">Screen reference adapted from the supplied Android captures. <strong>Enter the values above.</strong> RX and TX are shown with the confirmed target values. <span class="credit">Original captures: project owner; adaptation: OpenAI.</span></figcaption>
 </figure>
 
-<div class="warning warning--caution"><strong>Use the channel card.<br></strong>TX field reads <strong>467.38750 MHz</strong>. <br>RX field reads&nbsp;<strong>462.38750 MHz.&nbsp;&nbsp;</strong><div>TX/RX CTCSS/DCS<strong> </strong>should read<b>&nbsp;DCS-331N</b><br>Bandwidth is <b>12.5 kHz</b></div></div>
+<p><strong>Check:</strong> RX starts with <strong>462</strong>; TX starts with <strong>467</strong>. Both end in <strong>.38750</strong>. A final zero may disappear without changing the value; an extra nonzero digit needs the lead's check. Keep Talk Around off for normal repeater use; use it during repeater failure only under the lead's instructions.</p>
 
-<p><strong>Compare:</strong> RX starts with <strong>462</strong>, TX with <strong>467</strong>; both have <strong>.38750</strong> and use FM. <strong>462.3875</strong> and <strong>462.38750</strong> are the same frequency. Dropping a final zero is different from adding a nonzero digit.</p>
-
-<div class="sources">Sources: project-owner frequency confirmation and supplied channel-edit capture image. Figure 1 is an illustrated adaptation, not a pixel-identical screenshot crop.</div>
+<div class="sources">COM-002; project-owner frequency confirmation; supplied Android channel-editor and channel-panel captures.</div>
 
 <!-- pagebreak -->
 
-<p class="lede">Set both DCS fields, review the remaining channel options, and save the entry.</p>
+<p class="lede">Set the receive and transmit codes separately, then save.</p>
 
-## 4. Set DCS and save
-
-<ol class="procedure">
-<li><strong>Tap RX CTCSS/DCS.</strong> Choose the DCS entry containing <strong>331N</strong>. Here, <strong>N</strong> means normal polarity. Confirm the selection.</li>
-<li><strong>Tap TX CTCSS/DCS.</strong> Select the same <strong>331N</strong> entry and confirm. Check it separately; setting RX does not prove TX is correct.</li>
-<li><strong>Recognize the app label.</strong> The supplied editor displays <strong>DCS-331N/465I</strong> in each field. This is one displayed selection label. Use the entry containing <strong>331N</strong>; do not program an additional code or substitute <strong>331I</strong>.</li>
-<li><strong>Check bandwidth and power with the lead.</strong> The captured example shows <strong>Bandwidth 12.5KHz</strong> and <strong>TX Power High</strong>. These are captured settings, not independent authorization to use High power. Set the values required by the lead's channel plan.</li>
-<li><strong>Check the switches below the fields.</strong> Keep <strong>Talk Around</strong> and <strong>Reverse Frequency</strong> off for the RX/TX assignment on page 1. Leave scan, lockout, and other optional settings as directed by the lead.</li>
-<li><strong>Tap SAVE at the upper right.</strong> Keep the radio connected while saving. Do not tap <strong>SHARE</strong> or <strong>DELETE</strong>. If an error appears or the connection drops, reconnect and verify the entry before proceeding.</li>
-</ol>
-
-<div class="warning warning--caution"><strong>Caution: Talk Around changes repeater operation.</strong>&nbsp;Talk Around makes TX and RX the same frequency. Heights 6 is a repeater that uses separate frequencies; do not enable this option for the setup shown here. <b>Only use talkaround in the event of repeater failure.</b></div>
-
-## If editing is refused
-
-<p>Device settings → <strong>General settings</strong> includes <strong>Lock channel data</strong>. Ask the lead whether this is preventing edits before changing a lock. Do not solve a locked channel by factory-resetting the radio.</p>
-
-## Save checkpoint
-
-<div class="checklist"><ul>
-<li>Both DCS fields contain <strong>331N</strong>.</li>
-<li>Power and bandwidth match the lead's plan.</li>
-<li>Talk Around and Reverse Frequency are off.</li>
-<li>SAVE completed without a reported connection or save error.</li>
-</ul></div>
-
-<div class="sources">Sources: supplied captures 6 and 7; BTECH UV-PRO Manual, p. 31 (TX/RX subtone and Talk Around). Frequencies and normal-polarity DCS confirmed by the project owner.</div>
-
-<!-- pagebreak -->
-
-<p class="lede">Reopen the memory, select it on the radio, and verify it without relying on the phone.</p>
-
-## 5. Verify what was stored
+## 5. Set DCS and save Heights 6
 
 <ol class="procedure">
-<li><strong>Reopen the saved entry.</strong> Return to the channel grid, press and hold the memory, and choose <strong>Edit channel</strong>. Compare both frequencies and both DCS fields with the card on page 1.</li>
-<li><strong>Select the channel.</strong> Return to the grid and tap its tile. The supplied panel highlights the selected tile and shows its name and frequency at the bottom. Check the radio's display too.</li>
-<li><strong>Use Single CH for this first check.</strong> In the panel's <strong>Work Mode</strong> row, select <strong>Single CH</strong>. Do not use Scan or Dual CH while learning which channel is active. Check Talk Around remains off.</li>
-<li><strong>Check the radio itself.</strong> Disconnect the app, power the radio off and back on, and select the memory again. Hold <strong>*</strong> to switch between VFO/frequency and memory/channel mode; use <strong>up/down</strong> to select the saved memory.</li>
-<li><strong>Have the lead verify stored settings.</strong> Reopening the phone editor alone does not prove a cached entry was written to the radio. The lead should inspect the radio's channel-list <strong>Edit</strong> view or read its stored configuration after reconnecting.</li>
+<li><strong>Tap RX CTCSS/DCS.</strong> Choose <strong>DCS 331N</strong> and confirm. The <strong>N</strong> means normal polarity.</li>
+<li><strong>Tap TX CTCSS/DCS.</strong> Choose <strong>DCS 331N</strong> again and confirm. Both fields must be set.</li>
+<li><strong>Check the other channel settings with your radio lead.</strong> Set <strong>Bandwidth to 12.5 kHz</strong>, as specified in the owner's current channel instructions. Use the transmit power required by your radio lead; the captured <strong>High</strong> setting alone does not establish the approved power.</li>
+<li><strong>Leave Talk Around and Reverse Frequency off.</strong> Heights 6 needs the separate RX and TX frequencies entered on the previous page.</li>
+<li><strong>Tap SAVE at the upper right.</strong> Keep the phone connected to the radio until saving finishes.</li>
 </ol>
 
-## Verify each item separately
+<p><strong>If the DCS list looks different:</strong> the supplied app displays <strong>DCS-331N/465I</strong>. Select the entry containing <strong>331N</strong>. This is one selection label; do not enter a second code or choose <strong>331I</strong>.</p>
 
-<div class="checklist"><ul>
-<li>Memory name: Heights 6 (or the lead's agreed LHH FW label)</li>
-<li>RX: <strong>462.38750 MHz</strong></li>
-<li>TX: <strong>467.38750 MHz</strong></li>
-<li>Receive and transmit DCS: <strong>331N</strong></li>
-<li>Power and bandwidth verified against the lead's plan</li>
-<li>Memory remains available after restarting the radio</li>
-<li>Other saved channels remain unchanged</li>
-</ul></div>
-
-## Listen before transmitting
-
-<p>Set an audible volume and arrange a reception check with the lead. A quiet speaker may mean no one is talking; it does not prove programming failed. Keep the app's green microphone control and the radio's PTT button untouched until an authorized check is arranged.</p>
-
-<p><strong>Phone optional:</strong> BTECH says normal RF voice operation does not require a phone or internet connection. If dual watch is later enabled, the large-font radio channel is the active main channel; holding <strong>Return</strong> changes main/sub selection.</p>
-
-<div class="sources">Sources: supplied channel-panel captures 1–2; BTECH UV-PRO Manual, pp. 4, 7–8; BTECH product page (phone-independent operation).</div>
-
-<!-- pagebreak -->
-
-<p class="lede">Complete a supervised two-way check and keep a record of the result.</p>
-
-## 6. Make an authorized radio check
-
-<div class="warning"><strong>Transmit only when authorized.</strong> Have the radio lead confirm the equipment and operating settings are permitted for the channel. Do not test during emergency traffic.</div>
-
-<ol class="procedure">
-<li><strong>Arrange the check.</strong> Use a safe location, select Heights 6, and listen first. Follow the lead's timing and COM-002's net procedure.</li>
-<li><strong>Make a short call.</strong> When authorized, press PTT, pause briefly, and say your assigned callsign and “radio check.” Release PTT to hear the reply.</li>
-<li><strong>Confirm both directions.</strong> You should hear the other station clearly, and it should confirm that it heard and understood you.</li>
-<li><strong>Record the result.</strong> If either direction fails, ask for help before duty. Do not change frequencies or codes at random.</li>
-</ol>
-
-## Troubleshooting
+## Compare before you continue
 
 <table>
-<thead><tr><th scope="col">Problem</th><th scope="col">Check next</th></tr></thead>
+<thead><tr><th scope="col">Field</th><th scope="col">Correct entry</th></tr></thead>
 <tbody>
-<tr><th scope="row">Phone will not connect</th><td>Radio power, Bluetooth, required permissions, pairing mode, and selected device.</td></tr>
-<tr><th scope="row">Channel missing after restart</th><td>Correct group and memory mode; repeat SAVE while connected and have the lead read stored settings.</td></tr>
-<tr><th scope="row">No received speech</th><td>Volume, selected memory, RX frequency, receive DCS, and known station activity.</td></tr>
-<tr><th scope="row">Others cannot hear you</th><td>Stop transmitting. Ask the lead to check TX frequency/DCS, Disable TX, power, authorization, and coverage.</td></tr>
+<tr><th scope="row">Title</th><td>Heights 6</td></tr>
+<tr><th scope="row">RX Freq</th><td><strong>462.38750 MHz</strong>, FM</td></tr>
+<tr><th scope="row">TX Freq</th><td><strong>467.38750 MHz</strong>, FM</td></tr>
+<tr><th scope="row">RX CTCSS/DCS</th><td><strong>331N</strong></td></tr>
+<tr><th scope="row">TX CTCSS/DCS</th><td><strong>331N</strong></td></tr>
+<tr><th scope="row">Talk Around / Reverse Frequency</th><td>Both off</td></tr>
+<tr><th scope="row">Bandwidth / TX Power</th><td>12.5 kHz / power assigned by the radio lead</td></tr>
 </tbody>
 </table>
 
-## Commissioning record
+<p><strong>You should see:</strong> your saved channel in the numbered grid. If saving reports an error, reconnect and check the entry before continuing.</p>
 
-<p>Checked by: _______________________ &nbsp; Date: _______________<br>Receive check: __________ &nbsp; Authorized two-way check: __________<br>Bandwidth / power confirmed: __________________________________</p>
+<p><strong>Protect existing programming:</strong> use SAVE. Do not use DELETE, factory reset, an unknown channel import, or a firmware update during this setup.</p>
 
-<p><strong>Before duty:</strong> charge the battery, confirm the channel, know your callsign, and protect PTT. Use <strong>COM-002</strong> for directed-net calls. For immediate danger, call 911 when available.</p>
+<div class="sources">Project-owner-confirmed frequencies and DCS; supplied editor captures 6–7; BTECH UV-PRO Manual, p. 31 (Talk Around). Draft; the radio lead must verify settings before duty.</div>
 
-<div class="sources">References (accessed October 9, 2026): <a href="https://baofengtech.com/wp-content/uploads/2024/08/BTECHpackaging_UVPRO_Manual_Rev3.pdf">BTECH UV-PRO Manual, Rev. 3</a>, pp. 4–8, 11–15, 22, 31; <a href="https://baofengtech.com/product/uv-pro/">BTECH UV-PRO product page</a>; COM-002; project-owner channel/gesture confirmations and supplied Android captures. Draft requires editor and subject-matter review before publication.</div>
+<!-- pagebreak -->
+
+<p class="lede">Make sure the channel was saved to the radio and works without the phone.</p>
+
+## 6. Select and check Heights 6
+
+<ol class="procedure">
+<li><strong>Reopen the saved channel.</strong> Press and hold its tile, then tap <strong>Edit channel</strong>. Compare both frequencies and both DCS fields with the table on the previous page.</li>
+<li><strong>Return to the grid and tap the Heights 6 tile.</strong> Check that it is selected and that the radio shows the same channel. The captured name <strong>LHH FW</strong> refers to this channel; use the lead's agreed label if different.</li>
+<li><strong>Select Single CH</strong> in the app panel's <strong>Work Mode</strong> row. This makes the first check easier to follow.</li>
+<li><strong>Disconnect the app.</strong> Turn the radio off, then on again with the top knob.</li>
+<li><strong>Find Heights 6 on the radio.</strong> If it is in frequency mode, hold <strong>*</strong> to switch to saved-channel mode. Use <strong>up/down</strong> to select Heights 6. If the keypad is locked, hold <strong>#</strong> to unlock it.</li>
+<li><strong>Ask the radio lead to verify the stored settings.</strong> The lead can inspect the radio's channel-list <strong>Edit</strong> view or read back its settings after reconnecting. The phone's editor alone may show cached data.</li>
+</ol>
+
+<p><strong>You should see:</strong> Heights 6 available after restarting, with the phone disconnected. Normal radio voice operation does not require the phone or internet.</p>
+
+## 7. Listen, then make an authorized radio check
+
+<ol class="procedure">
+<li><strong>Arrange a check with your radio lead.</strong> Have the lead confirm the radio and settings are authorized for this channel. Listen first; avoid emergency traffic.</li>
+<li><strong>Check reception.</strong> Turn the volume up enough to hear the lead clearly. Silence may simply mean nobody is talking.</li>
+<li><strong>When the lead says to call, press the orange side PTT.</strong> Pause briefly, then say your assigned callsign and “radio check.”</li>
+<li><strong>Release PTT to listen.</strong> Confirm that you hear the reply and that the other station heard you clearly.</li>
+</ol>
+
+<div class="sources">BTECH UV-PRO Manual, pp. 4, 7–8; COM-002 net procedures; supplied channel-panel captures. A physical radio check is still required before duty.</div>
+
+<!-- pagebreak -->
+
+<p class="lede">If a step fails, check the matching item below before changing anything else.</p>
+
+## Help when something does not work
+
+<table>
+<thead><tr><th scope="col">Problem</th><th scope="col">What to do</th></tr></thead>
+<tbody>
+<tr><th scope="row">Radio will not turn on</th><td>Check that the battery is charged and fitted securely. Turn the top knob past the click.</td></tr>
+<tr><th scope="row">Buttons do not respond</th><td>At the operating screen, hold <strong>#</strong> to unlock a locked keypad.</td></tr>
+<tr><th scope="row">Phone cannot find the radio</th><td>Check radio power, phone Bluetooth, app permissions, and radio pairing mode. Keep them close; confirm the selected device.</td></tr>
+<tr><th scope="row">Channel cannot be edited</th><td>Ask the lead to check <strong>Device settings → General settings → Lock channel data</strong>. Do not reset the radio.</td></tr>
+<tr><th scope="row">Heights 6 is missing after restart</th><td>Check the channel group and saved-channel mode. Reconnect, repeat SAVE, and have the lead read back the stored settings.</td></tr>
+<tr><th scope="row">No speech is heard</th><td>Check volume, selected channel, RX frequency, and RX DCS. Arrange a known transmission with the lead.</td></tr>
+<tr><th scope="row">The lead cannot hear you</th><td>Ask the lead to check TX frequency, TX DCS, Disable TX, power, and coverage before trying again.</td></tr>
+</tbody>
+</table>
+
+## Ready-to-use checklist
+
+<div class="checklist"><ul>
+<li>Battery charged and antenna attached</li>
+<li>Heights 6 selected on the radio</li>
+<li>Both frequencies and both DCS fields checked</li>
+<li>Bandwidth and power confirmed by the radio lead</li>
+<li>Channel remains saved after restarting</li>
+<li>Reception and authorized two-way check passed</li>
+</ul></div>
+
+<p>Checked by: _______________________ &nbsp; Date: _______________<br>Bandwidth / power: __________________________________________</p>
+
+<p><strong>For net calls:</strong> follow COM-002 and your assigned callsign. For immediate danger, call 911 when available.</p>
+
+<div class="sources">References: <a href="https://baofengtech.com/wp-content/uploads/2024/08/BTECHpackaging_UVPRO_Manual_Rev3.pdf">BTECH UV-PRO Manual, Rev. 3</a>, pp. 4–8, 11–15, 22, 26, 31; <a href="https://baofengtech.com/product/uv-pro/">BTECH UV-PRO product page</a>; COM-002; project-owner confirmations and supplied Android captures/photo, October 9, 2026. Draft requires editor and subject-matter review before publication.</div>
