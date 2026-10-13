@@ -111,9 +111,9 @@ sources:
 <ol class="procedure" start="7" style="counter-reset: step 6">
 <li><strong>Move the sandbags away.</strong></li>
 </ol>
-<figure class="figure figure--full figure--diagram figure--contain sandbag-reset" aria-labelledby="step-7-move-sandbags-caption">
-<img src="../assets/handouts/SKL-001/step-7-move-sandbags.svg" alt="Four completed sandbags have been moved into a line away from the filling fixture.">
-<figcaption id="step-7-move-sandbags-caption">7. Move completed sandbags away from the work area.</figcaption>
+<figure class="figure figure--full figure--contain sandbag-reset" style="--crop-position: 50% 50%" aria-labelledby="skl-001-07-four-flattened-sandbags-isolated-line-art-caption">
+  <img src="../assets/handouts/SKL-001/07-four-flattened-sandbags-isolated-line-art.png" alt="Four sandbags lying in a row.">
+  <figcaption id="skl-001-07-four-flattened-sandbags-isolated-line-art-caption">Four sandbags lying in a row.</figcaption>
 </figure>
 </div>
 </div>
@@ -146,9 +146,9 @@ sources:
 <li>Keep driveways and exits clear.</li>
 <li>Inspect for damage before use.</li>
 </ul>
-<figure class="figure figure--full figure--diagram figure--contain sandbag-pallet" aria-labelledby="pallet-stack-caption">
-<img src="../assets/handouts/SKL-001/pallet-stack.svg" alt="Filled sandbags are stacked low on a pallet with offset joints, clear of the ground.">
-<figcaption id="pallet-stack-caption">Stack low, with joints offset.</figcaption>
+<figure class="figure figure--full figure--contain sandbag-pallet" style="--crop-position: 50% 50%" aria-labelledby="skl-001-50288520-b1c3-4e30-8ce9-d4d45c95d29e-caption">
+  <img src="../assets/handouts/SKL-001/50288520-b1c3-4e30-8ce9-d4d45c95d29e.png" alt="Sandbags stacked on a pallet">
+  <figcaption id="skl-001-50288520-b1c3-4e30-8ce9-d4d45c95d29e-caption">Sandbags should rotate 90-degrees at each layer to interleave like bricks with the bags below</figcaption>
 </figure>
 </div>
 </div>
@@ -164,9 +164,9 @@ sources:
 <li><strong>What needs protection?</strong> Identify vulnerable doors, garages, low windows, and openings.</li>
 <li><strong>Where can the water safely go?</strong> Find an existing drainage path on your property.</li>
 </ol>
-<figure class="figure figure--full figure--diagram figure--contain sandbag-plan sandbag-flow" aria-labelledby="plan-barrier-caption">
-<img src="../assets/handouts/SKL-001/plan-barrier.svg" alt="Plan view of a house: uphill runoff meets a low sandbag line and follows arrows around the doorway and driveway toward an existing safe drainage path.">
-<figcaption id="plan-barrier-caption">Plan a short diversion to an existing safe drainage path.</figcaption>
+<figure class="figure figure--full figure--contain sandbag-plan sandbag-flow" style="--crop-position: 50% 50%" aria-labelledby="skl-001-af91921d-3b9e-4a62-be46-7d5c66124c5d-caption">
+  <img src="../assets/handouts/SKL-001/af91921d-3b9e-4a62-be46-7d5c66124c5d.png" alt="A top down view of a home with sandbags directing water around it.">
+  <figcaption id="skl-001-af91921d-3b9e-4a62-be46-7d5c66124c5d-caption">Use sandbags to redirect water to a safe outlet.  Do not dump your water into your neighbors lawn.</figcaption>
 </figure>
 <h2>Select the barrier location</h2>
 <div class="grid ">
@@ -208,13 +208,13 @@ sources:
 <li><strong>Check the ends.</strong> Connect to suitable higher ground or provide a safe outlet.</li>
 </ol>
 <div class="grid ">
-<figure class="figure figure--full figure--diagram figure--contain sandbag-stacks" aria-labelledby="stagger-courses-caption">
-<img src="../assets/handouts/SKL-001/stagger-courses.svg" alt="Three courses of bags have offset joints; the joints of the middle course cover the centers of the bags below.">
-<figcaption id="stagger-courses-caption">Stagger each course by about half a bag.</figcaption>
+<figure class="figure figure--full figure--contain sandbag-stacks" style="--crop-position: 50% 50%" aria-labelledby="skl-001-5d205686-955c-49b4-8f02-2250a1dc3d48-caption">
+  <img src="../assets/handouts/SKL-001/5d205686-955c-49b4-8f02-2250a1dc3d48.png" alt="Sandbags stacked near a basement window">
+  <figcaption id="skl-001-5d205686-955c-49b4-8f02-2250a1dc3d48-caption">Sandbags staggered around a basement window.</figcaption>
 </figure>
-<figure class="figure figure--full figure--diagram figure--contain sandbag-stacks sandbag-flow" aria-labelledby="wide-base-caption">
-<img src="../assets/handouts/SKL-001/wide-base.svg" alt="Cross-section of a low barrier with three bags at the base, two above, and one at the top; labels identify the water side and protected side.">
-<figcaption id="wide-base-caption">Keep a wide, stepped base.</figcaption>
+<figure class="figure figure--full figure--contain sandbag-stacks sandbag-flow" style="--crop-position: 50% 50%" aria-labelledby="skl-001-c820fe1c-02fd-4e2f-b429-13f6a46bb002-caption">
+  <img src="../assets/handouts/SKL-001/c820fe1c-02fd-4e2f-b429-13f6a46bb002.png" alt="Sandbags stacked to form a stable base.">
+  <figcaption id="skl-001-c820fe1c-02fd-4e2f-b429-13f6a46bb002-caption">As you increase the height of a dyke, increase the width of the dyke as well.</figcaption>
 </figure>
 </div>
 <h2>Inspect the finished barrier</h2>
@@ -253,9 +253,9 @@ sources:
 <li>Avoid directing water toward a neighbor, road, or other doorway.</li>
 <li>Keep the evacuation route open.</li>
 </ul>
-<figure class="figure figure--full figure--diagram figure--contain sandbag-opening sandbag-flow" aria-labelledby="protect-garage-caption">
-<img src="../assets/handouts/SKL-001/protect-garage.svg" alt="A low angled line lies across part of a sloping driveway in front of a garage; an arrow follows the line toward a safe drainage path.">
-<figcaption id="protect-garage-caption">Driveway diversion toward safe drainage.</figcaption>
+<figure class="figure figure--full figure--contain sandbag-opening sandbag-flow" style="--crop-position: 50% 50%" aria-labelledby="skl-001-63e332d2-1f56-4f78-badb-0e49e245b6b6-caption">
+  <img src="../assets/handouts/SKL-001/63e332d2-1f56-4f78-badb-0e49e245b6b6.png" alt="Use sandbags to divert water flow">
+  <figcaption id="skl-001-63e332d2-1f56-4f78-badb-0e49e245b6b6-caption">Use sandbags to divert water flow along safe paths.  If it overtops the sandbags, give it a safe location for the water to flow.</figcaption>
 </figure>
 </div>
 <h2>C. Low windows and utility openings</h2>
@@ -265,9 +265,9 @@ sources:
 <li>Use a low diversion barrier to reduce surface runoff.</li>
 <li>Keep required ventilation, window escape routes, and utility access clear.</li>
 </ul>
-<figure class="figure figure--full figure--diagram figure--contain sandbag-opening" aria-labelledby="protect-low-window-caption">
-<img src="../assets/handouts/SKL-001/protect-low-window.svg" alt="A low sandbag diversion stands in front of a window well while the window and required access remain clear.">
-<figcaption id="protect-low-window-caption">Low window well protection.</figcaption>
+<figure class="figure figure--full figure--contain sandbag-opening" style="--crop-position: 50% 50%" aria-labelledby="skl-001-f71f49ed-f363-404d-8d98-478fa1a752dc-caption">
+  <img src="../assets/handouts/SKL-001/f71f49ed-f363-404d-8d98-478fa1a752dc.png" alt="Sandbags around a door.">
+  <figcaption id="skl-001-f71f49ed-f363-404d-8d98-478fa1a752dc-caption">If you place sandbags around a door, give yourself enough room to enter and exit.</figcaption>
 </figure>
 </div>
 </div>
@@ -280,9 +280,9 @@ sources:
 <h2>1. Water flowing around the ends</h2>
 <p>A line that stops below higher ground may send water around its end.</p>
 <div class="grid sandbag-water-row">
-<figure class="figure figure--full figure--diagram figure--contain sandbag-water sandbag-flow" aria-labelledby="water-around-ends-caption">
-<img src="../assets/handouts/SKL-001/water-around-ends.svg" alt="Runoff follows a curved arrow around the free end of a sandbag line instead of reaching a safe outlet.">
-<figcaption id="water-around-ends-caption">Water flowing around the ends.</figcaption>
+<figure class="figure figure--full figure--contain sandbag-water sandbag-flow" style="--crop-position: 50% 50%" aria-labelledby="skl-001-cf47a864-35e6-475b-896f-179b39975fb8-caption">
+  <img src="../assets/handouts/SKL-001/cf47a864-35e6-475b-896f-179b39975fb8.png" alt="Water burrowing in and underneath a sandbag wall.">
+  <figcaption id="skl-001-cf47a864-35e6-475b-896f-179b39975fb8-caption">Fast moving water is undermining a sandbag installation</figcaption>
 </figure>
 <div><h3>What to do</h3><ul>
 <li>Extend or adjust the line only from safe, dry ground.</li>

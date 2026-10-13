@@ -146,8 +146,8 @@
       "creator": "La Habra Heights Fire Watch handout contributors",
       "source": "Original editable diagram for SKL-001, 2026-10-13",
       "license": "Repository license",
-      "alt": "Four flat bags overlap in a line, with each filled portion covering the previous bag\u2019s folded empty end and water flowing along the row.",
-      "caption": "Top view \u2014 overlap adjoining bags.",
+      "alt": "Four flat bags overlap in a line, with each filled portion covering the previous bag’s folded empty end and water flowing along the row.",
+      "caption": "Top view — overlap adjoining bags.",
       "decorative": false
     },
     {
@@ -298,6 +298,86 @@
       "license": "GPL",
       "alt": "A low barrier of overlapping sandbags extends across a doorway and beyond both sides.",
       "caption": "Stagger sandbags in a square or semi-circular pattern around the door to keep mud and water out.",
+      "decorative": false
+    },
+    {
+      "file": "50288520-b1c3-4e30-8ce9-d4d45c95d29e.png",
+      "type": "illustration",
+      "creator": "Mark Hughes",
+      "source": "ChatGPT / grok",
+      "license": "GPL",
+      "alt": "Sandbags stacked on a pallet",
+      "caption": "Sandbags should rotate 90-degrees at each layer to interleave like bricks with the bags below",
+      "decorative": false
+    },
+    {
+      "file": "af91921d-3b9e-4a62-be46-7d5c66124c5d.png",
+      "type": "illustration",
+      "creator": "Mark Hughes",
+      "source": "grok / OpenAI",
+      "license": "GPL",
+      "alt": "A top down view of a home with sandbags directing water around it.",
+      "caption": "Use sandbags to redirect water to a safe outlet.  Do not dump your water into your neighbors lawn.",
+      "decorative": false
+    },
+    {
+      "file": "07-four-flattened-sandbags-isolated-line-art.png",
+      "type": "illustration",
+      "creator": "Mark Hughes",
+      "source": "Grok / OpenAI",
+      "license": "GPL",
+      "alt": "Four sandbags lying in a row.",
+      "caption": "Four sandbags lying in a row.",
+      "decorative": false
+    },
+    {
+      "file": "c820fe1c-02fd-4e2f-b429-13f6a46bb002.png",
+      "type": "illustration",
+      "creator": "Mark Hughes",
+      "source": "Grok / OpenAI",
+      "license": "GPL",
+      "alt": "Sandbags stacked to form a stable base.",
+      "caption": "As you increase the height of a dyke, increase the width of the dyke as well.",
+      "decorative": false
+    },
+    {
+      "file": "5d205686-955c-49b4-8f02-2250a1dc3d48.png",
+      "type": "illustration",
+      "creator": "Mark Hughes",
+      "source": "Grok / OpenAI",
+      "license": "GPL",
+      "alt": "Sandbags stacked near a basement window",
+      "caption": "Sandbags staggered around a basement window.",
+      "decorative": false
+    },
+    {
+      "file": "63e332d2-1f56-4f78-badb-0e49e245b6b6.png",
+      "type": "photograph",
+      "creator": "Mark Hughes",
+      "source": "Grok / OpenAI",
+      "license": "GPL",
+      "alt": "Use sandbags to divert water flow",
+      "caption": "Use sandbags to divert water flow along safe paths.  If it overtops the sandbags, give it a safe location for the water to flow.",
+      "decorative": false
+    },
+    {
+      "file": "f71f49ed-f363-404d-8d98-478fa1a752dc.png",
+      "type": "illustration",
+      "creator": "Mark Hughes",
+      "source": "Grok / OpenAI",
+      "license": "GPL",
+      "alt": "Sandbags around a door.",
+      "caption": "If you place sandbags around a door, give yourself enough room to enter and exit.",
+      "decorative": false
+    },
+    {
+      "file": "cf47a864-35e6-475b-896f-179b39975fb8.png",
+      "type": "photograph",
+      "creator": "Mark Hughes",
+      "source": "Grok / OpenAI",
+      "license": "GPL",
+      "alt": "Water burrowing in and underneath a sandbag wall.",
+      "caption": "Fast moving water is undermining a sandbag installation",
       "decorative": false
     }
   ]
