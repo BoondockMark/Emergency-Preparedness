@@ -118,6 +118,10 @@ These HTML wrappers are intentionally allowed:
   each pair of pages (N−1 markers for an N-page handout). The build derives the
   page count from these chunks, so adding a page requires only inserting a
   marker and its new content.
+- `<!-- page-title: Planning a Sandbag Barrier -->` — optional first line of a
+  page chunk for a topic-specific title. The renderer escapes this plain text
+  and uses it for that page's single `h1`. Pages without a title marker keep the
+  document title and the automatic continuation suffix.
 
 ## Required review path
 

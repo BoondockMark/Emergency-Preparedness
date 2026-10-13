@@ -124,20 +124,27 @@ export function renderMarkdown(source, { sourcePath, startLine = 1 } = {}) {
 
 export function renderHandout(template, document) {
   const { meta, chunks, sourcePath, chunkStartLines = [] } = document;
-  const pages = chunks.map((chunk, index) => `
-<article class="sheet ${index % 2 === 0 ? 'front' : 'back'}" style="--section-index: ${meta.sectionNumber - 1}">
+  const pages = chunks.map((chunk, index) => {
+    // An optional first-line marker gives a topic page its own title. Keep the
+    // marker's newline so diagnostics retain the original source line numbers.
+    const heading = chunk.match(/^\s*<!--\s*page-title:\s*([^\n]+?)\s*-->[ \t]*(?=\n|$)/i);
+    const title = heading ? heading[1].trim() : index ? `${meta.title} — continued` : meta.title;
+    const body = heading ? chunk.replace(heading[0], heading[0].replace(/[^\n]/g, '')) : chunk;
+    return `
+<article class="sheet ${index % 2 === 0 ? 'front' : 'back'}" data-handout-code="${escapeHtml(meta.code)}" style="--section-index: ${meta.sectionNumber - 1}">
   <div class="edge" aria-label="${escapeHtml(meta.code)}: ${escapeHtml(meta.section)}">${escapeHtml(meta.code)}</div>
   <main class="content">
     <header class="kicker">La Habra Heights Fire Watch · Emergency Preparedness Binder <span class="status">${escapeHtml(meta.status.toUpperCase())}</span></header>
-    <h1${index ? ' class="title--compact"' : ''}>${escapeHtml(index ? `${meta.title} — continued` : meta.title)}</h1>
-    ${renderMarkdown(chunk, { sourcePath, startLine: chunkStartLines[index] ?? 1 })}
+    <h1${index && !heading ? ' class="title--compact"' : ''}>${escapeHtml(title)}</h1>
+    ${renderMarkdown(body, { sourcePath, startLine: chunkStartLines[index] ?? 1 })}
     <footer class="footer">
       <span>${escapeHtml(meta.code)} · v${escapeHtml(meta.version)}</span>
       <span>Last reviewed: ${escapeHtml(meta.lastReviewed)}</span>
       <span>${index + 1} of ${meta.pageCount}</span>
     </footer>
   </main>
-</article>`).join('');
+</article>`;
+  }).join('');
 
   return template
     .replace('{{title}}', escapeHtml(meta.title))

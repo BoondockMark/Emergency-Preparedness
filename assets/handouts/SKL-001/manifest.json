@@ -101,12 +101,192 @@
       "decorative": false
     },
     {
+      "file": "flatten-bag.svg",
+      "type": "diagram",
+      "creator": "La Habra Heights Fire Watch handout contributors",
+      "source": "Original editable diagram for SKL-001, 2026-10-13",
+      "license": "Repository license",
+      "alt": "A partly filled bag lies flat, with sand spread toward the closed end and an empty tail remaining at the opening.",
+      "caption": "Flatten the sand toward the closed end.",
+      "decorative": false
+    },
+    {
+      "file": "fold-bag.svg",
+      "type": "diagram",
+      "creator": "La Habra Heights Fire Watch handout contributors",
+      "source": "Original editable diagram for SKL-001, 2026-10-13",
+      "license": "Repository license",
+      "alt": "The bag opening folds underneath the filled portion, leaving a flat bag without a tied neck.",
+      "caption": "Fold the empty end underneath.",
+      "decorative": false
+    },
+    {
+      "file": "pallet-stack.svg",
+      "type": "diagram",
+      "creator": "La Habra Heights Fire Watch handout contributors",
+      "source": "Original editable diagram for SKL-001, 2026-10-13",
+      "license": "Repository license",
+      "alt": "Filled sandbags are stacked low on a pallet with offset joints, clear of the ground.",
+      "caption": "Stack low on stable support.",
+      "decorative": false
+    },
+    {
+      "file": "plan-barrier.svg",
+      "type": "diagram",
+      "creator": "La Habra Heights Fire Watch handout contributors",
+      "source": "Original editable diagram for SKL-001, 2026-10-13",
+      "license": "Repository license",
+      "alt": "Plan view of a house: uphill runoff meets a low sandbag line and follows arrows around the doorway and driveway toward an existing safe drainage path.",
+      "caption": "Plan the diversion before placing bags.",
+      "decorative": false
+    },
+    {
+      "file": "overlap-bags.svg",
+      "type": "diagram",
+      "creator": "La Habra Heights Fire Watch handout contributors",
+      "source": "Original editable diagram for SKL-001, 2026-10-13",
+      "license": "Repository license",
+      "alt": "Four flat bags overlap in a line, with each filled portion covering the previous bag\u2019s folded empty end and water flowing along the row.",
+      "caption": "Top view \u2014 overlap adjoining bags.",
+      "decorative": false
+    },
+    {
+      "file": "stagger-courses.svg",
+      "type": "diagram",
+      "creator": "La Habra Heights Fire Watch handout contributors",
+      "source": "Original editable diagram for SKL-001, 2026-10-13",
+      "license": "Repository license",
+      "alt": "Three courses of bags have offset joints; the joints of the middle course cover the centers of the bags below.",
+      "caption": "Stagger each course by about half a bag.",
+      "decorative": false
+    },
+    {
+      "file": "wide-base.svg",
+      "type": "diagram",
+      "creator": "La Habra Heights Fire Watch handout contributors",
+      "source": "Original editable diagram for SKL-001, 2026-10-13",
+      "license": "Repository license",
+      "alt": "Cross-section of a low barrier with three bags at the base, two above, and one at the top; labels identify the water side and protected side.",
+      "caption": "Keep a wide, stepped base.",
+      "decorative": false
+    },
+    {
+      "file": "protect-garage.svg",
+      "type": "diagram",
+      "creator": "La Habra Heights Fire Watch handout contributors",
+      "source": "Original editable diagram for SKL-001, 2026-10-13",
+      "license": "Repository license",
+      "alt": "A low angled line lies across part of a sloping driveway in front of a garage; an arrow follows the line toward a safe drainage path.",
+      "caption": "Driveway diversion toward safe drainage.",
+      "decorative": false
+    },
+    {
+      "file": "protect-low-window.svg",
+      "type": "diagram",
+      "creator": "La Habra Heights Fire Watch handout contributors",
+      "source": "Original editable diagram for SKL-001, 2026-10-13",
+      "license": "Repository license",
+      "alt": "A low sandbag diversion stands in front of a window well while the window and required access remain clear.",
+      "caption": "Low window well protection.",
+      "decorative": false
+    },
+    {
+      "file": "water-around-ends.svg",
+      "type": "diagram",
+      "creator": "La Habra Heights Fire Watch handout contributors",
+      "source": "Original editable diagram for SKL-001, 2026-10-13",
+      "license": "Repository license",
+      "alt": "Runoff follows a curved arrow around the free end of a sandbag line instead of reaching a safe outlet.",
+      "caption": "Water flowing around the ends.",
+      "decorative": false
+    },
+    {
+      "file": "water-seepage.svg",
+      "type": "diagram",
+      "creator": "La Habra Heights Fire Watch handout contributors",
+      "source": "Original editable diagram for SKL-001, 2026-10-13",
+      "license": "Repository license",
+      "alt": "Labeled arrows pass through joints and underneath the sandbag barrier, showing that bags are not watertight.",
+      "caption": "Water seeping through the barrier.",
+      "decorative": false
+    },
+    {
+      "file": "water-pooling.svg",
+      "type": "diagram",
+      "creator": "La Habra Heights Fire Watch handout contributors",
+      "source": "Original editable diagram for SKL-001, 2026-10-13",
+      "license": "Repository license",
+      "alt": "A curved sandbag line traps a pool on the building side; eroded ground beneath the end indicates possible undercutting.",
+      "caption": "Water pooling behind the barrier.",
+      "decorative": false
+    },
+    {
+      "file": "mistake-aligned-joints.svg",
+      "type": "diagram",
+      "creator": "La Habra Heights Fire Watch handout contributors",
+      "source": "Original editable diagram for SKL-001, 2026-10-13",
+      "license": "Repository license",
+      "alt": "Wrong: bag joints line up vertically. Right: the upper bag bridges the joint below.",
+      "caption": "1. Aligned vertical joints",
+      "decorative": false
+    },
+    {
+      "file": "mistake-overfilled.svg",
+      "type": "diagram",
+      "creator": "La Habra Heights Fire Watch handout contributors",
+      "source": "Original editable diagram for SKL-001, 2026-10-13",
+      "license": "Repository license",
+      "alt": "Wrong: an overfilled rounded bag cannot settle tightly. Right: a partly filled bag lies flat and remains flexible.",
+      "caption": "2. Overfilled bags",
+      "decorative": false
+    },
+    {
+      "file": "mistake-narrow-base.svg",
+      "type": "diagram",
+      "creator": "La Habra Heights Fire Watch handout contributors",
+      "source": "Original editable diagram for SKL-001, 2026-10-13",
+      "license": "Repository license",
+      "alt": "Wrong: four bags form a narrow column. Right: a low stepped stack has a broad stable base.",
+      "caption": "3. Tall, narrow stacks",
+      "decorative": false
+    },
+    {
+      "file": "mistake-open-gaps.svg",
+      "type": "diagram",
+      "creator": "La Habra Heights Fire Watch handout contributors",
+      "source": "Original editable diagram for SKL-001, 2026-10-13",
+      "license": "Repository license",
+      "alt": "Wrong: separated bags leave a gap. Right: flattened bags overlap with empty ends folded underneath.",
+      "caption": "4. Open gaps and loose ends",
+      "decorative": false
+    },
+    {
+      "file": "mistake-blocked-drain.svg",
+      "type": "diagram",
+      "creator": "La Habra Heights Fire Watch handout contributors",
+      "source": "Original editable diagram for SKL-001, 2026-10-13",
+      "license": "Repository license",
+      "alt": "Wrong: a sandbag blocks a drain grate. Right: the drain is clear, with a labeled runoff arrow entering it.",
+      "caption": "5. Blocking drainage",
+      "decorative": false
+    },
+    {
+      "file": "mistake-unsafe-diversion.svg",
+      "type": "diagram",
+      "creator": "La Habra Heights Fire Watch handout contributors",
+      "source": "Original editable diagram for SKL-001, 2026-10-13",
+      "license": "Repository license",
+      "alt": "Wrong: runoff arrows point toward a neighbor or road. Right: a low line steers water to an existing safe outlet on the property.",
+      "caption": "6. Unsafe diversion",
+      "decorative": false
+    },
+    {
       "file": "d7168f45-a11f-4ace-9851-2d6b47fd6ffe.png",
-      "type": "photograph",
+      "type": "illustration",
       "creator": "Mark Hughes",
       "source": "grok / OpenAI",
       "license": "GPL",
-      "alt": "Sandbags staggered along the side a stream bed shielding a door from runoff.",
+      "alt": "An overlapping sandbag line follows a runoff channel past a doorway.",
       "caption": "Use staggered sandbags to guide water towards an outlet.  For stopping water, create a pyramidal berm.",
       "decorative": false
     },
@@ -116,7 +296,7 @@
       "creator": "Mark Hughes",
       "source": "OpenAI/Grok",
       "license": "GPL",
-      "alt": "Sandbags protecting door",
+      "alt": "A low barrier of overlapping sandbags extends across a doorway and beyond both sides.",
       "caption": "Stagger sandbags in a square or semi-circular pattern around the door to keep mud and water out.",
       "decorative": false
     }
