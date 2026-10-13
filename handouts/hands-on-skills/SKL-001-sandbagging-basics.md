@@ -96,14 +96,24 @@ sources:
 <div class="warning warning--danger">Leave the area if water is moving fast, rising around you, or cutting off your exit. Do not enter flowing water or build beside an unstable slope or wall.</div>
 
 ## 1. Pick the route
-
+<div>
 <p>Find where water arrives and a safe outlet. Set bags on firm ground <strong>uphill of the opening</strong>. Lead water to an existing drain path on your property—never toward a neighbor, road, or another doorway. Keep drains and your exit open; watch for pooling behind the line.</p>
 
-<figure class="figure figure--half figure--left figure--crop-square" align="center" style="--crop-position: 26% 24%" aria-labelledby="skl-001-01-runoff-diversion-plan-caption">
-  <img src="../assets/handouts/SKL-001/01-runoff-diversion-plan.svg" alt="Place sandbags parallel to running water to help prevent overtopping">
-  <figcaption id="skl-001-01-runoff-diversion-plan-caption">Place sandbags parallel to running water to help prevent overtopping</figcaption>
+<figure class="figure figure--half figure--left" style="--crop-position: 50% 50%" aria-labelledby="skl-001-d7168f45-a11f-4ace-9851-2d6b47fd6ffe-caption">
+  <img src="../assets/handouts/SKL-001/d7168f45-a11f-4ace-9851-2d6b47fd6ffe.png" alt="Sandbags staggered along the side a stream bed shielding a door from runoff.">
+  <figcaption id="skl-001-d7168f45-a11f-4ace-9851-2d6b47fd6ffe-caption">Use staggered sandbags to guide water towards an outlet.  For stopping water, create a pyramidal berm.</figcaption>
 </figure>
+
+<!-- pagebreak -->
+
+<figure class="figure figure--half figure--table" style="--crop-position: 50% 50%" aria-labelledby="skl-001-bdf6c66b-52ef-4ce1-ab30-8bb75678146c-caption">
+  <img src="../assets/handouts/SKL-001/bdf6c66b-52ef-4ce1-ab30-8bb75678146c.png" alt="Sandbags protecting door">
+  <figcaption id="skl-001-bdf6c66b-52ef-4ce1-ab30-8bb75678146c-caption">Stagger sandbags in a square or semi-circular pattern around the door to keep mud and water out.</figcaption>
+</figure>
+</div>
 <div class="figure-clear"></div>
+
+
 
 <!-- pagebreak -->
 
@@ -111,7 +121,7 @@ sources:
 
 <ol class="procedure">
 <li>Clear loose debris and fill low spots first. Keep the line short, low, and away from a building wall.</li>
-<li>Lay bags flat, <strong>folded end underneath and toward incoming water</strong>. Lap the filled part over the previous bag's empty end; press them together.</li>
+<li>Lay bags flat, <strong>folded end underneath and toward incoming water</strong>. Lap the filled part over the previous bag's empty end; press them together.&nbsp; Walk on the sandbags to lock them in place.</li>
 <li>For a second layer, cover joints below. Widen the base as height increases; avoid a tall, narrow wall.</li>
 </ol>
 
@@ -119,6 +129,8 @@ sources:
   <img src="../assets/handouts/SKL-001/lay-sandbags.svg" style="height: 1.5in" alt="Top view shows overlapping bags with folded ends facing incoming runoff; section view shows a wider base under a staggered second layer.">
   <figcaption id="lay-caption"><strong>Top and side views.</strong> Overlap the tails; stagger joints and widen the base. <span class="credit">Original Fire Watch diagram, after USACE §2.3.</span></figcaption>
 </figure>
+
+
 
 <p><strong>Recheck from safe ground:</strong> check for water around the ends, through gaps, or pooling behind the line. Bags redirect shallow water but do not form a watertight seal. Leave if conditions worsen.</p>
 
@@ -129,3 +141,5 @@ sources:
 <div class="sources">U.S. Army Corps of Engineers, <em>Flood Fight Handbook</em> (2022), §2.1–2.3: www.mvp.usace.army.mil/Portals/57/MVP%20Flood%20Fight%20Handbook%202022.pdf. RiverOakRanch, “Filling Sandbags the Easy Way, With Sandbag Tubes” (2010): www.instructables.com/Filling-Sandbags-the-Easy-way-with-Sandbag-Tubes/. Accessed 2026-09-24.</div>
 
 <div class="sources">USACE, <em>Flood Fight Handbook</em> (2022), §2.2–2.3: www.mvp.usace.army.mil/Portals/57/MVP%20Flood%20Fight%20Handbook%202022.pdf.</div>
+
+

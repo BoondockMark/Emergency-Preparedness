@@ -99,6 +99,26 @@
       "alt": "Place sandbags parallel to running water to help prevent overtopping",
       "caption": "Place sandbags parallel to running water to help prevent overtopping",
       "decorative": false
+    },
+    {
+      "file": "d7168f45-a11f-4ace-9851-2d6b47fd6ffe.png",
+      "type": "photograph",
+      "creator": "Mark Hughes",
+      "source": "grok / OpenAI",
+      "license": "GPL",
+      "alt": "Sandbags staggered along the side a stream bed shielding a door from runoff.",
+      "caption": "Use staggered sandbags to guide water towards an outlet.  For stopping water, create a pyramidal berm.",
+      "decorative": false
+    },
+    {
+      "file": "bdf6c66b-52ef-4ce1-ab30-8bb75678146c.png",
+      "type": "illustration",
+      "creator": "Mark Hughes",
+      "source": "OpenAI/Grok",
+      "license": "GPL",
+      "alt": "Sandbags protecting door",
+      "caption": "Stagger sandbags in a square or semi-circular pattern around the door to keep mud and water out.",
+      "decorative": false
     }
   ]
 }

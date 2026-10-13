@@ -17,5 +17,8 @@
   },
   "dependencies": {
     "puppeteer": "^25.12.0"
+  },
+  "allowScripts": {
+    "puppeteer@25.12.0": true
   }
 }
