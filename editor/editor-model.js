@@ -70,3 +70,20 @@ export function setHandoutStatus(source, status) {
   const updated = frontMatter[0].replace(/^status:\s*.*$/m, `status: ${status}`);
   return updated + source.slice(frontMatter[0].length);
 }
+
+// Keep image operations tied to an exact occurrence, including repeated uses
+// of the same asset and figures nested in authored component wrappers.
+export function figureRanges(source) {
+  return [...source.matchAll(/<figure\b[^>]*>[\s\S]*?<\/figure\s*>/gi)].map(match => {
+    const start = match.index;
+    const figureEnd = start + match[0].length;
+    const clear = source.slice(figureEnd).match(/^\s*<div\s+class=["']figure-clear["']\s*>\s*<\/div>/i);
+    const end = figureEnd + (clear?.[0].length || 0);
+    const file = match[0].match(/\bsrc\s*=\s*["']\.\.\/assets\/handouts\/[^/]+\/([^"'?#]+)["']/i)?.[1];
+    return { start, end, figureEnd, text: source.slice(start, end), file };
+  });
+}
+
+export function figureAtOffset(source, offset) {
+  return figureRanges(source).find(figure => offset >= figure.start && offset < figure.end) || null;
+}

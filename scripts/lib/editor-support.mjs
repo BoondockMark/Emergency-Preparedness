@@ -99,8 +99,12 @@ export async function addAsset(root, code, request) {
 /** Prepare and validate an upload without changing the published asset tree. */
 export async function stageAsset(stagingDirectory, root, code, request, reservedFiles = []) {
   const { manifest } = await readManifest(root, code);
-  const file = safeAssetName(request.name, request.mimeType);
-  if (manifest.assets.some(asset => asset.file === file) || reservedFiles.includes(file)) throw Error(`${file} already exists`);
+  const originalName = safeAssetName(request.name, request.mimeType);
+  const extension = path.extname(originalName);
+  const stem = path.basename(originalName, extension);
+  const reserved = new Set([...manifest.assets.map(asset => asset.file), ...reservedFiles]);
+  let file = originalName;
+  for (let suffix = 2; reserved.has(file); suffix += 1) file = `${stem}-${suffix}${extension}`;
   const entry = {
     file, type: request.type, creator: request.creator?.trim(), source: request.source?.trim(),
     license: request.license?.trim(), alt: request.decorative ? '' : request.alt?.trim(),
@@ -161,12 +165,17 @@ export async function deleteAsset(root, code, file, handoutSource) {
 
 export function figureMarkup(code, asset, options = {}) {
   const escape = value => String(value).replace(/[&<>"']/g, character => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[character]);
+  const customWidth = typeof options.width === 'number' && Number.isFinite(options.width) ? Math.max(10, Math.min(100, options.width)) : null;
   const width = options.width === 'half' ? 'figure--half' : 'figure--full';
-  const align = width === 'figure--half' && ['left', 'right'].includes(options.align) ? ` figure--${options.align}` : '';
+  const narrow = width === 'figure--half' || (customWidth !== null && customWidth < 100);
+  const align = narrow && ['left', 'right'].includes(options.align) ? ` figure--${options.align}` : '';
   const crop = ['3x2', '4x3', 'square'].includes(options.crop) ? ` figure--crop-${options.crop}` : options.crop === 'contain' ? ' figure--contain' : '';
-  const position = /^\d{1,3}% \d{1,3}%$/.test(options.position || '') ? ` style="--crop-position: ${options.position}"` : '';
+  const styles = [];
+  if (customWidth !== null) styles.push(`width: ${customWidth}%`);
+  if (/^\d{1,3}% \d{1,3}%$/.test(options.position || '')) styles.push(`--crop-position: ${options.position}`);
+  const position = styles.length ? ` style="${styles.join('; ')}"` : '';
   const captionId = `${code.toLowerCase()}-${asset.file.replace(/\.[^.]+$/, '').replace(/[^a-z0-9-]/g, '-')}-caption`;
   const labelled = asset.caption ? ` aria-labelledby="${captionId}"` : '';
   const caption = asset.caption ? `\n  <figcaption id="${captionId}">${escape(asset.caption)}</figcaption>` : '';
-  return `<figure class="figure ${width}${align}${crop}"${position}${labelled}>\n  <img src="../assets/handouts/${code}/${asset.file}" alt="${escape(asset.alt)}">${caption}\n</figure>${width === 'figure--half' ? '\n<div class="figure-clear"></div>' : ''}`;
+  return `<figure class="figure ${width}${align}${crop}"${position}${labelled}>\n  <img src="../assets/handouts/${code}/${asset.file}" alt="${escape(asset.alt)}">${caption}\n</figure>${narrow ? '\n<div class="figure-clear"></div>' : ''}`;
 }

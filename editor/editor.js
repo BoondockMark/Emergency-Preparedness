@@ -1,4 +1,4 @@
-import { handoutNeedsFixing, handoutOptionLabel, indentSelection, prefixLines, readHandoutStatus, selectionDetails, setHandoutStatus } from './editor-model.js';
+import { figureAtOffset, figureRanges, handoutNeedsFixing, handoutOptionLabel, indentSelection, prefixLines, readHandoutStatus, selectionDetails, setHandoutStatus } from './editor-model.js';
 
 const select = document.querySelector('#handout');
 const handoutSearch = document.querySelector('#handout-search');
@@ -24,6 +24,11 @@ const imageDialog = document.querySelector('#image-dialog');
 const assetList = document.querySelector('#asset-list');
 let opened = { source: '', revision: '' };
 let selectedAsset = '';
+let imageContext;
+let imageBusy = false;
+let uploadPreviewUrl;
+let visualSelection;
+let pendingVisualFocus;
 let previewTimer;
 let validationTimer;
 let validationSequence = 0;
@@ -44,10 +49,16 @@ const attachedVisualDocuments = new WeakSet();
 function authoredHtml(element) {
   const clone = element.cloneNode(true);
   [clone, ...clone.querySelectorAll('*')].forEach(candidate => {
+    if (candidate.hasAttribute('data-editor-tabindex')) candidate.removeAttribute('tabindex');
+    candidate.removeAttribute('data-editor-tabindex');
+    candidate.removeAttribute('data-image-editable');
     candidate.removeAttribute('data-source-path');
     candidate.removeAttribute('data-source-line');
     candidate.removeAttribute('data-visual-block');
     candidate.removeAttribute('contenteditable');
+    if (candidate.matches('img') && candidate.getAttribute('src')?.startsWith('../assets/handouts/')) {
+      candidate.setAttribute('src', candidate.getAttribute('src').split('?')[0]);
+    }
   });
   return clone.outerHTML;
 }
@@ -91,14 +102,40 @@ function attachVisualEditor() {
   if (!document || attachedVisualDocuments.has(document)) return;
   attachedVisualDocuments.add(document);
   const blocks = visualBlocks(document, source.value);
+  visualSelection = undefined;
   const blockByIdentifier = new Map(blocks.map(block => [block.identifier, block]));
   document.querySelectorAll('.content').forEach(content => {
     content.contentEditable = 'false';
   });
   blocks.forEach(block => { block.element.contentEditable = 'true'; });
   const style = document.createElement('style');
-  style.textContent = '[data-visual-block][contenteditable="true"] { outline: 2px solid transparent; } [data-visual-block][contenteditable="true"]:focus { outline-color: #2563eb; outline-offset: 2px; }';
+  style.textContent = '[data-visual-block][contenteditable="true"] { outline: 2px solid transparent; } [data-visual-block][contenteditable="true"]:focus { outline-color: #2563eb; outline-offset: 2px; } figure[data-image-editable] { cursor: pointer; outline: 2px solid transparent; outline-offset: 2px; } figure[data-image-editable]:hover, figure[data-image-editable]:focus { outline-color: #2563eb; }';
   document.head.append(style);
+  const imageRange = figure => {
+    const block = blockByIdentifier.get(figure.closest('[data-visual-block]')?.dataset.visualBlock);
+    if (!block) return null;
+    const figures = [block.element, ...block.element.querySelectorAll('figure')].filter(element => element.matches('figure'));
+    return figureRanges(source.value).filter(range => range.start >= block.start && range.start < block.end)[figures.indexOf(figure)] || null;
+  };
+  document.querySelectorAll('.content figure').forEach(figure => {
+    figure.contentEditable = 'false';
+    figure.dataset.imageEditable = 'true';
+    if (!figure.hasAttribute('tabindex')) { figure.tabIndex = 0; figure.dataset.editorTabindex = 'true'; }
+  });
+  document.addEventListener('focusin', event => {
+    const block = blockByIdentifier.get(event.target.closest?.('[data-visual-block]')?.dataset.visualBlock);
+    if (block) visualSelection = block;
+  });
+  document.addEventListener('click', event => {
+    const block = blockByIdentifier.get(event.target.closest?.('[data-visual-block]')?.dataset.visualBlock);
+    if (block) visualSelection = block;
+    const figure = event.target.closest?.('figure[data-image-editable]');
+    if (!figure) return;
+    event.preventDefault();
+    const range = imageRange(figure);
+    if (range) openImageDialog(range);
+    else message.textContent = 'This image could not be located. Switch to Source to edit it.';
+  });
   document.body.addEventListener('input', event => {
     const element = event.target.nodeType === Node.ELEMENT_NODE ? event.target : event.target.parentElement;
     const blockElement = element?.closest('[data-visual-block]');
@@ -121,11 +158,23 @@ function attachVisualEditor() {
     updateStatusControl(); renderSoon();
   });
   document.addEventListener('keydown', event => {
+    const figure = event.target.closest?.('figure[data-image-editable]');
+    if (figure && ['Enter', ' '].includes(event.key)) {
+      event.preventDefault();
+      const range = imageRange(figure);
+      if (range) openImageDialog(range);
+    }
     if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 's') {
       event.preventDefault();
       save();
     }
   });
+  if (pendingVisualFocus !== undefined) {
+    const figure = [...document.querySelectorAll('.content figure')].find(element => imageRange(element)?.start === pendingVisualFocus);
+    pendingVisualFocus = undefined;
+    figure?.focus({ preventScroll: true });
+    figure?.scrollIntoView({ block: 'center' });
+  }
 }
 function showEditorMode(mode) {
   editorMode = mode;
@@ -139,6 +188,7 @@ function showEditorMode(mode) {
   else { invalidateVisualRender(); source.focus(); }
 }
 function invalidateVisualRender() {
+  visualSelection = undefined;
   visualRenderSequence += 1;
   visualRenderController?.abort();
   visualRenderController = undefined;
@@ -152,7 +202,11 @@ async function renderVisual() {
   try {
     const html = await request('/api/render', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(snapshot), signal: controller.signal });
     if (sequence !== visualRenderSequence || editorMode !== 'visual' || !isCurrentBuffer(snapshot)) return;
-    visual.addEventListener('load', attachVisualEditor, { once: true });
+    const scrollY = visual.contentWindow?.scrollY || 0;
+    visual.addEventListener('load', () => {
+      visual.contentWindow.scrollTo(0, scrollY);
+      attachVisualEditor();
+    }, { once: true });
     visual.srcdoc = html;
   } catch (error) {
     if (error.name !== 'AbortError' && sequence === visualRenderSequence) message.textContent = `Visual editor: ${error.message}. Switch to Source to correct the document.`;
@@ -263,6 +317,7 @@ function renderSoon() {
   dirty(); writeDraft(); updateCursorStatus(); clearTimeout(previewTimer);
   previewTimer = setTimeout(render, 350);
   clearTimeout(validationTimer);
+  validationState.textContent = 'Checking syntax'; validationState.className = 'checking';
   validationTimer = setTimeout(validate, 100);
 }
 function showIssues(findings) {
@@ -348,7 +403,7 @@ async function validate() {
     const layout = await request('/api/validate', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ ...payload, phase: 'layout' }) });
     if (sequence !== validationSequence) return;
     showIssues(layout.issues);
-    validationState.textContent = layout.valid ? 'No issues' : `${layout.issues.length} issue${layout.issues.length === 1 ? '' : 's'}`;
+    validationState.textContent = layout.issues.length ? `${layout.issues.length} issue${layout.issues.length === 1 ? '' : 's'}` : 'No issues';
     updateHandout(payload.path, { formatting: layout.valid ? 'valid' : 'error' });
     validationState.className = '';
   } catch (error) {
@@ -360,7 +415,7 @@ async function render() {
   renderController?.abort();
   renderController = new AbortController();
   try {
-    const html = await request('/api/render', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ path: opened.path || select.value, source: source.value }), signal: renderController.signal });
+    const html = await request('/api/render', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(bufferSnapshot()), signal: renderController.signal });
     if (sequence !== renderSequence) return;
     preview.srcdoc = html;
     message.textContent = '';
@@ -377,6 +432,7 @@ async function openHandout({ discardCurrentDraft = false } = {}) {
       if (discardCurrentDraft) clearDraft(previousPath);
     }
     opened = await request(`/api/handout?path=${encodeURIComponent(select.value)}&session=${encodeURIComponent(session)}`);
+    imageContext = undefined; pendingVisualFocus = undefined;
     source.value = opened.source; selectedAsset = ''; showAssets(); updateStatusControl(); dirty();
     const draft = readDraft(opened.path);
     const canRestore = draft && typeof draft.source === 'string' && draft.source !== opened.source;
@@ -414,7 +470,7 @@ async function save() {
       }
     }
     const result = await request('/api/save', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ ...snapshot, revision: opened.revision }) });
-    opened = { ...opened, ...snapshot, revision: result.revision, assets: opened.assets.map(asset => ({ ...asset, pending: false })) }; showAssets(); updateHandout(snapshot.path, { status: result.status }); clearDraft(); dirty(); message.textContent = 'Saved atomically with pending assets.'; return true;
+    opened = { ...opened, ...snapshot, revision: result.revision, assets: opened.assets.map(asset => ({ ...asset, pending: false })) }; showAssets(); updateHandout(snapshot.path, { status: result.status }); clearDraft(); dirty(); message.textContent = 'Saved.'; return true;
   } catch (error) { message.textContent = `Not saved: ${error.message}`; return false; }
 }
 function insert(button) {
@@ -438,97 +494,298 @@ function insert(button) {
 }
 function imageOptions() {
   return {
-    width: document.querySelector('#image-width').value,
+    width: document.querySelector('#image-width').value === 'custom' ? Number(document.querySelector('#image-size').value) : document.querySelector('#image-width').value,
     align: document.querySelector('#image-align').value,
     crop: document.querySelector('#image-crop').value,
     position: `${document.querySelector('#image-x').value}% ${document.querySelector('#image-y').value}%`
   };
 }
 function selectedFigure() {
-  const cursor = source.selectionStart;
-  const before = source.value.lastIndexOf('<figure', cursor);
-  if (before < 0) return null;
-  let end = source.value.indexOf('</figure>', before);
-  if (end < cursor) return null;
-  end += '</figure>'.length;
-  const clear = source.value.slice(end).match(/^\n<div class="figure-clear"><\/div>/);
-  if (clear) end += clear[0].length;
-  const text = source.value.slice(before, end);
-  const file = text.match(/\.\.\/assets\/handouts\/[^/]+\/([^"?#]+)/)?.[1];
-  return { start: before, end, text, file };
+  return figureAtOffset(source.value, source.selectionStart);
+}
+function parseFigure(markup) {
+  return new DOMParser().parseFromString(markup, 'text/html').querySelector('figure');
+}
+function assetUrl(file) {
+  return `/assets/handouts/${encodeURIComponent(opened.code)}/${encodeURIComponent(file)}?session=${encodeURIComponent(session)}&path=${encodeURIComponent(opened.path)}`;
+}
+function imageError(error = '') {
+  const output = document.querySelector('#image-error');
+  output.textContent = error; output.hidden = !error;
+}
+function clearUploadPreview() {
+  if (uploadPreviewUrl) URL.revokeObjectURL(uploadPreviewUrl);
+  uploadPreviewUrl = undefined;
+}
+function refreshImageControls() {
+  const target = imageContext?.figure;
+  const upload = document.querySelector('#image-file').files[0];
+  document.querySelector('#image-upload-details').hidden = !upload;
+  imageDialog.querySelector('fieldset').disabled = imageBusy;
+  document.querySelector('#image-file').disabled = imageBusy;
+  document.querySelector('#apply-image').textContent = target ? (selectedAsset === target.file ? 'Apply changes' : 'Replace image') : 'Insert image';
+  document.querySelector('#apply-image').disabled = imageBusy || !selectedAsset || Boolean(upload);
+  document.querySelector('#upload-image').textContent = target ? 'Upload and replace' : 'Upload and insert';
+  document.querySelector('#upload-image').disabled = imageBusy;
+  document.querySelector('#remove-image').hidden = !target;
+  document.querySelector('#remove-image').disabled = imageBusy;
+  document.querySelector('#insert-another-image').hidden = !target;
+  document.querySelector('#insert-another-image').disabled = imageBusy;
+  const selected = opened.assets?.find(asset => asset.file === selectedAsset);
+  document.querySelector('#delete-image').disabled = imageBusy || !selected || selected.pending;
+  document.querySelector('#cancel-assets').disabled = imageBusy;
+  const size = Number(document.querySelector('#image-size').value);
+  document.querySelector('#image-size-value').textContent = `${size}%`;
+  document.querySelector('#image-align').disabled = size === 100;
+  const cropped = ['3x2', '4x3', 'square'].includes(document.querySelector('#image-crop').value);
+  document.querySelector('#image-x').disabled = !cropped;
+  document.querySelector('#image-y').disabled = !cropped;
+  const figure = document.querySelector('#image-placement-preview');
+  const image = document.querySelector('#image-preview');
+  figure.hidden = !selected && !uploadPreviewUrl;
+  document.querySelector('#image-preview-empty').hidden = !figure.hidden;
+  if (!figure.hidden) {
+    image.src = uploadPreviewUrl || assetUrl(selected.file);
+    image.alt = upload ? document.querySelector('#image-alt').value : selected.alt;
+    const authoredCaption = target?.file === selectedAsset ? parseFigure(target.text)?.querySelector('figcaption')?.textContent : undefined;
+    document.querySelector('#image-preview-caption').textContent = upload ? document.querySelector('#image-caption').value : authoredCaption ?? selected.caption ?? '';
+  }
+  figure.style.width = `${size}%`;
+  figure.style.marginLeft = size < 100 && document.querySelector('#image-align').value === 'right' ? 'auto' : '0';
+  image.style.aspectRatio = ({ '3x2': '3 / 2', '4x3': '4 / 3', square: '1' })[document.querySelector('#image-crop').value] || 'auto';
+  image.style.objectFit = cropped ? 'cover' : 'contain';
+  image.style.objectPosition = imageOptions().position;
+}
+function loadImageOptions(range) {
+  const figure = range && parseFigure(range.text);
+  const width = figure?.style.width.match(/^(\d+(?:\.\d+)?)%$/)?.[1];
+  const size = width ? Math.max(10, Math.min(100, Number(width))) : figure?.classList.contains('figure--half') ? 50 : 100;
+  document.querySelector('#image-width').value = width ? 'custom' : size === 50 ? 'half' : 'full';
+  document.querySelector('#image-size').value = size;
+  document.querySelector('#image-align').value = figure?.classList.contains('figure--right') ? 'right' : 'left';
+  document.querySelector('#image-crop').value = ['3x2', '4x3', 'square'].find(crop => figure?.classList.contains(`figure--crop-${crop}`)) || (figure?.classList.contains('figure--contain') ? 'contain' : '');
+  const position = figure?.style.getPropertyValue('--crop-position').match(/(\d+(?:\.\d+)?)%\s+(\d+(?:\.\d+)?)%/);
+  document.querySelector('#image-x').value = position?.[1] || 50;
+  document.querySelector('#image-y').value = position?.[2] || 50;
+}
+function openImageDialog(figure = null, anchor) {
+  if (!opened.path || imageBusy) return;
+  clearUploadPreview();
+  document.querySelector('#image-form').reset();
+  document.querySelector('#image-alt').disabled = false;
+  document.querySelector('#image-alt').required = true;
+  const block = anchor || (editorMode === 'visual' && visualSelection);
+  imageContext = {
+    snapshot: bufferSnapshot(), figure,
+    anchor: block ? { start: block.start, end: block.end } : null,
+    insertion: editorMode === 'source' && !anchor ? { start: source.selectionStart, end: source.selectionEnd } : null
+  };
+  selectedAsset = figure?.file || '';
+  loadImageOptions(figure);
+  const position = document.querySelector('#image-insert-position');
+  position.value = block ? 'after' : 'end';
+  position.querySelector('[value="before"]').disabled = !block;
+  position.querySelector('[value="after"]').disabled = !block;
+  document.querySelector('#image-insert-location').hidden = Boolean(figure) || (editorMode === 'source' && !anchor);
+  document.querySelector('#image-dialog-title').textContent = figure ? 'Edit image' : 'Insert image';
+  document.querySelector('#image-context').textContent = figure ? `Editing ${figure.file || 'this image'}. Choose another image to replace it, or adjust its size below.` : editorMode === 'source' ? 'The image will be inserted at the source cursor.' : block ? 'Insert beside the paragraph or section you selected.' : 'The image will be added at the end of the handout. Select a paragraph first to insert beside it.';
+  imageError(); showAssets(); refreshImageControls();
+  if (!imageDialog.open) imageDialog.showModal();
 }
 function showAssets() {
+  document.querySelector('#asset-empty').hidden = Boolean(opened.assets?.length);
   assetList.replaceChildren(...(opened.assets || []).map(asset => {
     const button = document.createElement('button');
     button.type = 'button'; button.className = `asset${selectedAsset === asset.file ? ' selected' : ''}${asset.pending ? ' pending' : ''}`;
+    button.setAttribute('aria-pressed', String(selectedAsset === asset.file));
     const image = document.createElement('img');
-    image.src = `/assets/handouts/${encodeURIComponent(opened.code)}/${encodeURIComponent(asset.file)}?session=${encodeURIComponent(session)}&path=${encodeURIComponent(opened.path)}`; image.alt = '';
+    image.src = assetUrl(asset.file); image.alt = '';
     button.append(image, document.createTextNode(asset.file));
     if (asset.pending) { const badge = document.createElement('span'); badge.className = 'pending-label'; badge.textContent = 'Pending save'; button.append(badge); }
-    button.addEventListener('click', () => { selectedAsset = asset.file; showAssets(); });
+    button.addEventListener('click', () => {
+      if (imageBusy) return;
+      selectedAsset = asset.file;
+      document.querySelector('#image-file').value = ''; clearUploadPreview();
+      imageError(); showAssets(); refreshImageControls();
+    });
     return button;
   }));
 }
-async function figureMarkup(file) {
-  return request('/api/figure', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ path: select.value, session, file, options: imageOptions() }) });
+async function figureMarkup(file, options) {
+  return request('/api/figure', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ path: opened.path, session, file, options }) });
 }
 async function discardAssets(handoutPath = opened.path) {
   if (!handoutPath) return;
   await request('/api/assets/discard', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ path: handoutPath, session }) });
 }
-async function insertAsset(file) {
-  const result = await figureMarkup(file);
-  const range = selectedFigure();
-  if (range) source.setRangeText(result.markup, range.start, range.end, 'end');
-  else source.setRangeText(`\n${result.markup}\n`, source.selectionStart, source.selectionEnd, 'end');
-  source.focus(); renderSoon(); imageDialog.close();
+function requireImageContext(context) {
+  if (!context || imageContext !== context || !isCurrentBuffer(context.snapshot)) throw Error('The handout changed. Close this panel and select the image again.');
 }
-document.querySelector('#images').addEventListener('click', () => {
-  const figure = selectedFigure();
-  if (figure?.file) selectedAsset = figure.file;
-  showAssets(); imageDialog.showModal();
+function resizeFigure(range, options) {
+  const figure = parseFigure(range.text);
+  const previousSize = Number.parseFloat(figure.style.width) || (figure.classList.contains('figure--half') ? 50 : 100);
+  const nextSize = options.width === 'half' ? 50 : options.width === 'full' ? 100 : options.width;
+  // Preserve captions, credits, accessibility relationships, and custom classes.
+  [...figure.classList].filter(name => /^figure--(?:full|half|left|right|crop-3x2|crop-4x3|crop-square|contain)$/.test(name)).forEach(name => figure.classList.remove(name));
+  figure.classList.add('figure', options.width === 'half' ? 'figure--half' : 'figure--full');
+  figure.style.removeProperty('width');
+  if (typeof options.width === 'number') figure.style.width = `${options.width}%`;
+  if (options.width !== 'full' && options.width !== 100) figure.classList.add(`figure--${options.align}`);
+  if (options.crop) figure.classList.add(options.crop === 'contain' ? 'figure--contain' : `figure--crop-${options.crop}`);
+  figure.style.setProperty('--crop-position', options.position);
+  const opening = figure.outerHTML.match(/^<figure\b[^>]*>/)[0];
+  let original = range.text.slice(0, range.figureEnd - range.start);
+  if (previousSize !== nextSize) {
+    // Authored diagrams often have a fixed print height. Let height follow the
+    // image proportions when the user explicitly changes its size.
+    const image = figure.querySelector('img');
+    image.style.height = 'auto';
+    original = original.replace(/<img\b[^>]*>/i, image.outerHTML);
+  }
+  const clear = options.width !== 'full' && options.width !== 100 ? '\n<div class="figure-clear"></div>' : '';
+  return original.replace(/^<figure\b[^>]*>/i, opening) + clear;
+}
+function replaceFigureMarkup(range, markup, options, asset) {
+  if (!range) return markup;
+  const resized = parseFigure(resizeFigure(range, options));
+  const replacement = parseFigure(markup);
+  const placementClasses = /^figure--(?:full|half|left|right|crop-3x2|crop-4x3|crop-square|contain|diagram)$/;
+  for (const name of resized.classList) if (!placementClasses.test(name)) replacement.classList.add(name);
+  replacement.classList.toggle('figure--diagram', asset.type === 'diagram');
+  for (const property of resized.style) {
+    if (!['width', '--crop-position'].includes(property)) replacement.style.setProperty(property, resized.style.getPropertyValue(property), resized.style.getPropertyPriority(property));
+  }
+  const imageStyle = resized.querySelector('img').getAttribute('style');
+  if (imageStyle) replacement.querySelector('img').setAttribute('style', imageStyle);
+  return replacement.outerHTML + (markup.includes('figure-clear') ? '\n<div class="figure-clear"></div>' : '');
+}
+function uniqueFigureCaption(markup, range) {
+  const figure = parseFigure(markup);
+  const caption = figure.querySelector('figcaption[id]');
+  if (!caption) return markup;
+  const remainder = range ? source.value.slice(0, range.start) + source.value.slice(range.end) : source.value;
+  const existing = new DOMParser().parseFromString(remainder, 'text/html');
+  const base = caption.id;
+  let identifier = base;
+  for (let suffix = 2; existing.getElementById(identifier); suffix += 1) identifier = `${base}-${suffix}`;
+  if (identifier === base) return markup;
+  caption.id = identifier;
+  figure.setAttribute('aria-labelledby', identifier);
+  return figure.outerHTML + (markup.includes('figure-clear') ? '\n<div class="figure-clear"></div>' : '');
+}
+function applyImageMarkup(markup, context) {
+  requireImageContext(context);
+  const range = context.figure;
+  let start; let end;
+  if (range) { start = range.start; end = range.end; }
+  else if (context.insertion) { ({ start, end } = context.insertion); }
+  else {
+    const position = document.querySelector('#image-insert-position').value;
+    start = end = position === 'end' ? source.value.length : context.anchor[position === 'before' ? 'start' : 'end'];
+  }
+  markup = uniqueFigureCaption(markup, range);
+  const replacement = range ? markup : `\n\n${markup}\n\n`;
+  source.setRangeText(replacement, start, end, 'end');
+  pendingVisualFocus = start + (range ? 0 : 2);
+  renderSoon(); imageDialog.close();
+  if (editorMode === 'visual') renderVisual();
+  else source.focus();
+}
+document.querySelector('#images').addEventListener('click', () => openImageDialog(editorMode === 'source' ? selectedFigure() : null));
+document.querySelector('#insert-another-image').addEventListener('click', () => {
+  const target = imageContext?.figure;
+  if (target) openImageDialog(null, target);
+});
+document.querySelector('#image-width').addEventListener('change', event => {
+  if (event.target.value !== 'custom') document.querySelector('#image-size').value = event.target.value === 'half' ? 50 : 100;
+  refreshImageControls();
+});
+document.querySelector('#image-size').addEventListener('input', () => {
+  document.querySelector('#image-width').value = 'custom'; refreshImageControls();
+});
+for (const id of ['image-align', 'image-crop', 'image-x', 'image-y', 'image-alt', 'image-caption']) document.querySelector(`#${id}`).addEventListener('input', refreshImageControls);
+document.querySelector('#image-file').addEventListener('change', () => {
+  clearUploadPreview(); imageError();
+  const file = document.querySelector('#image-file').files[0];
+  if (file && !['image/png', 'image/jpeg', 'image/svg+xml'].includes(file.type)) {
+    document.querySelector('#image-file').value = ''; imageError('Choose a PNG, JPEG, or SVG image.');
+  } else if (file) {
+    uploadPreviewUrl = URL.createObjectURL(file);
+    document.querySelector('#image-type').value = file.type === 'image/svg+xml' ? 'diagram' : 'photograph';
+  }
+  refreshImageControls();
+});
+const dropZone = document.querySelector('#image-drop-zone');
+dropZone.addEventListener('dragover', event => { event.preventDefault(); dropZone.classList.add('dragover'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+dropZone.addEventListener('drop', event => {
+  event.preventDefault(); dropZone.classList.remove('dragover');
+  if (imageBusy || !event.dataTransfer.files.length) return;
+  const transfer = new DataTransfer(); transfer.items.add(event.dataTransfer.files[0]);
+  document.querySelector('#image-file').files = transfer.files;
+  document.querySelector('#image-file').dispatchEvent(new Event('change'));
 });
 document.querySelector('#image-form').addEventListener('submit', async event => {
   event.preventDefault();
   const file = document.querySelector('#image-file').files[0];
-  if (!file) return;
+  if (!file || imageBusy) return;
+  const context = imageContext;
+  const options = imageOptions();
+  const decorative = document.querySelector('#image-decorative').checked;
+  const payload = {
+    path: opened.path, session, name: file.name, mimeType: file.type,
+    type: document.querySelector('#image-type').value, alt: decorative ? '' : document.querySelector('#image-alt').value,
+    decorative, caption: document.querySelector('#image-caption').value, creator: document.querySelector('#image-creator').value,
+    source: document.querySelector('#image-source').value, license: document.querySelector('#image-license').value, options
+  };
+  imageBusy = true; refreshImageControls(); imageError();
   try {
+    requireImageContext(context);
     const dataUrl = await new Promise((resolve, reject) => { const reader = new FileReader(); reader.onload = () => resolve(reader.result); reader.onerror = reject; reader.readAsDataURL(file); });
-    const decorative = document.querySelector('#image-decorative').checked;
-    const result = await request('/api/assets', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({
-      path: select.value, session, name: file.name, mimeType: file.type, dataUrl,
-      type: document.querySelector('#image-type').value, alt: decorative ? '' : document.querySelector('#image-alt').value,
-      decorative, caption: document.querySelector('#image-caption').value, creator: document.querySelector('#image-creator').value,
-      source: document.querySelector('#image-source').value, license: document.querySelector('#image-license').value, options: imageOptions()
-    }) });
-    opened.assets.push(result.asset); selectedAsset = result.asset.file;
-    source.setRangeText(`\n${result.markup}\n`, source.selectionStart, source.selectionEnd, 'end');
-    event.target.reset(); showAssets(); renderSoon(); imageDialog.close();
-  } catch (error) { message.textContent = `Image not added: ${error.message}`; }
+    const result = await request('/api/assets', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ ...payload, dataUrl }) });
+    opened.assets.push(result.asset); selectedAsset = result.asset.file; showAssets();
+    applyImageMarkup(replaceFigureMarkup(context.figure, result.markup, options, result.asset), context);
+  } catch (error) { imageError(`Image not added: ${error.message}`); }
+  finally { imageBusy = false; refreshImageControls(); }
 });
 document.querySelector('#image-decorative').addEventListener('change', event => {
   const alt = document.querySelector('#image-alt'); alt.disabled = event.target.checked; alt.required = !event.target.checked;
 });
 document.querySelector('#apply-image').addEventListener('click', async () => {
-  if (!selectedAsset) return void (message.textContent = 'Select an image first.');
-  try { await insertAsset(selectedAsset); } catch (error) { message.textContent = error.message; }
+  if (!selectedAsset || imageBusy) return;
+  const context = imageContext; const file = selectedAsset; const options = imageOptions();
+  imageBusy = true; refreshImageControls(); imageError();
+  try {
+    requireImageContext(context);
+    const markup = context.figure?.file === file ? resizeFigure(context.figure, options) : replaceFigureMarkup(context.figure, (await figureMarkup(file, options)).markup, options, opened.assets.find(asset => asset.file === file));
+    applyImageMarkup(markup, context);
+  } catch (error) { imageError(error.message); }
+  finally { imageBusy = false; refreshImageControls(); }
 });
 document.querySelector('#remove-image').addEventListener('click', () => {
-  const figure = selectedFigure();
-  if (!figure) return void (message.textContent = 'Place the source cursor inside a figure first.');
-  source.setRangeText('', figure.start, figure.end, 'start'); renderSoon(); imageDialog.close();
+  const context = imageContext;
+  try {
+    requireImageContext(context);
+    if (!context.figure || imageBusy) return;
+    source.setRangeText('', context.figure.start, context.figure.end, 'start');
+    renderSoon(); imageDialog.close();
+    if (editorMode === 'visual') renderVisual(); else source.focus();
+  } catch (error) { imageError(error.message); }
 });
 document.querySelector('#delete-image').addEventListener('click', async () => {
-  if (!selectedAsset || !confirm(`Permanently delete ${selectedAsset}?`)) return;
-  const figure = selectedFigure();
-  if (figure?.file === selectedAsset) source.setRangeText('', figure.start, figure.end, 'start');
-  if (source.value.includes(`../assets/handouts/${opened.code}/${selectedAsset}`)) return void (message.textContent = 'Remove every use of this image from the source before deleting it.');
-  if (dirty() && !await save()) return;
+  if (!selectedAsset || imageBusy || !confirm(`Permanently delete ${selectedAsset}?`)) return;
+  // Permanent deletion never silently removes an authored occurrence.
+  if (source.value.includes(`../assets/handouts/${opened.code}/${selectedAsset}`)) return imageError('Remove every use of this image from the page before deleting its asset.');
+  if (dirty() && !await save()) return imageError('Save the handout before deleting this asset.');
   try {
-    await request('/api/assets', { method: 'DELETE', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ path: select.value, file: selectedAsset }) });
-    opened.assets = opened.assets.filter(asset => asset.file !== selectedAsset); selectedAsset = ''; showAssets(); renderSoon(); imageDialog.close(); message.textContent = 'Asset deleted.';
-  } catch (error) { message.textContent = `Asset not deleted: ${error.message}`; }
+    await request('/api/assets', { method: 'DELETE', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ path: opened.path, file: selectedAsset }) });
+    opened.assets = opened.assets.filter(asset => asset.file !== selectedAsset); selectedAsset = ''; showAssets(); refreshImageControls();
+    imageContext.snapshot = bufferSnapshot();
+  } catch (error) { imageError(`Asset not deleted: ${error.message}`); }
 });
+imageDialog.addEventListener('cancel', event => { if (imageBusy) event.preventDefault(); });
+imageDialog.querySelector('.dialog-heading').addEventListener('submit', event => { if (imageBusy) event.preventDefault(); });
+imageDialog.addEventListener('close', clearUploadPreview);
 document.querySelector('#toolbar').addEventListener('click', event => {
   if (!event.target.matches('button:not(#images):not(#visual-mode):not(#source-mode)')) return;
   if (editorMode === 'visual') {
@@ -602,14 +859,20 @@ document.querySelector('#restore-draft').addEventListener('click', () => {
 });
 document.querySelector('#discard-draft').addEventListener('click', async () => { await discardAssets(); opened.assets = opened.assets.filter(asset => !asset.pending); showAssets(); clearDraft(); message.textContent = 'Browser draft and pending assets discarded.'; });
 document.querySelector('#cancel-assets').addEventListener('click', async () => {
+  if (imageBusy) return;
   if (!opened.assets.some(asset => asset.pending) || confirm('Discard all pending asset uploads?')) {
     const pendingFiles = opened.assets.filter(asset => asset.pending).map(asset => asset.file);
-    for (const file of pendingFiles) {
-      const escaped = file.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-      source.value = source.value.replace(new RegExp(`\\n?<figure[^>]*>[\\s\\S]*?assets/handouts/[^/]+/${escaped}[\\s\\S]*?</figure>(?:\\n<div class="figure-clear"></div>)?\\n?`, 'g'), '\n');
+    try {
+      await discardAssets();
+      for (const range of figureRanges(source.value).reverse()) {
+        if (pendingFiles.includes(range.file)) source.value = source.value.slice(0, range.start) + source.value.slice(range.end);
+      }
+      opened.assets = opened.assets.filter(asset => !asset.pending); selectedAsset = ''; showAssets(); renderSoon(); imageDialog.close();
+      if (editorMode === 'visual') renderVisual();
+      message.textContent = 'Pending assets discarded.';
+    } catch (error) {
+      imageError(`Pending uploads not discarded: ${error.message}`);
     }
-    await discardAssets(); opened.assets = opened.assets.filter(asset => !asset.pending); selectedAsset = ''; showAssets(); renderSoon(); imageDialog.close();
-    message.textContent = 'Pending assets discarded.';
   }
 });
 document.addEventListener('keydown', event => { if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 's') { event.preventDefault(); save(); } });
