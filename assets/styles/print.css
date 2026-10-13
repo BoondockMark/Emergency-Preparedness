@@ -211,7 +211,8 @@ th { background: var(--shade-medium); font-weight: 800; }
 .sandbag-mistake { border: 1px solid var(--rule); padding: var(--space-2); break-inside: avoid; }
 .sandbag-mistake h2 { font-size: var(--type-h3); text-transform: none; letter-spacing: 0; border: 0; margin: 0; padding: 0; }
 .sandbag-mistakes { margin-bottom: var(--space-3); }
-.sandbag-pair img { height: 1.62in; }
+/* The comparison SVGs are already monochrome; filters rasterize them in PDFs. */
+.sandbag-pair img { height: 1.62in; filter: none; }
 .sandbag-field-row { grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); }
 .sandbag-field img { height: 3.9in; }
 .sandbag-checklist { padding: 0; border: 0; margin: var(--space-2) 0; }

@@ -4,7 +4,7 @@ title: Sandbags for Home Runoff
 section: Hands-On Skills
 sectionNumber: 6
 status: draft
-version: 0.4
+version: 0.5
 lastReviewed: 2026-10-02
 reviewers:
   editor: Mark Hughes
@@ -294,8 +294,8 @@ sources:
 <p>Water can pass between bags, through fabric, and underneath.</p>
 <div class="grid sandbag-water-row">
 <figure class="figure figure--full figure--diagram figure--contain sandbag-water sandbag-flow" aria-labelledby="water-seepage-caption">
-<img src="../assets/handouts/SKL-001/water-seepage.svg" alt="Labeled arrows pass through joints and underneath the sandbag barrier, showing that bags are not watertight.">
-<figcaption id="water-seepage-caption">Water seeping through the barrier.</figcaption>
+<img src="../assets/handouts/SKL-001/water-seepage.svg" alt="Black arrows show runoff seeping through joints in a staggered sandbag barrier; a separate dashed arrow follows a path beneath the bags through the ground.">
+<figcaption id="water-seepage-caption">Seepage can pass through joints and beneath the bags.</figcaption>
 </figure>
 <div><h3>What to do</h3><ul>
 <li>Seat bags firmly and cover joints.</li>
@@ -308,8 +308,8 @@ sources:
 <p>A poorly placed barrier can trap water on the protected side.</p>
 <div class="grid sandbag-water-row">
 <figure class="figure figure--full figure--diagram figure--contain sandbag-water sandbag-flow" aria-labelledby="water-pooling-caption">
-<img src="../assets/handouts/SKL-001/water-pooling.svg" alt="A curved sandbag line traps a pool on the building side; eroded ground beneath the end indicates possible undercutting.">
-<figcaption id="water-pooling-caption">Water pooling behind the barrier.</figcaption>
+<img src="../assets/handouts/SKL-001/water-pooling.svg" alt="A detailed sandbag line curves in front of a doorway. Ripples mark water trapped on the house side; a labeled cutaway of the ground shows an eroded pocket beneath the front edge.">
+<figcaption id="water-pooling-caption">A trapped pool can erode the ground beneath the barrier.</figcaption>
 </figure>
 <div><h3>What to do</h3><ul>
 <li>Do not work in flowing water or on unstable ground.</li>
@@ -327,37 +327,37 @@ sources:
 <p class="lede">Six common errors that reduce protection.</p>
 <div class="grid sandbag-mistakes">
 <div class="sandbag-mistake"><h2>1. Aligned vertical joints</h2><figure class="figure figure--full figure--diagram figure--contain sandbag-pair" aria-labelledby="mistake-aligned-joints-caption">
-<img src="../assets/handouts/SKL-001/mistake-aligned-joints.svg" alt="Wrong: bag joints line up vertically. Right: the upper bag bridges the joint below.">
-<figcaption id="mistake-aligned-joints-caption">bag joints line up vertically.  the upper bag bridges the joint below.</figcaption>
+<img src="../assets/handouts/SKL-001/mistake-aligned-joints.svg" alt="Wrong: two courses of bags have vertically aligned joints. Right: an upper bag spans the joint below, offset by about half a bag.">
+<figcaption id="mistake-aligned-joints-caption">Stagger every course by about half a bag.</figcaption>
 </figure>
 </div>
 <div class="sandbag-mistake"><h2>2. Overfilled bags</h2><figure class="figure figure--full figure--diagram figure--contain sandbag-pair" aria-labelledby="mistake-overfilled-caption">
-<img src="../assets/handouts/SKL-001/mistake-overfilled.svg" alt="Wrong: an overfilled rounded bag cannot settle tightly. Right: a partly filled bag lies flat and remains flexible.">
-<figcaption id="mistake-overfilled-caption">an overfilled rounded bag cannot settle tightly.  a partly filled bag lies flat and remains flexible.</figcaption>
+<img src="../assets/handouts/SKL-001/mistake-overfilled.svg" alt="Wrong: an overfilled bag bulges into a rounded shape with a loose neck. Right: a partly filled bag lies flat with its empty end folded underneath.">
+<figcaption id="mistake-overfilled-caption">Leave bags partly filled so they flatten and fit tightly.</figcaption>
 </figure>
 </div>
 </div>
 <div class="grid sandbag-mistakes">
 <div class="sandbag-mistake"><h2>3. Tall, narrow stacks</h2><figure class="figure figure--full figure--diagram figure--contain sandbag-pair" aria-labelledby="mistake-narrow-base-caption">
-<img src="../assets/handouts/SKL-001/mistake-narrow-base.svg" alt="Wrong: four bags form a narrow column. Right: a low stepped stack has a broad stable base.">
-<figcaption id="mistake-narrow-base-caption">four bags form a narrow column.  a low stepped stack has a broad stable base.</figcaption>
+<img src="../assets/handouts/SKL-001/mistake-narrow-base.svg" alt="Wrong: four bags form a tall column on a narrow base. Right: three bags at the base, two above, and one on top form a low stable pyramid.">
+<figcaption id="mistake-narrow-base-caption">Keep the barrier low, with a wide, stepped base.</figcaption>
 </figure>
 </div>
 <div class="sandbag-mistake"><h2>4. Open gaps and loose ends</h2><figure class="figure figure--full figure--diagram figure--contain sandbag-pair" aria-labelledby="mistake-open-gaps-caption">
-<img src="../assets/handouts/SKL-001/mistake-open-gaps.svg" alt="Wrong: separated bags leave a gap. Right: flattened bags overlap with empty ends folded underneath.">
-<figcaption id="mistake-open-gaps-caption">separated bags leave a gap.  flattened bags overlap with empty ends folded underneath.</figcaption>
+<img src="../assets/handouts/SKL-001/mistake-open-gaps.svg" alt="Wrong: two separated bags leave a channel for water and an empty tail is loose. Right: adjoining bags overlap, with their empty ends tucked beneath the filled portions.">
+<figcaption id="mistake-open-gaps-caption">Close gaps; overlap bags and tuck empty ends underneath.</figcaption>
 </figure>
 </div>
 </div>
 <div class="grid sandbag-mistakes">
 <div class="sandbag-mistake"><h2>5. Blocking drainage</h2><figure class="figure figure--full figure--diagram figure--contain sandbag-pair" aria-labelledby="mistake-blocked-drain-caption">
-<img src="../assets/handouts/SKL-001/mistake-blocked-drain.svg" alt="Wrong: a sandbag blocks a drain grate. Right: the drain is clear, with a labeled runoff arrow entering it.">
-<figcaption id="mistake-blocked-drain-caption">a sandbag blocks a drain grate.  the drain is clear, with a labeled runoff arrow entering it.</figcaption>
+<img src="../assets/handouts/SKL-001/mistake-blocked-drain.svg" alt="Wrong: a filled sandbag covers the drain grate. Right: the entire grate stays clear, with a black runoff arrow leading into it.">
+<figcaption id="mistake-blocked-drain-caption">Keep drains open and able to receive runoff.</figcaption>
 </figure>
 </div>
 <div class="sandbag-mistake"><h2>6. Unsafe diversion</h2><figure class="figure figure--full figure--diagram figure--contain sandbag-pair" aria-labelledby="mistake-unsafe-diversion-caption">
-<img src="../assets/handouts/SKL-001/mistake-unsafe-diversion.svg" alt="Wrong: runoff arrows point toward a neighbor or road. Right: a low line steers water to an existing safe outlet on the property.">
-<figcaption id="mistake-unsafe-diversion-caption">runoff arrows point toward a neighbor or road.  a low line steers water to an existing safe outlet on the property.</figcaption>
+<img src="../assets/handouts/SKL-001/mistake-unsafe-diversion.svg" alt="Wrong: a sandbag line redirects runoff across a dashed property boundary toward a neighboring building or road. Right: the line guides runoff into an existing drainage outlet.">
+<figcaption id="mistake-unsafe-diversion-caption">Guide runoff to an existing safe outlet on your property.</figcaption>
 </figure>
 </div>
 </div>
