@@ -104,7 +104,7 @@ in a selection, and list or heading tools apply their prefix to every selected
 line.
 
 The toolbar applies headings, emphasis, and lists directly in Visual mode. Tools
-for component wrappers, tables, images, and page breaks automatically move to
+for component wrappers, tables, and page breaks automatically move to
 Source mode so their exact structure remains visible. Visual edits retain the
 YAML front matter and serialize the handout body as supported HTML. Preview rendering uses the same parser,
 `templates/handout.html`, and `assets/styles/print.css` as the build. The editor
@@ -115,11 +115,19 @@ states: **Draft**, **Under review**, or **Approved**. Approval is not a validati
 bypass: the handout must still name both reviewers, provide complete sources and
 a proof record, and pass the approval-specific checks before it can be published.
 
-The **Images** panel can upload a PNG, JPEG, or SVG, record its required manifest
-metadata, insert an existing asset, and adjust full/half width, left/right
-alignment, crop ratio, and crop focus. Cropping changes CSS positioning without
-altering the original file. Place the source cursor inside a figure to change or
-remove it. Permanent deletion is allowed only after every reference has been
+To add an image in **Visual** mode, click a paragraph or section and choose
+**Insert image**. Choose an existing thumbnail or upload/drop a PNG, JPEG, or SVG,
+then insert before or after that section (or at the end of the handout). Click an
+image directly to open **Edit image**. The size slider, full/half-width presets,
+alignment, crop ratio, and crop focus show a live preview and load the image’s
+current settings. Choose another thumbnail or **Upload and replace** to replace
+that occurrence while keeping its size and placement. **Apply changes** preserves
+authored captions and credits. **Insert another image** adds a separate occurrence.
+These tools stay in Visual mode; Source mode also supports images at the cursor.
+Cropping changes CSS positioning without altering the original file. Uploads
+record required alternative text and creator/source/license metadata, and remain
+pending until **Save**. **Remove from page** keeps the asset available. Permanent
+deletion is under **Manage assets** and allowed only after every reference has been
 removed and the handout saved. New uploads are stored as GitHub-safe Base64 text
 files (such as `photo.jpg.base64`) while manifests and handouts continue to use
 the ordinary `photo.jpg` name; builds decode them automatically. This avoids

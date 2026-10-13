@@ -9,7 +9,7 @@ import { renderHandout, parseHandoutSource, renderHandoutSource } from '../scrip
 import { createEditorServer } from '../scripts/lib/editor-server.mjs';
 import { browserOptions, prepareDocumentValidation } from '../scripts/lib/artifact-generation.mjs';
 import { figureMarkup, safeAssetName } from '../scripts/lib/editor-support.mjs';
-import { HANDOUT_STATUSES, handoutNeedsFixing, handoutOptionLabel, indentSelection, prefixLines, readHandoutStatus, selectionDetails, setHandoutStatus } from '../editor/editor-model.js';
+import { figureAtOffset, figureRanges, HANDOUT_STATUSES, handoutNeedsFixing, handoutOptionLabel, indentSelection, prefixLines, readHandoutStatus, selectionDetails, setHandoutStatus } from '../editor/editor-model.js';
 
 const repository = path.resolve(import.meta.dirname, '..');
 const fixture = () => fs.readFile(path.join(repository, 'test/unit-fixtures/front-matter.md'), 'utf8');
@@ -35,7 +35,7 @@ async function setup(t) {
   }] }));
   const server = await createEditorServer({ root });
   await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
-  t.after(() => new Promise(resolve => server.close(resolve)));
+  t.after(() => new Promise(resolve => { server.closeAllConnections(); server.close(resolve); }));
   return { root, source, base: `http://127.0.0.1:${server.address().port}`, file: path.join(root, 'handouts/section/example.md') };
 }
 
@@ -419,10 +419,10 @@ test('browser editor saves Visual mode edits with platform shortcuts while ifram
       const paragraph = [...document.querySelectorAll('.content p')].find(element => element.textContent.includes('First page.') || element.textContent.includes('Saved visually'));
       paragraph.textContent = next;
       paragraph.dispatchEvent(new Event('input', { bubbles: true }));
-      paragraph.closest('.content').focus();
+      paragraph.focus();
     }, contents);
     assert.equal(await page.evaluate(() => document.activeElement?.id), 'visual');
-    assert.equal(await page.$eval('#visual', frame => frame.contentDocument.activeElement?.classList.contains('content')), true);
+    assert.equal(await page.$eval('#visual', frame => Boolean(frame.contentDocument.activeElement?.closest('.content'))), true);
     await saveWithShortcut(page, modifier);
     assert.ok((await fs.readFile(file, 'utf8')).includes(contents));
   }
@@ -440,7 +440,7 @@ test('browser editor validates valid buffers before saving', { timeout: 45_000 }
   });
   await appendSource(page, '\nA valid saved change.');
   await page.click('#save');
-  await waitForText(page, '#message', 'Saved atomically.');
+  await waitForText(page, '#state', 'Saved');
   assert.deepEqual(await page.evaluate(() => window.saveRequestOrder.slice(-2)), ['/api/validate', '/api/save']);
   assert.match(await fs.readFile(file, 'utf8'), /A valid saved change\.$/);
 });
@@ -456,7 +456,7 @@ test('browser editor saves invalid drafts only after explicit confirmation', { t
   }));
   await page.click('#save');
   await confirmation;
-  await waitForText(page, '#message', 'Saved atomically.');
+  await waitForText(page, '#state', 'Saved');
   assert.equal(await fs.readFile(file, 'utf8'), invalidDraft);
 });
 
@@ -471,7 +471,7 @@ test('browser editor saves invalid under-review handouts only after explicit con
   }));
   await page.click('#save');
   await confirmation;
-  await waitForText(page, '#message', 'Saved atomically.');
+  await waitForText(page, '#state', 'Saved');
   assert.equal(await fs.readFile(file, 'utf8'), invalid);
 });
 
@@ -517,7 +517,7 @@ test('browser editor validates edits made while an older validation is pending',
   });
   await appendSource(page, '\ndelayed validation');
   await page.waitForFunction(() => window.delayedValidationStarted);
-  await replaceSource(page, original.replace('title: Fixture', 'title:').replace('Fixture body.', 'new invalid buffer'));
+  await replaceSource(page, original.replace('title: Fixture', 'title:').replace('First page.', 'new invalid buffer'));
   page.once('dialog', dialog => dialog.dismiss());
   await page.click('#save');
   await waitForText(page, '#message', 'Save canceled');
@@ -561,6 +561,23 @@ test('image helpers normalize names and generate supported crop and alignment ma
   assert.match(markup, /alt="A &lt;safe&gt; route"/);
   assert.match(markup, /Look &amp; leave/);
   assert.match(markup, /figure-clear/);
+  const custom = figureMarkup('STH-001', { file: 'photo.png', alt: 'A route.' }, { width: 35, align: 'right' });
+  assert.match(custom, /figure--full figure--right/);
+  assert.match(custom, /width: 35%/);
+  assert.match(custom, /figure-clear/);
+  assert.match(figureMarkup('STH-001', { file: 'photo.png', alt: 'A route.' }, { width: 500 }), /width: 100%/);
+});
+
+test('image ranges distinguish repeated nested figures and their adjacent clearing blocks', () => {
+  const markup = figureMarkup('STH-001', { file: 'route.svg', alt: 'Route.' }, { width: 'half', align: 'left' });
+  const source = `<div class="grid">\n${markup}\n<p>Keep this text.</p>\n${markup}\n</div>`;
+  const ranges = figureRanges(source);
+  assert.equal(ranges.length, 2);
+  assert.equal(figureAtOffset(source, ranges[1].start + 12).start, ranges[1].start);
+  assert.equal(ranges[1].file, 'route.svg');
+  assert.equal(figureAtOffset(source, source.indexOf('Keep this text')), null);
+  assert.match(ranges[0].text, /figure-clear/);
+  assert.match(source.slice(0, ranges[1].start) + source.slice(ranges[1].end), /Keep this text/);
 });
 
 test('editor stages an upload until save, then manifests, serves, and deletes it', async t => {
@@ -628,13 +645,13 @@ test('browser editor opens, switches, saves, reverts, reports conflicts, and rec
   assert.match(await value(page, '#source'), /^status: under-review$/m);
   await waitForText(page, '#state', 'Unsaved changes');
   await page.click('#save');
-  await waitForText(page, '#message', 'Saved atomically.');
+  await waitForText(page, '#state', 'Saved');
   assert.match(await fs.readFile(file, 'utf8'), /^status: under-review$/m);
 
   await appendSource(page, '\nSaved with button.');
   await waitForText(page, '#state', 'Unsaved changes');
   await page.click('#save');
-  await waitForText(page, '#message', 'Saved atomically.');
+  await waitForText(page, '#state', 'Saved');
   assert.match(await fs.readFile(file, 'utf8'), /Saved with button\.$/);
   assert.equal(await text(page, '#state'), 'Saved');
 
@@ -684,6 +701,7 @@ test('browser editor opens, switches, saves, reverts, reports conflicts, and rec
   await page.select('#handout', 'handouts/section/example.md');
   await page.waitForFunction(() => !document.querySelector('#draft-recovery').hidden);
   await page.click('#discard-draft');
+  await page.waitForFunction(() => document.querySelector('#draft-recovery').hidden);
   assert.equal(await page.$eval('#draft-recovery', element => element.hidden), true);
   assert.equal(await page.evaluate(() => localStorage.getItem('handout-editor:draft:handouts/section/example.md')), null);
   assert.doesNotMatch(await value(page, '#source'), /Dismiss this draft/);
@@ -711,11 +729,13 @@ test('browser editor toolbar and keyboard operations transform and save Markdown
   assert.match(await value(page, '#source'), /\nAlpha\nBeta$/);
 
   await page.$eval('#source', element => { element.focus(); element.setSelectionRange(element.value.length, element.value.length); });
+  await page.$eval('.tool-overflow', element => { element.open = true; });
   await page.click('#toolbar [data-insert*="pagebreak"]');
   assert.equal((await value(page, '#source')).endsWith('\n<!-- pagebreak -->\n'), true);
 
   await page.click('#toolbar [data-block="warning"]');
   assert.match(await value(page, '#source'), /<div class="warning">\nContent\n<\/div>$/);
+  await replaceSource(page, (await value(page, '#source')).replace('pageCount: 2', 'pageCount: 3'));
   await page.click('#save');
   await page.waitForFunction(() => document.querySelector('#state').textContent === 'Saved');
   const saved = await fs.readFile(file, 'utf8');
@@ -751,6 +771,7 @@ test('browser editor navigates validation results and inserts and removes figure
     const headingIssueIndex = await page.$$eval('#issues button', buttons => buttons.findIndex(button => button.textContent.includes('heading-order')));
     assert.notEqual(headingIssueIndex, -1);
     const headingIssues = await page.$$('#issues button');
+    await page.waitForFunction(() => document.querySelector('#preview').contentDocument?.querySelector('h3')?.textContent === 'Skipped heading');
     await headingIssues[headingIssueIndex].click();
     assert.match(await page.$eval('#source', element => element.value.slice(element.selectionStart, element.selectionEnd)), /Skipped heading/);
     await page.waitForFunction(() => document.querySelector('#preview').contentDocument?.querySelector('[data-validation-outline="true"]'));
@@ -765,6 +786,7 @@ test('browser editor navigates validation results and inserts and removes figure
   await page.select('#image-align', 'right');
   await page.select('#image-crop', 'square');
   await page.click('#apply-image');
+  await page.waitForFunction(() => !document.querySelector('#image-dialog').open);
   assert.equal(await page.$eval('#image-dialog', element => element.open), false);
   const inserted = await value(page, '#source');
   assert.match(inserted, /<figure class="figure figure--half figure--right figure--crop-square"/);
@@ -795,9 +817,142 @@ test('browser editor focuses source-mapped findings in the Visual editor', { tim
   const headingIssueIndex = await page.$$eval('#issues button', buttons => buttons.findIndex(button => button.textContent.includes('heading-order')));
   assert.notEqual(headingIssueIndex, -1);
   const headingIssues = await page.$$('#issues button');
+  await page.waitForFunction(() => document.querySelector('#preview').contentDocument?.querySelector('h3')?.textContent === 'Skipped heading');
+  await page.click('#source-mode');
+  await page.click('#visual-mode');
+  await page.waitForFunction(() => document.querySelector('#visual').contentDocument?.querySelector('h3')?.textContent === 'Skipped heading');
   await headingIssues[headingIssueIndex].click();
   assert.equal(await page.$eval('#visual-mode', button => button.getAttribute('aria-pressed')), 'true');
   assert.equal(await page.$eval('#visual', frame => frame.contentDocument.activeElement?.textContent), 'Skipped heading');
   assert.match(await text(page, '#message'), /Navigated to heading-order in the Visual editor/);
   await page.waitForFunction(() => document.querySelector('#preview').contentDocument?.querySelector('[data-validation-outline="true"]'));
+});
+
+test('visual image tools insert at a selected block, preview size, upload a replacement, and save', { timeout: 60_000 }, async t => {
+  const { page, root, file } = await openEditor(t, { mode: 'visual' });
+  const initial = await value(page, '#source');
+  const canvas = await (await page.$('#visual')).contentFrame();
+  await canvas.waitForSelector('.content > p');
+  await canvas.click('.content > p');
+  await page.click('#images');
+  assert.equal(await text(page, '#image-dialog-title'), 'Insert image');
+  assert.equal(await value(page, '#image-insert-position'), 'after');
+  await page.click('#asset-list .asset');
+  await page.select('#image-width', 'half');
+  await page.select('#image-align', 'right');
+  await page.select('#image-crop', 'square');
+  await page.$eval('#image-size', input => { input.value = '35'; input.dispatchEvent(new Event('input', { bubbles: true })); });
+  assert.equal(await text(page, '#image-size-value'), '35%');
+  assert.equal(await page.$eval('#image-placement-preview', element => element.style.width), '35%');
+  assert.equal(await value(page, '#source'), initial, 'dialog changes are only applied on request');
+  await page.click('#apply-image');
+  await page.waitForFunction(() => document.querySelector('#visual').contentDocument?.querySelector('figure')?.style.width === '35%');
+  const inserted = await value(page, '#source');
+  const figure = figureRanges(inserted)[0];
+  assert.ok(figure.start > inserted.indexOf('First page.'));
+  assert.ok(figure.start < inserted.indexOf('<!-- pagebreak -->'));
+  assert.match(inserted, /figure--right figure--crop-square/);
+  assert.equal(inserted.slice(0, inserted.indexOf('First page.')), initial.slice(0, initial.indexOf('First page.')));
+  assert.equal(await page.$eval('#visual-mode', button => button.getAttribute('aria-pressed')), 'true');
+
+  await canvas.click('figure img');
+  assert.equal(await text(page, '#image-dialog-title'), 'Edit image');
+  assert.equal(await value(page, '#image-size'), '35');
+  assert.equal(await value(page, '#image-align'), 'right');
+  assert.equal(await value(page, '#image-crop'), 'square');
+  const upload = await page.$('#image-file');
+  await upload.uploadFile(path.join(root, 'assets/handouts/STH-001/route.svg'));
+  for (const [selector, contents] of [['#image-alt', 'Replacement route marker.'], ['#image-caption', 'Replacement caption.'], ['#image-creator', 'Test author'], ['#image-source', 'Test fixture'], ['#image-license', 'Test permission']]) await page.type(selector, contents);
+  assert.equal(await text(page, '#upload-image'), 'Upload and replace');
+  await page.click('#upload-image');
+  await page.waitForFunction(() => !document.querySelector('#image-dialog').open);
+  const replaced = await value(page, '#source');
+  assert.equal(figureRanges(replaced).length, 1, 'replacement does not insert a second image');
+  assert.match(replaced, /route-2\.svg/);
+  assert.match(replaced, /width: 35%/);
+  assert.match(replaced, /figure--right figure--crop-square/);
+  await page.waitForFunction(() => {
+    const image = document.querySelector('#preview').contentDocument?.querySelector('figure img');
+    return image?.src.includes('route-2.svg') && image.complete && image.naturalWidth > 0;
+  });
+  await page.click('#save');
+  await page.waitForFunction(() => document.querySelector('#state').textContent === 'Saved');
+  assert.equal(await fs.readFile(file, 'utf8'), replaced);
+  assert.ok(await fs.readFile(path.join(root, 'assets/handouts/STH-001/route-2.svg.base64'), 'utf8'));
+  await page.waitForFunction(() => document.querySelector('#visual').contentDocument?.querySelector('figure img')?.src.includes('route-2.svg'));
+  await canvas.click('figure img');
+  await page.click('#asset-list .asset');
+  assert.equal(await text(page, '#apply-image'), 'Replace image');
+  await page.click('#apply-image');
+  await page.waitForFunction(() => !document.querySelector('#image-dialog').open);
+  const libraryReplacement = await value(page, '#source');
+  assert.equal(figureRanges(libraryReplacement).length, 1);
+  assert.equal(figureRanges(libraryReplacement)[0].file, 'route.svg');
+  assert.match(libraryReplacement, /width: 35%/);
+  assert.match(libraryReplacement, /figure--right figure--crop-square/);
+});
+
+test('visual resizing and replacement target the clicked nested occurrence and preserve custom captions', { timeout: 60_000 }, async t => {
+  const { page } = await openEditor(t);
+  const initial = await value(page, '#source');
+  const asset = { file: 'route.svg', alt: 'A route marker.', caption: 'Route marker.' };
+  const first = figureMarkup('STH-001', asset, { width: 'half', align: 'left', crop: '4x3', position: '20% 70%' });
+  const second = first.replace('sth-001-route-caption', 'custom-caption').replace('sth-001-route-caption', 'custom-caption').replace('Route marker.</figcaption>', 'Keep this caption <span class="credit">Keep this credit.</span></figcaption>').replace('figure figure--half', 'figure custom-layout figure--half').replace('<img src', '<img style="height: 1in" src');
+  await replaceSource(page, initial.replace('First page.', `<div class="grid">\n${first}\n${second}\n</div>`));
+  await page.click('#visual-mode');
+  await page.waitForFunction(() => document.querySelector('#visual').contentDocument?.querySelectorAll('figure').length === 2);
+  const canvas = await (await page.$('#visual')).contentFrame();
+  const figures = await canvas.$$('figure');
+  await figures[1].focus();
+  await page.keyboard.press('Enter');
+  assert.equal(await value(page, '#image-width'), 'half');
+  assert.equal(await value(page, '#image-x'), '20');
+  assert.equal(await value(page, '#image-y'), '70');
+  await page.$eval('#image-size', input => { input.value = '42'; input.dispatchEvent(new Event('input', { bubbles: true })); });
+  await page.click('#apply-image');
+  const resized = await value(page, '#source');
+  assert.equal(figureRanges(resized)[0].text, first);
+  assert.match(figureRanges(resized)[1].text, /width: 42%/);
+  assert.match(figureRanges(resized)[1].text, /Keep this caption <span class="credit">Keep this credit\./);
+  assert.match(figureRanges(resized)[1].text, /aria-labelledby="custom-caption"/);
+  assert.match(figureRanges(resized)[1].text, /custom-layout/);
+  assert.match(figureRanges(resized)[1].text, /height: auto/);
+  assert.doesNotMatch(resized, /data-image-editable|data-editor-tabindex/);
+  await page.waitForFunction(() => document.querySelector('#visual').contentDocument?.querySelectorAll('figure')[1]?.style.width === '42%');
+  const updated = await canvas.$$('figure');
+  await updated[1].click();
+  await page.click('#remove-image');
+  const removed = await value(page, '#source');
+  assert.equal(figureRanges(removed).length, 1);
+  assert.equal(figureRanges(removed)[0].text, first);
+  assert.match(removed, /<div class="grid">/);
+});
+
+test('visual insertion can add repeated assets before a block with unique caption IDs and cancel cleanly', { timeout: 45_000 }, async t => {
+  const { page } = await openEditor(t, { mode: 'visual' });
+  const canvas = await (await page.$('#visual')).contentFrame();
+  await canvas.waitForSelector('.content > p');
+  await canvas.click('.content > p');
+  await page.click('#images');
+  await page.click('#asset-list .asset');
+  await page.select('#image-width', 'half');
+  await page.select('#image-insert-position', 'before');
+  await page.click('#apply-image');
+  await page.waitForFunction(() => document.querySelector('#visual').contentDocument?.querySelector('figure'));
+  assert.ok((await value(page, '#source')).indexOf('<figure') < (await value(page, '#source')).indexOf('First page.'));
+  await canvas.click('figure');
+  const beforeCancel = await value(page, '#source');
+  await page.$eval('#image-size', input => { input.value = '25'; input.dispatchEvent(new Event('input', { bubbles: true })); });
+  await page.keyboard.press('Escape');
+  assert.equal(await value(page, '#source'), beforeCancel);
+  await canvas.click('figure');
+  await page.click('#insert-another-image');
+  await page.click('#asset-list .asset');
+  await page.select('#image-width', 'half');
+  await page.click('#apply-image');
+  await page.waitForFunction(() => !document.querySelector('#image-dialog').open);
+  const inserted = await value(page, '#source');
+  assert.equal(figureRanges(inserted).length, 2);
+  assert.match(inserted, /id="sth-001-route-caption-2"/);
+  assert.match(inserted, /aria-labelledby="sth-001-route-caption-2"/);
 });

@@ -38,7 +38,7 @@ SVG attachment. Keep the graphic's normal published name (for example,
 is that name plus `.base64` (`smoke-column.jpg.base64`). The build validates and
 decodes the text into the ignored `build/` directory before rendering.
 
-You do not need to encode files by hand. Run `npm run editor`, open **Images**,
+You do not need to encode files by hand. Run `npm run editor`, choose **Insert image**,
 and upload the original PNG, JPEG, or SVG. The editor sanitizes SVG, verifies
 PNG/JPEG signatures, and writes the GitHub-safe `.base64` text file. Existing
 unencoded assets remain supported, but new editor uploads always use the text
@@ -95,13 +95,21 @@ omit the `alt` attribute.
 
 ## Add a graphic to a handout
 
-The local visual editor (`npm run editor`) provides an **Images** panel for this
+The local visual editor (`npm run editor`) provides an **Insert image** panel for this
 workflow. It writes the text-encoded upload and manifest entry together, then inserts
 the same documented figure markup shown below. Its crop and alignment controls
 change only the figure classes and `--crop-position`; they never resample or
 overwrite the original image. All creator, source, license, and alternative-text
 fields remain required. Deleting from the page keeps the asset available, while
 permanent asset deletion is blocked until all saved references are removed.
+
+Click a paragraph or section in Visual mode, then **Insert image** to choose an
+existing asset or upload/drop a new one. Choose whether to insert before or after
+that section. Click an existing image to resize it with the live size slider or
+full/half-width presets. Its current alignment and crop settings load automatically.
+Choose a different asset or **Upload and replace** to replace just that image while
+retaining placement. Apply changes, then Save. Removing from the page keeps the
+asset in the library; permanent deletion is under **Manage assets**.
 
 Handouts are Markdown files, but documented HTML components may be used for
 print layout. Reference an asset with the exact repository-relative path
@@ -136,6 +144,12 @@ Use one width class on every figure:
 - `figure--full` uses the printable width.
 - `figure--half figure--left` wraps text on the right.
 - `figure--half figure--right` wraps text on the left.
+
+The editor’s custom-size slider uses `figure--full` with an inline percentage
+width (for example, `style="width: 35%"`). Smaller custom sizes may use
+`figure--left` or `figure--right`; the original image proportions are retained
+unless a crop is selected. The editor adds the same clearing element used by
+half-width figures.
 
 After a floated half-width figure and its related text, add:
 
