@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 330 178" role="img" aria-labelledby="title description">
+<title id="title">Stack low on stable support.</title><desc id="description">Filled sandbags are stacked low on a pallet with offset joints, clear of the ground.</desc>
+<defs>
+<marker id="flow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0L8 4L0 8Z" fill="#0063a6"/></marker>
+<marker id="dim" markerWidth="7" markerHeight="7" refX="3.5" refY="3.5" orient="auto-start-reverse"><path d="M7 0L0 3.5L7 7" fill="none" stroke="#16232b"/></marker>
+<pattern id="sand" width="12" height="12" patternUnits="userSpaceOnUse"><circle cx="2" cy="3" r=".8" fill="#16232b"/><circle cx="8" cy="9" r=".8" fill="#16232b"/></pattern>
+<g id="bag"><path d="M5 13Q13 1 29 5Q67 -2 96 8Q110 13 109 30L106 47Q93 54 60 50L10 51Q0 37 5 13Z" fill="white" stroke="#16232b" stroke-width="2"/><path d="M9 17Q15 29 10 45M96 11Q91 24 101 44M19 46Q55 41 93 46M17 10Q60 16 91 10" fill="none" stroke="#16232b" stroke-width="1"/></g>
+<g id="sidebag"><path d="M2 35Q7 10 29 7Q58 0 92 9Q109 16 110 35Q57 43 2 35Z" fill="white" stroke="#16232b" stroke-width="2"/><path d="M11 32Q56 27 101 33M17 13L14 28M96 15L100 30" fill="none" stroke="#16232b" stroke-width="1"/></g>
+<g id="plant"><path d="M0 30Q-3 8 -18 0Q-15 21 -3 31M0 31Q1 9 17 1Q15 20 2 31M0 31Q-2 1 0 -12Q5 11 0 31M-3 29Q-25 14 -25 27L-3 33M3 29Q25 17 26 28L3 33" fill="white" stroke="#16232b" stroke-width="1.4"/></g>
+</defs>
+<g font-family="DejaVu Sans, sans-serif" fill="#16232b" stroke-linecap="round" stroke-linejoin="round"><path d="M15 129L131 80L310 94L205 146Z" fill="#edf0f1" stroke="#16232b" stroke-width="2" /><path d="M15 129V145L204 164L310 112V94M204 146V164M47 120L237 137M78 107L271 122" fill="none" stroke="#16232b" stroke-width="2" /><use href="#bag" transform="translate(40 95) scale(0.8 0.58)"/><use href="#bag" transform="translate(128 95) scale(0.8 0.58)"/><use href="#bag" transform="translate(216 95) scale(0.8 0.58)"/><use href="#bag" transform="translate(83 61) scale(0.8 0.58)"/><use href="#bag" transform="translate(171 61) scale(0.8 0.58)"/><use href="#bag" transform="translate(123 27) scale(0.8 0.58)"/></g>
+</svg>

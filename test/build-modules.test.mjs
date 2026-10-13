@@ -232,6 +232,22 @@ test('continued handout pages use compact headings with fully escaped titles', (
   assert.match(html, /<span>1 of 4<\/span>[\s\S]*?<article class="sheet back"[\s\S]*?<span>2 of 4<\/span>[\s\S]*?<article class="sheet front"[\s\S]*?<span>3 of 4<\/span>[\s\S]*?<article class="sheet back"[\s\S]*?<span>4 of 4<\/span>/);
 });
 
+test('topic page titles are escaped and retain body source line numbers', () => {
+  const html = renderHandout('{{title}} {{pages}}', {
+    meta: {
+      code: 'SKL-001', title: 'Sandbags', section: 'Hands-On Skills', sectionNumber: 6,
+      status: 'draft', version: '0.4', lastReviewed: '2026-10-02', pageCount: 3
+    },
+    chunks: ['First page.', '\n<!-- page-title: Plan & <inspect> -->\nBody.', 'Last page.'],
+    sourcePath: 'handouts/topic.md', chunkStartLines: [20, 30, 40]
+  });
+  assert.match(html, /<h1>Plan &amp; &lt;inspect&gt;<\/h1>/);
+  assert.equal((html.match(/<h1[ >]/g) ?? []).length, 3);
+  assert.doesNotMatch(html, /<!-- page-title:/);
+  assert.match(html, /<p data-source-path="handouts\/topic.md" data-source-line="32">Body\.<\/p>/);
+  assert.match(html, /<h1 class="title--compact">Sandbags — continued<\/h1>/);
+});
+
 test('approved content rejects unresolved approval placeholders', async () => {
   const approved = (await fixture('front-matter.md'))
     .replace('status: draft', 'status: approved')

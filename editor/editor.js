@@ -618,6 +618,7 @@ window.addEventListener('beforeunload', event => { if (dirty() || opened.assets?
 handouts = await request('/api/handouts');
 populateHandouts();
 if (handouts.length) {
+  select.selectedIndex = 0;
   await openHandout();
   scanHandouts();
 }
