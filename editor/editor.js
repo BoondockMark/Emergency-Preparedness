@@ -279,14 +279,15 @@ async function scanHandouts() {
 
 const draftKey = path => `handout-editor:draft:${path}`;
 function readDraft(path) {
+  if (opened.private) return null;
   try { return JSON.parse(localStorage.getItem(draftKey(path))); } catch { return null; }
 }
 function writeDraft() {
-  if (!opened.path || !dirty()) return;
+  if (opened.private || !opened.path || !dirty()) return;
   try { localStorage.setItem(draftKey(opened.path), JSON.stringify({ source: source.value, revision: opened.revision, updatedAt: Date.now() })); } catch { /* Editing must continue if storage is unavailable. */ }
 }
 function clearDraft(path = opened.path) {
-  try { localStorage.removeItem(draftKey(path)); } catch { /* Storage may be disabled. */ }
+  try { if (!opened.private) localStorage.removeItem(draftKey(path)); } catch { /* Storage may be disabled. */ }
   draftRecovery.hidden = true;
 }
 function updateCursorStatus() {
@@ -432,6 +433,9 @@ async function openHandout({ discardCurrentDraft = false } = {}) {
       if (discardCurrentDraft) clearDraft(previousPath);
     }
     opened = await request(`/api/handout?path=${encodeURIComponent(select.value)}&session=${encodeURIComponent(session)}`);
+    document.querySelector('#source-library').textContent = opened.private
+      ? 'Private library · Saves to private repository · Browser draft recovery off'
+      : 'Public library';
     imageContext = undefined; pendingVisualFocus = undefined;
     source.value = opened.source; selectedAsset = ''; showAssets(); updateStatusControl(); dirty();
     const draft = readDraft(opened.path);

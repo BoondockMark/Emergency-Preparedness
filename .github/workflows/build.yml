@@ -19,6 +19,9 @@ jobs:
         env:
           PUPPETEER_CACHE_DIR: ${{ runner.temp }}/puppeteer
       - run: node --test test/private-content.test.mjs test/build-modules.test.mjs
+      - run: node --test test/private-editor.test.mjs
+        env:
+          PUPPETEER_CACHE_DIR: ${{ runner.temp }}/puppeteer
       - run: npm run check -- --public
         env:
           PUPPETEER_CACHE_DIR: ${{ runner.temp }}/puppeteer
