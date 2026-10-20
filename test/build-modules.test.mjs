@@ -305,3 +305,16 @@ test('table of contents lists documents in binder order with cumulative page ran
   assert.match(html, /Second start<\/td><td>Section 1<\/td><td class="toc-pages">3–4<\/td>/);
   assert.match(html, /Call for help<\/td><td>Section 2<\/td><td class="toc-pages">5<\/td>/);
 });
+
+test('contents pagination shifts binder page numbers after adding private slots', () => {
+  const documents = Array.from({ length: 29 }, (_, index) => ({ meta: {
+    code: `PRP-${String(index + 1).padStart(3, '0')}`, title: 'Restricted records',
+    section: 'Plans & Records', sectionNumber: 8, pageCount: index === 0 ? 2 : 1
+  } }));
+  const html = generateTableOfContentsPages(documents);
+  assert.equal((html.match(/class="sheet front toc-sheet"/g) || []).length, 2);
+  assert.match(html, /<span>1 of 2<\/span>/);
+  assert.match(html, /<span>2 of 2<\/span>/);
+  assert.match(html, /toc-pages">3–4<\/td>/);
+  assert.match(html, /toc-pages">32<\/td>/);
+});

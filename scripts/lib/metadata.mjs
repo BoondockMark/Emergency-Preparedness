@@ -115,6 +115,7 @@ export function validateMetadata(meta, body, sourcePath) {
   const expectedCode = SECTION_CODES[meta.sectionNumber - 1];
   if (!meta.code.startsWith(`${expectedCode}-`)) fail(sourcePath, 'code', `must use the ${expectedCode} prefix for ${meta.section}`);
   if (!STATUSES.includes(meta.status)) fail(sourcePath, 'status', `must be one of ${STATUSES.join(', ')}`);
+  if (meta.private !== undefined && typeof meta.private !== 'boolean') fail(sourcePath, 'private', 'must be true or false');
   if (meta.pageCount !== undefined && (!Number.isInteger(meta.pageCount) || meta.pageCount < 1)) {
     fail(sourcePath, 'pageCount', 'must be a positive integer when declared');
   }

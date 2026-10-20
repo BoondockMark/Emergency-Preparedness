@@ -14,11 +14,12 @@ jobs:
         with:
           node-version: 22
           cache: npm
-      # Puppeteer 24.16.0 installs its pinned Chrome-for-Testing revision.
+      # Install the Chrome-for-Testing revision pinned by package-lock.json.
       - run: npm ci
         env:
           PUPPETEER_CACHE_DIR: ${{ runner.temp }}/puppeteer
-      - run: npm run check
+      - run: node --test test/private-content.test.mjs test/build-modules.test.mjs
+      - run: npm run check -- --public
         env:
           PUPPETEER_CACHE_DIR: ${{ runner.temp }}/puppeteer
       - name: Confirm generated files are committed
