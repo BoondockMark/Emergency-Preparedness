@@ -9,6 +9,7 @@
   </nav>
   <div id="draft-recovery" hidden><span>A newer browser draft is available.</span><button id="restore-draft">Restore draft</button><button id="discard-draft">Discard draft</button></div>
   <main><section class="editor-column"><div class="source-heading"><strong id="editor-label">Visual editor</strong><output id="cursor-status" for="source">Line 1, column 1</output></div><iframe id="visual" title="Visual handout editor"></iframe><textarea id="source" aria-label="Markdown and HTML source" spellcheck="true" hidden></textarea><p id="visual-help">Click an image to resize or replace it. To add one, click a paragraph or section, then choose Insert image.</p></section><section class="preview-column"><span>Live print preview</span><iframe id="preview" title="Rendered print preview"></iframe><aside id="validation" aria-live="polite" tabindex="-1"><h2>Validation <span id="validation-state"></span></h2><ol id="issues"></ol></aside></section></main>
+  <p id="source-library" role="status"></p>
   <div id="message" role="status"></div><script type="module" src="/editor.js"></script>
   <dialog id="image-dialog" aria-labelledby="image-dialog-title" aria-describedby="image-context">
     <form method="dialog" class="dialog-heading"><strong id="image-dialog-title">Insert image</strong><button value="cancel" aria-label="Close image editor">×</button></form>

@@ -12,6 +12,8 @@
     "test:visual:update": "node scripts/build.mjs --update-visuals",
     "preview": "node scripts/preview.mjs",
     "editor": "node scripts/editor.mjs",
+    "editor:private": "node scripts/editor.mjs --private",
+    "editor:public": "node scripts/editor.mjs --public",
     "test": "node --test"
   },
   "engines": {

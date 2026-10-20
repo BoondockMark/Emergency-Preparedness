@@ -7,7 +7,7 @@ import puppeteer from 'puppeteer';
 import { browserOptions, copyAssets, openPrintPage, prepareDirectories, prepareDocumentValidation, validateDocument } from './artifact-generation.mjs';
 import { loadAssetManifests, readAssetBytes } from './asset-validation.mjs';
 import { renderHandoutSource } from './content-rendering.mjs';
-import { discoverDocuments } from './filesystem-discovery.mjs';
+import { loadBuildContent } from './private-content.mjs';
 import { loadDocument } from './metadata.mjs';
 import { commitHandoutWithAssets, deleteAsset, figureMarkup, stageAsset } from './editor-support.mjs';
 import { readHandoutStatus } from '../../editor/editor-model.js';
@@ -18,11 +18,14 @@ const json = (response, status, value) => {
 };
 const revision = source => createHash('sha256').update(source).digest('hex');
 
-export async function createEditorServer({ root }) {
-  const handoutsRoot = path.resolve(root, 'handouts');
-  const realHandoutsRoot = await fs.realpath(handoutsRoot);
-  let manifests = await loadAssetManifests(root);
-  const stagingRoot = await fs.mkdtemp(path.join(os.tmpdir(), 'handout-editor-assets-'));
+export async function createEditorServer({ root, privateDirectory, publicOnly = false, requirePrivate = false }) {
+  const content = await loadBuildContent(root, { privateDirectory, publicOnly, requirePrivate });
+  const { documents, privateRoot } = content;
+  let manifests = content.manifests;
+  const temporaryRoot = privateRoot ? path.join(privateRoot, 'build/editor') : os.tmpdir();
+  if (privateRoot) await fs.mkdir(temporaryRoot, { recursive: true, mode: 0o700 });
+  const stagingRoot = await fs.mkdtemp(path.join(temporaryRoot, 'handout-editor-assets-'));
+  const documentRoot = relative => documents.find(item => item.sourcePath === relative)?.contentRoot || root;
   const staged = new Map();
   const stageKey = (session, handoutPath) => `${session}\0${handoutPath}`;
   const stagedFor = value => staged.get(stageKey(value.session, value.path)) ?? [];
@@ -31,6 +34,7 @@ export async function createEditorServer({ root }) {
   };
   const combinedManifests = value => {
     const combined = new Map([...manifests].map(([code, assets]) => [code, new Map(assets)]));
+    combined.roots = manifests.roots;
     const document = documents.find(item => item.sourcePath === value.path);
     if (document) for (const item of stagedFor(value)) {
       if (!combined.has(document.meta.code)) combined.set(document.meta.code, new Map());
@@ -44,10 +48,11 @@ export async function createEditorServer({ root }) {
     for (const item of staged.get(key) ?? []) await fs.rm(item.stagedFile, { force: true });
     staged.delete(key);
   }
-  const documents = await discoverDocuments(root, manifests);
   const discovered = new Map();
   for (const { sourcePath } of documents) {
-    const realFile = await fs.realpath(path.resolve(root, sourcePath));
+    const contentRoot = documentRoot(sourcePath);
+    const realHandoutsRoot = await fs.realpath(path.join(contentRoot, 'handouts'));
+    const realFile = await fs.realpath(path.resolve(contentRoot, sourcePath));
     if (realFile.startsWith(`${realHandoutsRoot}${path.sep}`) && path.extname(realFile) === '.md') {
       discovered.set(sourcePath, realFile);
     }
@@ -58,16 +63,28 @@ export async function createEditorServer({ root }) {
   let resourcesPromise;
   async function validationResources() {
     resourcesPromise ??= (async () => {
-      validationRoot = await fs.mkdtemp(path.join(os.tmpdir(), 'handout-validation-'));
+      validationRoot = await fs.mkdtemp(path.join(temporaryRoot, 'handout-validation-'));
       await prepareDirectories(root, validationRoot);
       await copyAssets(root, validationRoot, manifests);
-      browser = await puppeteer.launch(browserOptions());
+      const options = browserOptions();
+      if (privateRoot) {
+        options.userDataDir = path.join(validationRoot, 'browser-profile');
+        options.env = { ...options.env, TMPDIR: temporaryRoot };
+      }
+      browser = await puppeteer.launch(options);
       return { validationRoot, browser };
     })();
     return resourcesPromise;
   }
   async function refreshAssets() {
     manifests = await loadAssetManifests(root);
+    manifests.roots = new Map();
+    if (privateRoot) {
+      for (const [code, entries] of await loadAssetManifests(privateRoot)) {
+        manifests.set(code, entries);
+        manifests.roots.set(code, privateRoot);
+      }
+    }
     await browser?.close();
     if (validationRoot) await fs.rm(validationRoot, { recursive: true, force: true });
     browser = undefined;
@@ -144,7 +161,7 @@ export async function createEditorServer({ root }) {
         const session = url.searchParams.get('session');
         const pending = session ? stagedFor({ session, path: relative }) : [];
         const assets = [...(manifests.get(document.meta.code)?.values() ?? []), ...pending.map(item => ({ ...item.entry, pending: true }))];
-        return json(response, 200, { path: relative, source, revision: revision(source), code: document.meta.code, assets });
+        return json(response, 200, { path: relative, source, revision: revision(source), code: document.meta.code, assets, private: Boolean(document.contentRoot) });
       }
       if (request.method === 'POST' && url.pathname === '/api/assets') {
         const value = await body(request);
@@ -154,7 +171,7 @@ export async function createEditorServer({ root }) {
         const document = documents.find(item => item.sourcePath === value.path);
         const key = stageKey(value.session, value.path);
         const items = staged.get(key) ?? [];
-        const item = await stageAsset(path.join(stagingRoot, value.session, createHash('sha256').update(value.path).digest('hex')), root, document.meta.code, value, items.map(candidate => candidate.entry.file));
+        const item = await stageAsset(path.join(stagingRoot, value.session, createHash('sha256').update(value.path).digest('hex')), documentRoot(value.path), document.meta.code, value, items.map(candidate => candidate.entry.file));
         items.push(item); staged.set(key, items);
         return json(response, 201, { asset: { ...item.entry, pending: true }, markup: figureMarkup(document.meta.code, item.entry, value.options) });
       }
@@ -177,7 +194,7 @@ export async function createEditorServer({ root }) {
         if (!file) return json(response, 404, { error: 'Unknown handout path' });
         const source = await fs.readFile(file, 'utf8');
         const document = documents.find(item => item.sourcePath === value.path);
-        await deleteAsset(root, document.meta.code, value.file, source);
+        await deleteAsset(documentRoot(value.path), document.meta.code, value.file, source);
         await refreshAssets();
         return json(response, 200, { deleted: value.file });
       }
@@ -222,7 +239,7 @@ export async function createEditorServer({ root }) {
         if (revision(current) !== value.revision) return json(response, 409, { error: 'File changed on disk; revert before saving' });
         requireSession(value);
         const pending = stagedFor(value);
-        await commitHandoutWithAssets(root, file, value.source, documents.find(item => item.sourcePath === value.path).meta.code, pending);
+        await commitHandoutWithAssets(documentRoot(value.path), file, value.source, documents.find(item => item.sourcePath === value.path).meta.code, pending);
         await discardStaged(value);
         await refreshAssets();
         const savedStatus = value.source.match(/^status:\s*(draft|under-review|approved)\s*$/m)?.[1]
@@ -246,7 +263,7 @@ export async function createEditorServer({ root }) {
           return response.end(pending.bytes);
         }
         if (!manifests.get(match[1])?.has(match[2])) return json(response, 404, { error: 'Unknown asset' });
-        const directory = path.join(root, 'assets', 'handouts', match[1]);
+        const directory = path.join(manifests.roots?.get(match[1]) || root, 'assets', 'handouts', match[1]);
         const file = path.join(directory, match[2]);
         const types = { '.svg': 'image/svg+xml', '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg' };
         const contentType = types[path.extname(file).toLowerCase()];

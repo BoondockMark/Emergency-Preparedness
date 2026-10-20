@@ -51,6 +51,34 @@ entire manifest for that code there; it replaces the public asset set for that
 code in private builds. Private proof records live under
 `docs/publishing/proofs/` in the private repository.
 
+## View and edit private pages
+
+Clone both repositories as siblings, then from the public checkout run:
+
+```bash
+BINDER_PRIVATE_DIR=../Emergency-Preparedness-Private npm run editor:private
+```
+
+Open http://127.0.0.1:4174. Marked placeholders now show their matching private
+content and graphics. The library label identifies private pages. Save writes
+private pages and their uploaded graphics to the private repository; ordinary
+public pages still save to the public repository. Browser draft recovery is off
+for private pages, keeping their text out of persistent browser storage. Save
+before closing the editor. Private validation and upload temporary files stay
+under the private checkout's ignored `build/editor/` directory.
+
+Stop the existing editor before changing modes. `npm run editor:public` always
+shows public placeholders. Plain `npm run editor` uses private content only when
+`BINDER_PRIVATE_DIR` is set. GitHub access alone does not select a local clone.
+
+To print the entire binder with these private pages, run:
+
+```bash
+BINDER_PRIVATE_DIR=../Emergency-Preparedness-Private npm run build:private
+```
+
+Then print `<private-checkout>/build/binder/pdfs/EMERGENCY_PREPAREDNESS_BINDER.pdf`.
+
 ## Pull requests and CI
 
 Public pull requests always build with `--public`; they cannot obtain private

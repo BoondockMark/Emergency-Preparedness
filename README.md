@@ -153,3 +153,7 @@ See [contributor guidance](docs/contributors/CONTRIBUTING.md), the [graphics and
 
 See [private binder setup](docs/contributors/PRIVATE-CONTENT.md) for authenticated
 builds, matching public placeholder pages, and private pull-request proofs.
+
+For private content in the editor, start with
+`BINDER_PRIVATE_DIR=../Emergency-Preparedness-Private npm run editor:private`.
+Private page saves go to that private checkout. See [private editor setup](docs/contributors/PRIVATE-CONTENT.md#view-and-edit-private-pages).

@@ -1,0 +1,117 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs/promises';
+import os from 'node:os';
+import path from 'node:path';
+import test from 'node:test';
+import puppeteer from 'puppeteer';
+import { createEditorServer } from '../scripts/lib/editor-server.mjs';
+import { browserOptions } from '../scripts/lib/artifact-generation.mjs';
+
+const repository = path.resolve(import.meta.dirname, '..');
+const handoutPath = 'handouts/start-here/record.md';
+async function setup(t, { publicOnly = false } = {}) {
+  const directory = await fs.mkdtemp(path.join(os.tmpdir(), 'private-editor-'));
+  t.after(() => fs.rm(directory, { recursive: true, force: true }));
+  const root = path.join(directory, 'public');
+  const privateRoot = path.join(directory, 'private');
+  const fixture = await fs.readFile(path.join(repository, 'test/unit-fixtures/front-matter.md'), 'utf8');
+  const publicSource = fixture.replace('pageCount: 1', 'pageCount: 1\nprivate: true').replace('Fixture body.', 'PUBLIC PLACEHOLDER');
+  const privateSource = fixture.replace('Fixture body.', 'PRIVATE TEST RECORD\n\n<img src="../assets/handouts/STH-001/map.svg" alt="Test map">');
+  for (const dir of [root, privateRoot]) await fs.mkdir(path.join(dir, 'handouts/start-here'), { recursive: true });
+  await fs.writeFile(path.join(root, handoutPath), publicSource);
+  await fs.writeFile(path.join(privateRoot, handoutPath), privateSource);
+  await fs.writeFile(path.join(root, 'handouts/start-here/public.md'), fixture.replace('STH-001', 'STH-002'));
+  for (const dir of ['templates', 'editor', 'assets/styles', 'assets/fonts']) {
+    await fs.cp(path.join(repository, dir), path.join(root, dir), { recursive: true });
+  }
+  const assets = path.join(privateRoot, 'assets/handouts/STH-001');
+  await fs.mkdir(assets, { recursive: true });
+  const svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10"><title>Test map</title><rect width="10" height="10"/></svg>';
+  const entry = { file: 'map.svg', type: 'diagram', creator: 'Test', source: 'Test', license: 'Test', alt: 'Test map', decorative: false };
+  await fs.writeFile(path.join(assets, 'map.svg'), svg);
+  await fs.writeFile(path.join(assets, 'manifest.json'), JSON.stringify({ assets: [entry] }));
+  const server = await createEditorServer({ root, privateDirectory: privateRoot, publicOnly });
+  await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
+  t.after(() => new Promise(resolve => { server.closeAllConnections(); server.close(resolve); }));
+  const base = `http://127.0.0.1:${server.address().port}`;
+  const get = async url => (await fetch(base + url)).json();
+  const post = async (url, data) => {
+    const response = await fetch(base + url, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(data) });
+    return { response, data: await response.json() };
+  };
+  return { root, privateRoot, base, get, post, publicSource, privateSource, svg };
+}
+
+test('private editor loads, previews, validates, and saves replacements to the private library', async t => {
+  const { root, privateRoot, base, get, post, publicSource, privateSource, svg } = await setup(t);
+  const opened = await get(`/api/handout?path=${handoutPath}`);
+  assert.equal(opened.private, true);
+  assert.equal(opened.source, privateSource);
+  assert.equal(await (await fetch(base + '/assets/handouts/STH-001/map.svg')).text(), svg);
+  const render = await fetch(base + '/api/render', { method: 'POST', body: JSON.stringify({ path: handoutPath, source: opened.source }) });
+  assert.match(await render.text(), /PRIVATE TEST RECORD/);
+  const validation = await post('/api/validate', { path: handoutPath, source: opened.source, session: 'private-test-session' });
+  assert.equal(validation.data.valid, true);
+  const stagedFiles = await fs.readdir(path.join(privateRoot, 'build/editor'));
+  assert.ok(stagedFiles.some(file => file.startsWith('handout-validation-')));
+  assert.ok(stagedFiles.some(file => file.startsWith('handout-editor-assets-')));
+  const uploaded = await post('/api/assets', {
+    path: handoutPath, session: 'private-test-session', name: 'extra-map.svg',
+    mimeType: 'image/svg+xml', dataUrl: `data:image/svg+xml;base64,${Buffer.from(svg).toString('base64')}`,
+    type: 'diagram', creator: 'Test', source: 'Test', license: 'Test', alt: 'Extra test map'
+  });
+  assert.equal(uploaded.response.status, 201);
+  const pendingUrl = `/assets/handouts/STH-001/extra-map.svg?session=private-test-session&path=${encodeURIComponent(handoutPath)}`;
+  assert.equal(await (await fetch(base + pendingUrl)).text(), svg);
+  const savedSource = opened.source.replace('PRIVATE TEST RECORD', 'EDITED PRIVATE TEST RECORD');
+  const saved = await post('/api/save', { path: handoutPath, source: savedSource, revision: opened.revision, session: 'private-test-session' });
+  assert.equal(saved.response.status, 200);
+  assert.equal(await fs.readFile(path.join(privateRoot, handoutPath), 'utf8'), savedSource);
+  assert.equal(await fs.readFile(path.join(root, handoutPath), 'utf8'), publicSource);
+  assert.equal(await (await fetch(base + '/assets/handouts/STH-001/extra-map.svg')).text(), svg);
+  await fs.access(path.join(privateRoot, 'assets/handouts/STH-001/extra-map.svg.base64'));
+  const deleted = await fetch(base + '/api/assets', { method: 'DELETE', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ path: handoutPath, file: 'extra-map.svg' }) });
+  assert.equal(deleted.status, 200);
+  await assert.rejects(fs.access(path.join(privateRoot, 'assets/handouts/STH-001/extra-map.svg.base64')));
+  await assert.rejects(fs.access(path.join(root, 'assets/handouts/STH-001')));
+});
+
+test('public editor override keeps placeholders and refuses private graphics', async t => {
+  const { base, get, publicSource } = await setup(t, { publicOnly: true });
+  const opened = await get(`/api/handout?path=${handoutPath}`);
+  assert.equal(opened.private, false);
+  assert.equal(opened.source, publicSource);
+  assert.equal((await fetch(base + '/assets/handouts/STH-001/map.svg')).status, 404);
+});
+
+test('ordinary public handouts still save to the public library in private mode', async t => {
+  const { root, privateRoot, get, post } = await setup(t);
+  const relative = 'handouts/start-here/public.md';
+  const opened = await get(`/api/handout?path=${relative}`);
+  assert.equal(opened.private, false);
+  const source = opened.source.replace('Fixture body.', 'Updated public text.');
+  assert.equal((await post('/api/save', { path: relative, source, revision: opened.revision, session: 'public-test-session' })).response.status, 200);
+  assert.equal(await fs.readFile(path.join(root, relative), 'utf8'), source);
+  await assert.rejects(fs.access(path.join(privateRoot, relative)));
+});
+
+test('browser shows private content and save destination without recovering public drafts or storing private drafts', async t => {
+  const { base, privateSource } = await setup(t);
+  const browser = await puppeteer.launch(browserOptions());
+  t.after(() => browser.close());
+  const page = await browser.newPage();
+  await page.evaluateOnNewDocument((key) => {
+    localStorage.setItem(key, JSON.stringify({ source: 'PUBLIC DRAFT THAT MUST NOT REPLACE PRIVATE TEXT' }));
+  }, `handout-editor:draft:${handoutPath}`);
+  await page.goto(base, { waitUntil: 'networkidle0' });
+  await page.select('#handout', handoutPath);
+  await page.waitForFunction(() => document.querySelector('#source').value.includes('PRIVATE TEST RECORD'));
+  assert.equal(await page.$eval('#source', el => el.value), privateSource);
+  assert.match(await page.$eval('#source-library', el => el.textContent), /Private library/);
+  assert.equal(await page.$eval('#draft-recovery', el => el.hidden), true);
+  await page.click('#source-mode');
+  await page.$eval('#source', el => { el.value += '\nPRIVATE UNSAVED EDIT'; el.dispatchEvent(new Event('input', { bubbles: true })); });
+  await page.waitForFunction(() => document.querySelector('#state').textContent.includes('Unsaved'));
+  const draft = await page.evaluate(key => localStorage.getItem(key), `handout-editor:draft:${handoutPath}`);
+  assert.doesNotMatch(draft, /PRIVATE UNSAVED EDIT/);
+});
