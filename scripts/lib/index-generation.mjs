@@ -17,7 +17,7 @@ export function generateBinderIndex(documents) {
 }
 
 export function generateMoodleIndex(documents) {
-  const approved = documents.filter(document => document.meta.status === 'approved');
+  const approved = documents.filter(document => document.meta.status === 'approved' && !document.meta.private);
   const sections = SECTIONS.map(section => {
     const entries = approved
       .filter(document => document.meta.section === section)

@@ -10,7 +10,8 @@ import {
   BINDER_CODE,
   generateBinderHtml,
   generateTableOfContentsHtml,
-  TABLE_OF_CONTENTS_CODE
+  TABLE_OF_CONTENTS_CODE,
+  tableOfContentsPageCount
 } from './binder-generation.mjs';
 import { readAssetBytes, sanitizeSvg } from './asset-validation.mjs';
 import { createCalibrationPdf } from './calibration-pdf.mjs';
@@ -52,7 +53,7 @@ export async function copyAssets(root, outputRoot, manifests) {
     await fs.mkdir(destination, { recursive: true });
     for (const file of entries.keys()) {
       const target = path.join(destination, file);
-      const bytes = await readAssetBytes(path.join(root, 'assets/handouts', code), file, `${code}/${file}`);
+      const bytes = await readAssetBytes(path.join(manifests.roots?.get(code) || root, 'assets/handouts', code), file, `${code}/${file}`);
       if (path.extname(file).toLowerCase() === '.svg') {
         await fs.writeFile(target, sanitizeSvg(bytes.toString('utf8'), `${code}/${file}`));
       } else {
@@ -293,11 +294,11 @@ async function renderArtifacts(root, outputRoot, documents) {
     }
 
     const contentsPage = await openPrintPage(browser, path.join(outputRoot, 'html', `${TABLE_OF_CONTENTS_CODE}.html`));
-    await validateRenderedPage(contentsPage, TABLE_OF_CONTENTS_CODE, 1, path.join(outputRoot, 'diagnostics'));
-    await createPdf(contentsPage, outputRoot, TABLE_OF_CONTENTS_CODE, 1);
+    await validateRenderedPage(contentsPage, TABLE_OF_CONTENTS_CODE, tableOfContentsPageCount(documents), path.join(outputRoot, 'diagnostics'));
+    await createPdf(contentsPage, outputRoot, TABLE_OF_CONTENTS_CODE, tableOfContentsPageCount(documents));
     await contentsPage.close();
 
-    const binderPageCount = 1 + documents.reduce((total, { meta }) => total + meta.pageCount, 0);
+    const binderPageCount = tableOfContentsPageCount(documents) + documents.reduce((total, { meta }) => total + meta.pageCount, 0);
     const binderPage = await openPrintPage(browser, path.join(outputRoot, 'html', `${BINDER_CODE}.html`));
     await validateRenderedPage(binderPage, BINDER_CODE, binderPageCount, path.join(outputRoot, 'diagnostics'));
     await createPdf(binderPage, outputRoot, BINDER_CODE, binderPageCount);
@@ -374,11 +375,11 @@ export async function lintLayouts({ root, outputRoot, documents, manifests }) {
 }
 
 async function validateApprovals(root, outputRoot, documents) {
-  for (const { meta } of documents) {
+  for (const { meta, contentRoot = root } of documents) {
     if (meta.status !== 'approved') continue;
     if (!meta.proofRecord) throw Error(`${meta.code}: approved handouts require proofRecord metadata`);
-    const recordPath = path.resolve(root, meta.proofRecord);
-    if (!recordPath.startsWith(path.join(root, 'docs/publishing/proofs') + path.sep)) {
+    const recordPath = path.resolve(contentRoot, meta.proofRecord);
+    if (!recordPath.startsWith(path.join(contentRoot, 'docs/publishing/proofs') + path.sep)) {
       throw Error(`${meta.code}: proofRecord must be under docs/publishing/proofs/`);
     }
     const record = await fs.readFile(recordPath, 'utf8');

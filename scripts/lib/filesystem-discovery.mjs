@@ -11,7 +11,7 @@ async function walk(directory) {
   )))).flat();
 }
 
-export async function discoverDocuments(root, manifests) {
+export async function discoverDocuments(root, manifests, { privateRoot } = {}) {
   const files = (await walk(path.join(root, 'handouts')))
     .filter(file => file.endsWith('.md'))
     .sort();
@@ -21,10 +21,22 @@ export async function discoverDocuments(root, manifests) {
   for (const file of files) {
     const sourcePath = path.relative(root, file);
     const document = parseHandoutSource(await fs.readFile(file, 'utf8'), sourcePath, manifests);
-    const { meta } = document;
+    let selected = document;
+    if (document.meta.private && privateRoot) {
+      const privateFile = path.join(privateRoot, sourcePath);
+      selected = parseHandoutSource(await fs.readFile(privateFile, 'utf8'), sourcePath, manifests);
+      for (const field of ['code', 'section', 'sectionNumber']) {
+        if (selected.meta[field] !== document.meta[field]) {
+          throw Error(`${sourcePath}: private replacement must match public ${field}`);
+        }
+      }
+      selected.meta.private = true;
+      selected.contentRoot = privateRoot;
+    }
+    const { meta } = selected;
     if (codes.has(meta.code)) throw Error(`${sourcePath}: code: duplicates ${meta.code}`);
     codes.add(meta.code);
-    documents.push(document);
+    documents.push(selected);
   }
   return documents;
 }

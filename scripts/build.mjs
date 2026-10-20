@@ -3,8 +3,7 @@ import os from 'node:os';
 import path from 'node:path';
 import process from 'node:process';
 import { generateArtifacts } from './lib/artifact-generation.mjs';
-import { loadAssetManifests } from './lib/asset-validation.mjs';
-import { discoverDocuments } from './lib/filesystem-discovery.mjs';
+import { loadBuildContent } from './lib/private-content.mjs';
 import { BINDER_CODE, TABLE_OF_CONTENTS_CODE } from './lib/binder-generation.mjs';
 
 const root = path.resolve(import.meta.dirname, '..');
@@ -21,11 +20,19 @@ if (updateVisuals) {
   );
 }
 
-const manifests = await loadAssetManifests(root);
-const documents = await discoverDocuments(root, manifests);
-const outputRoot = checkOnly
-  ? await fs.mkdtemp(path.join(os.tmpdir(), 'binder-check-'))
-  : path.join(root, 'build');
+const { manifests, documents, privateRoot } = await loadBuildContent(root, {
+  publicOnly: process.argv.includes('--public'),
+  requirePrivate: process.argv.includes('--private')
+});
+const outputRoot = privateRoot
+  ? path.join(privateRoot, 'build/binder')
+  : checkOnly
+    ? await fs.mkdtemp(path.join(os.tmpdir(), 'binder-check-'))
+    : path.join(root, 'build');
+if (privateRoot) {
+  await fs.mkdir(path.join(privateRoot, 'build/browser'), { recursive: true, mode: 0o700 });
+  process.env.TMPDIR = path.join(privateRoot, 'build/browser');
+}
 
 try {
   const tolerance = await generateArtifacts({ root, outputRoot, documents, manifests });
@@ -40,7 +47,10 @@ try {
     ])
   ];
 
-  if (checkOnly) {
+  if (privateRoot) {
+    // Private PDFs, previews, indexes, and diagnostics never enter tracked paths.
+    console.log(`Private binder validated${checkOnly ? "" : `: ${outputRoot}/pdfs/${BINDER_CODE}.pdf`}`);
+  } else if (checkOnly) {
     const changed = [];
     for (const [tracked, generated] of expectedArtifacts) {
       let matches = false;
@@ -96,5 +106,5 @@ try {
     + `Visual fixture tolerance: ${tolerance.maxDifferentPixelRatio * 100}%.`
   );
 } finally {
-  if (checkOnly) await fs.rm(outputRoot, { recursive: true, force: true });
+  if (checkOnly && !privateRoot) await fs.rm(outputRoot, { recursive: true, force: true });
 }
