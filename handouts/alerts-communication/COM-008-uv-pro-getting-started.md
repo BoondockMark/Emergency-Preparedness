@@ -4,16 +4,16 @@ title: BTECH UV-PRO Getting Started
 section: Alerts & Communication
 sectionNumber: 2
 status: draft
-version: 0.3
-lastReviewed: 2026-10-09
+version: 0.4
+lastReviewed: 2026-10-23
 reviewers:
   editor: unassigned
   subjectMatter: unassigned
 sources:
   - type: local
-    title: Heights 6 channel settings and directed-net practices
+    title: Heights 6 channel settings source history
     provider: La Habra Heights Fire Watch repository
-    location: handouts/alerts-communication/COM-002-heights-6-radio-communications.md
+    location: assets/handouts/COM-009/SOURCE-NOTES.md
     receivedDate: 2026-10-09
   - type: local
     title: Heights 6 frequencies, DCS, and channel-edit gesture confirmed by project owner
@@ -73,7 +73,7 @@ sources:
 
 <p><strong>You should see:</strong> the radio's operating screen. To switch off later, turn the same knob counterclockwise past the click.</p>
 
-<div class="sources">Button locations: supplied radio photo; functions: BTECH UV-PRO Manual, pp. 4–7. Channel plan: COM-002 and project-owner confirmation, October 9, 2026. Draft for training review.</div>
+<div class="sources">Button locations: supplied radio photo; functions: BTECH UV-PRO Manual, pp. 4–7. Channel plan: preserved source history and project-owner confirmation, October 9, 2026. Draft for training review.</div>
 
 <!-- pagebreak -->
 
@@ -134,7 +134,7 @@ sources:
 
 <p><strong>Check:</strong> RX starts with <strong>462</strong>; TX starts with <strong>467</strong>. Both end in <strong>.38750</strong>. A final zero may disappear without changing the value; an extra nonzero digit needs the lead's check. Keep Talk Around off for normal repeater use; use it during repeater failure only under the lead's instructions.</p>
 
-<div class="sources">COM-002; project-owner frequency confirmation; supplied Android channel-editor and channel-panel captures.</div>
+<div class="sources">Channel-plan source history; project-owner frequency confirmation; supplied Android channel-editor and channel-panel captures.</div>
 
 <!-- pagebreak -->
 
@@ -233,6 +233,6 @@ sources:
 
 <p>Checked by: _______________________ &nbsp; Date: _______________<br>Bandwidth / power: __________________________________________</p>
 
-<p><strong>For net calls:</strong> follow COM-002 and your assigned callsign. For immediate danger, call 911 when available.</p>
+<p><strong>Related guides:</strong> COM-009 covers general programming and verification. For radio etiquette and net calls, follow COM-002 and your assigned callsign. For immediate danger, call 911 when available.</p>
 
 <div class="sources">References: <a href="https://baofengtech.com/wp-content/uploads/2024/08/BTECHpackaging_UVPRO_Manual_Rev3.pdf">BTECH UV-PRO Manual, Rev. 3</a>, pp. 4–8, 11–15, 22, 26, 31; <a href="https://baofengtech.com/product/uv-pro/">BTECH UV-PRO product page</a>; COM-002; project-owner confirmations and supplied Android captures/photo, October 9, 2026. Draft requires editor and subject-matter review before publication.</div>
