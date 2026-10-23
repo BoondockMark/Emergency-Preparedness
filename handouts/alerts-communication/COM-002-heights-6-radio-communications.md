@@ -1,11 +1,11 @@
 ---
 code: COM-002
-title: Heights 6 Radio Communications
+title: Radio Usage and Etiquette
 section: Alerts & Communication
 sectionNumber: 2
 status: draft
-version: 0.1
-lastReviewed: 2026-09-24
+version: 0.2
+lastReviewed: 2026-10-23
 reviewers:
   editor: unassigned
   subjectMatter: unassigned
@@ -15,120 +15,113 @@ sources:
     provider: La Habra Heights Fire Watch
     location: User-supplied operational brief for COM-002
     receivedDate: 2026-09-24
-  - type: web
-    title: "PLACEHOLDER: Verify programming steps against the current BTECH UV-PRO manual and app."
-    organization: BTECH
-    url: https://baofengtech.com/
-    accessDate: 2026-09-24
+  - type: local
+    title: Fire Watch Radio Cheat Sheet and Radio Use and Emergency Examples
+    provider: Fire Watch project owner
+    location: Project conversation, October 23, 2026; two supplied quick-reference pages
+    receivedDate: 2026-10-23
 ---
-<p class="lede">Set up the BTECH UV-PRO for <strong>Heights 6</strong>, then make short, disciplined calls.</p>
+<p class="lede">Use clear, brief calls on your assigned channel. These habits apply across radio models; programming is covered separately in COM-009.</p>
 
-<div class="warning"><strong>Life safety comes first.</strong> Call 911 when available for an immediate threat. Do not delay evacuation, enter a hazard, or rely on this radio as your only way to summon help.</div>
+<div class="warning"><strong>Life safety comes first.</strong> Call 911 when available for immediate danger. A radio call does not mean emergency services have been notified. Do not delay evacuation or enter a hazard to make a report.</div>
 
-## Program Heights 6
-
-<div class="local-info">
-<p><strong>Name:</strong> Heights 6 &nbsp; | &nbsp; <strong>Radio:</strong> BTECH UV-PRO</p>
-<p><strong>RX:</strong> 462.38750 MHz / DCS 331N &nbsp; | &nbsp; <strong>TX:</strong> 467.38750 MHz / DCS 331N</p>
-<p><strong>Repeater site:</strong> KOCE-TV transmitter site, 16711 E Skyline Dr, La Habra Heights, CA 90631</p>
-</div>
+## Before you transmit
 
 <div class="grid">
 <div>
-<ol class="procedure">
-<li><strong>Connect.</strong> Open the UV-PRO app on the paired phone, select the correct radio, and read its channel list.</li>
-<li><strong>Create.</strong> Select an unused memory, name it <strong>Heights 6</strong>, and use separate RX and TX fields.</li>
-<li><strong>Enter the values exactly:</strong> RX 462.38750 MHz and TX 467.38750 MHz. Do not reverse them.</li>
-<li><strong>Set both DCS/DQT fields</strong> to <strong>331</strong>, <strong>normal (N)</strong>. Do not select inverted/reverse polarity.</li>
-<li><strong>Write and verify.</strong> Synchronize, reconnect, and confirm the name and four values. Do not change other fields.</li>
-</ol>
-
-<div class="warning warning--caution">If the app does not clearly show separate RX/TX frequencies and DCS values, stop and ask the radio lead. Never transmit on an unknown channel.</div>
-</div>
-
-<div>
-## Check the radio before duty
-
 <div class="checklist"><ul>
-<li>Battery charged; spare or cable ready</li>
+<li>Battery charged; spare or charging cable ready</li>
 <li>Antenna secure; volume audible</li>
-<li><strong>Heights 6</strong> selected; callsign known</li>
-<li>Push-to-talk protected from accidental use</li>
+<li>Assigned channel selected; callsign known</li>
 <li>Receive checked; transmit only if authorized</li>
+<li>Push-to-talk protected from accidental use</li>
 </ul></div>
-
-## Before a net begins
-
-<p>Monitor first. To reach a member, say their callsign, then yours: <strong>“145, 238.”</strong> Wait for “238, go ahead.” Use plain language and confirmed facts.</p>
-
-<p><strong>Identification:</strong> use your three-digit callsign. Address city personnel by title (for example, <strong>Public Works</strong> or <strong>Fire Chief</strong>). Follow instructions for any required station ID.</p>
+</div>
+<div>
+<ul>
+<li><strong>Listen first.</strong> Wait for a clear channel.</li>
+<li><strong>Press, pause, speak.</strong> Use a normal voice; follow your microphone guide.</li>
+<li><strong>Release and listen.</strong> Leave room for urgent calls.</li>
+<li><strong>Stay professional.</strong> Avoid private details and speculation.</li>
+</ul>
 </div>
 </div>
 
-<div class="sources">La Habra Heights Fire Watch operational brief, received September 24, 2026. Verify the workflow against current BTECH UV-PRO documentation.</div>
+## Common radio phrases
+
+| Phrase | Meaning |
+|---|---|
+| Roger / Copy | Message received. Read back critical details to confirm understanding. |
+| Affirmative / Negative | Yes / No. |
+| Over | Finished speaking; a reply is expected. |
+| Out | Exchange finished; no reply expected. Do not say “over and out.” |
+| Stand by / Standing by | Please wait / I am waiting and ready. |
+| Go ahead | Send your message; I am listening. |
+| Say again | Please repeat your message or the specified part. |
+| Correction / Disregard | Correcting my message / Ignore my previous message. |
+| Radio check / Loud and clear | Can you hear me? / Your audio is clear. |
+| Emergency traffic | Urgent call requesting priority; follow the team's procedure. |
+
+<p>Use plain language: “What is your location?” Acknowledgment does not mean a task is complete.</p>
+
+<div class="sources">SAMPLE TEXT — NOT APPROVED ADVICE. Fire Watch brief (September 24) and supplied quick-reference pages (October 23, 2026).</div>
 
 <!-- pagebreak -->
+<!-- page-title: Radio Calls and Emergency Traffic -->
 
-<p class="lede">On a directed net, listen, wait to be recognized, and report only the essential facts.</p>
+<p class="lede">On a directed net, Net Control coordinates calls. Listen, wait to be recognized, and report the essential facts.</p>
 
-<div class="warning"><strong>Emergency traffic has priority.</strong> At a break, say <strong>“Emergency traffic”</strong> and your callsign, then release push-to-talk and wait. Do not interrupt routine traffic.</div>
+## Make a routine call
 
-## Directed-net procedure
-
-<div class="grid">
-<div>
 <ol class="procedure">
-<li><strong>Listen.</strong> Do not answer another station's call or transmit during a Net Control update.</li>
-<li><strong>Call:</strong> “Net Control, [callsign].” Release and wait. If unanswered, pause and try once more.</li>
-<li><strong>Wait.</strong> After “[callsign], go ahead,” press, pause, and give one concise report.</li>
-<li><strong>Report</strong> location, observation and time, threats, action taken, and help needed. Label rumor as rumor.</li>
-<li><strong>Confirm.</strong> Read back critical details. End with your callsign and resume monitoring.</li>
+<li><strong>Call and identify:</strong> “Net Control, [callsign].” Release and wait for “Go ahead.” If unanswered, pause and try once more.</li>
+<li><strong>Report</strong> location, observation, time, threats, action taken, and help needed. Identify unconfirmed information.</li>
+<li><strong>Confirm.</strong> Read back critical details; ask “Say again” if unclear. End with your callsign; resume monitoring.</li>
 </ol>
-</div>
 
-<div>
-<h2>Net Control updates</h2>
-<ul>
-<li><strong>High activity:</strong> every 15 minutes—:00, :15, :30, :45</li>
-<li><strong>Quieter:</strong> every 30 minutes—:00, :30</li>
-<li><strong>Stand-down:</strong> every 60 minutes—:00</li>
-</ul>
-<p>Hold routine calls when an update is due.</p>
+<div class="local-info"><strong>[VERIFY] Fire Watch identification:</strong> Use your assigned three-digit callsign and any legally required station ID. Address city personnel by title. Outside a net, call the member directly: “145, 238.” Wait for “238, go ahead.”</div>
 
-<h2>Good radio habits</h2>
-<ul>
-<li>Think first; press, pause, and speak clearly.</li>
-<li>Give streets, addresses, landmarks, and directions.</li>
-<li>Say “affirmative” or “negative” when clarity matters.</li>
-<li>Do not share sensitive details, speculate, or argue.</li>
-</ul>
-</div>
-</div>
+## Give emergency traffic priority
 
-## Sample exchanges
+<div class="warning"><strong>Urgent danger:</strong> At a break, say <strong>“Emergency traffic, [callsign].”</strong> Release and listen for acknowledgment, then give the exact location and danger first. Other stations hold routine calls. If unanswered, use another available way to summon help.</div>
+
+<p>Confirm the interruption phrase before duty: the existing brief uses <strong>“Emergency traffic”</strong>; the supplied sheet uses “Break, break.”</p>
+
+<div class="sources">SAMPLE TEXT — NOT APPROVED ADVICE. Fire Watch operational brief and supplied quick-reference pages. Confirm local procedures before duty.</div>
+
+<!-- pagebreak -->
+<!-- page-title: Radio Check and Field Call Examples -->
+
+<p class="lede">Practice with your assigned callsign. Replace bracketed fields with confirmed facts and exact locations.</p>
+
+## Sample radio check
+
+<p>When the channel is clear and checks are permitted:<br>
+<strong>You:</strong> “Fire Watch, this is [callsign]. Radio check. Over.”<br>
+<strong>Other station:</strong> “[Callsign], loud and clear. Over.”<br>
+<strong>You:</strong> “Copy. [Callsign], out.”</p>
 
 <div class="grid">
 <div>
-<p><strong>Routine report</strong><br>
-<strong>145:</strong> “Net Control, 145.”<br>
-<strong>Net Control:</strong> “145, go ahead.”<br>
-<strong>145:</strong> “Skyline at Cypress: light gray smoke north, first seen two minutes ago. No flame visible. 145.”<br>
-<strong>Net Control:</strong> “145, observe safely and report changes.”<br>
-<strong>145:</strong> “Observe safely. 145.”</p>
+<h2>Routine report</h2>
+<p><strong>You:</strong> “Net Control, [callsign].”<br>
+<strong>Net Control:</strong> “[Callsign], go ahead.”<br>
+<strong>You:</strong> “Visible smoke near [exact location], first seen [time]. [Observed conditions]. [Help needed]. Over.”<br>
+<strong>You:</strong> Read back instructions when received; close with “[Callsign], out.”</p>
 </div>
-
 <div>
-<p><strong>Emergency traffic</strong><br>
-<strong>238:</strong> “Emergency traffic, 238.”<br>
-<strong>Net Control:</strong> “All stations hold. 238, go ahead.”<br>
-<strong>238:</strong> “Arcing line across East Road at 17000. Road blocked; people moving back. Request response. 238.”<br>
-<strong>Net Control:</strong> “238, keep everyone clear; response requested.”<br>
-<strong>238:</strong> “Keep clear. 238.”</p>
+<h2>Emergency report</h2>
+<p><strong>You:</strong> “Emergency traffic, [callsign].”<br>
+<strong>Net Control:</strong> “All stations hold. [Callsign], go ahead.”<br>
+<strong>You:</strong> “[Exact location]. Active fire. [People or access threatened]. [Action taken]. [Help needed]. Over.”</p>
+<p>Blocked road: give street/intersection, obstruction, and passability. Report from safety.</p>
 </div>
 </div>
 
-## Closing or leaving the net
+## Monitor updates and check out
 
-<p><strong>Do not leave silently.</strong> Ask to check out or report a radio change. Note final instructions. After duty, report problems, recharge, and do not alter Heights 6.</p>
+<div class="local-info"><strong>[VERIFY] Net Control updates:</strong> High activity: :00, :15, :30, :45; quieter: :00, :30; stand-down: :00 hourly. Hold routine calls for updates; follow current net instructions.</div>
 
-<div class="sources">Fire Watch operational brief, received September 24, 2026. Draft; verify against current BTECH documentation.</div>
+<p>Ask to check out or report a channel/radio change before leaving the net. After duty, report equipment problems and recharge. Neighborhood radio coordination does not replace official emergency instructions.</p>
+
+<div class="sources">SAMPLE TEXT — NOT APPROVED ADVICE. Fire Watch brief and supplied pages. Verify local procedures. Programming: COM-009; UV-PRO: COM-008.</div>
