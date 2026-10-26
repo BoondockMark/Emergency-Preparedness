@@ -29,7 +29,11 @@ function fail(sourcePath, field, message) {
 function scalar(value, sourcePath, lineNumber) {
   const text = value.trim();
   if (!text) return null;
-  if ((text.startsWith('"') && text.endsWith('"')) || (text.startsWith("'") && text.endsWith("'"))) return text.slice(1, -1);
+  if (text.startsWith('"') && text.endsWith('"')) {
+    try { return JSON.parse(text); }
+    catch { fail(sourcePath, `line ${lineNumber}`, 'invalid double-quoted scalar or unsupported escape'); }
+  }
+  if (text.startsWith("'") && text.endsWith("'")) return text.slice(1, -1).replace(/''/g, "'");
   if (/^\d+$/.test(text)) return Number(text);
   if (/^(true|false)$/.test(text)) return text === 'true';
   if (/^(null|~)$/.test(text)) return null;
@@ -39,7 +43,7 @@ function scalar(value, sourcePath, lineNumber) {
 
 // This intentionally implements only the block-style YAML subset used by handout metadata.
 // Rejecting aliases, tags, flow collections, and multi-line scalars keeps loading deterministic.
-function parseMetadataYaml(source, sourcePath) {
+export function parseMetadataYaml(source, sourcePath) {
   const lines = source.split('\n').map((raw, index) => {
     if (/\t/.test(raw)) fail(sourcePath, `line ${index + 1}`, 'tabs are not allowed in metadata');
     const match = raw.match(/^( *)(.*)$/);

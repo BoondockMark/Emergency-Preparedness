@@ -87,3 +87,53 @@ export function figureRanges(source) {
 export function figureAtOffset(source, offset) {
   return figureRanges(source).find(figure => offset >= figure.start && offset < figure.end) || null;
 }
+
+// Replace only named top-level fields; preserve the body and unrelated metadata verbatim.
+export function updateMetadataFields(source, fields) {
+  const match = source.match(/^---\r?\n([\s\S]*?)\r?\n---(?:\r?\n|$)/);
+  if (!match) throw Error('Missing front matter');
+  const newline = source.includes('\r\n') ? '\r\n' : '\n';
+  const scalar = value => {
+    if (/[\r\n]/.test(String(value))) throw Error('Metadata fields must fit on one line.');
+    return typeof value === 'number' || typeof value === 'boolean' ? String(value) : JSON.stringify(String(value ?? ''));
+  };
+  const serialize = (value, indent) => {
+    const pad = ' '.repeat(indent);
+    if (Array.isArray(value)) return value.map(item => {
+      const lines = serialize(item, indent + 2).split(newline);
+      return pad + '- ' + lines[0].slice(indent + 2) + (lines.length > 1 ? newline + lines.slice(1).join(newline) : '');
+    }).join(newline);
+    return Object.entries(value).map(([key, entry]) => {
+      if (!/^[A-Za-z][A-Za-z0-9]*$/.test(key)) throw Error('Unsupported metadata field');
+      return entry && typeof entry === 'object' ? `${pad}${key}:${newline}${serialize(entry, indent + 2)}` : `${pad}${key}: ${scalar(entry)}`;
+    }).join(newline);
+  };
+  let header = match[1];
+  for (const [key, value] of Object.entries(fields)) {
+    const replacement = serialize({ [key]: value }, 0);
+    const pattern = new RegExp(`^${key}:[^\\r\\n]*(?:\\r?\\n(?![A-Za-z][A-Za-z0-9]*:)[^\\r\\n]*)*`, 'm');
+    header = pattern.test(header) ? header.replace(pattern, block => {
+      const trailing = block.match(/(?:\r?\n(?:[ \t]*|#[^\r\n]*))+$/)?.[0] || '';
+      return replacement + trailing;
+    }) : header + newline + replacement;
+  }
+  return `---${newline}${header}${newline}---${newline}` + source.slice(match[0].length);
+}
+
+export class EditHistory {
+  constructor(value = '') { this.reset(value); }
+  reset(value) { this.entries = [value]; this.index = 0; this.lastTyped = 0; }
+  record(value, typing = false, now = Date.now()) {
+    if (value === this.entries[this.index]) return;
+    const merge = typing && this.lastTyped && now - this.lastTyped < 750 && this.index === this.entries.length - 1 && this.index > 0;
+    this.entries.splice(this.index + 1);
+    if (merge) this.entries[this.index] = value;
+    else { this.entries.push(value); this.index++; }
+    if (this.entries.length > 150) { this.entries.shift(); this.index--; }
+    this.lastTyped = typing ? now : 0;
+  }
+  undo() { this.lastTyped = 0; if (this.index > 0) this.index--; return this.entries[this.index]; }
+  redo() { this.lastTyped = 0; if (this.index + 1 < this.entries.length) this.index++; return this.entries[this.index]; }
+  get canUndo() { return this.index > 0; }
+  get canRedo() { return this.index + 1 < this.entries.length; }
+}

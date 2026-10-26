@@ -103,12 +103,34 @@ word count, and character count. Tab and Shift+Tab indent or outdent every line
 in a selection, and list or heading tools apply their prefix to every selected
 line.
 
-The toolbar applies headings, emphasis, and lists directly in Visual mode. Tools
-for component wrappers, tables, and page breaks automatically move to
-Source mode so their exact structure remains visible. Visual edits retain the
+The toolbar applies headings, emphasis, and lists directly in Visual mode.
+Component wrappers, tables, and page breaks insert after the
+selected paragraph or section, or at the end if nothing is selected. Click the
+new component to edit its text. Select a table cell to enable **Add table row**
+and **Add table column**; select a component to enable **Remove component**.
+These controls keep you in Visual mode. In Source mode, insertion still uses
+the text cursor. Visual page breaks also update an explicit `pageCount` assertion.
+Visual edits retain the
 YAML front matter and serialize the handout body as supported HTML. Preview rendering uses the same parser,
 `templates/handout.html`, and `assets/styles/print.css` as the build. The editor
 is a local authoring aid; generated PDFs still require `npm run build`.
+
+**Handout details** opens a form for the title, version, review date, reviewers,
+and structured sources. Choose a source type to see the relevant fields; add or
+remove sources as needed. **Check approval readiness** checks the form against
+source approval requirements without changing status or saving. **Apply details**
+updates the editing buffer; **Save** writes it to disk. Code, section, private
+flags, proof records, and other metadata remain intact. Malformed YAML must first
+be corrected in Source mode. The publishing build still verifies the proof record.
+
+**Undo** and **Redo** share an in-memory history across Visual and Source mode,
+including formatting, component, image, status, and details changes. Use
+Ctrl/Cmd+Z to undo and Ctrl/Cmd+Shift+Z or Ctrl+Y to redo. Nearby typing is grouped;
+saving keeps the history. Opening another handout, reverting, permanently deleting
+an asset, or discarding pending uploads resets it. History keeps the most recent
+150 snapshots and does not persist across reloads; public browser draft recovery
+continues to work separately. Pending uploads stay available when their insertion
+is undone, until saved or explicitly discarded.
 
 The header's **Status** menu updates the front matter to one of the three workflow
 states: **Draft**, **Under review**, or **Approved**. Approval is not a validation

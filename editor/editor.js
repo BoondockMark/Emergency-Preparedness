@@ -1,4 +1,4 @@
-import { figureAtOffset, figureRanges, handoutNeedsFixing, handoutOptionLabel, indentSelection, prefixLines, readHandoutStatus, selectionDetails, setHandoutStatus } from './editor-model.js';
+import { EditHistory, updateMetadataFields, figureAtOffset, figureRanges, handoutNeedsFixing, handoutOptionLabel, indentSelection, prefixLines, readHandoutStatus, selectionDetails, setHandoutStatus } from './editor-model.js';
 
 const select = document.querySelector('#handout');
 const handoutSearch = document.querySelector('#handout-search');
@@ -44,6 +44,7 @@ const session = sessionStorage.getItem('handout-editor:session') || crypto.rando
 sessionStorage.setItem('handout-editor:session', session);
 let handouts = [];
 let editorMode = 'visual';
+const history = new EditHistory();
 const attachedVisualDocuments = new WeakSet();
 
 function authoredHtml(element) {
@@ -102,7 +103,7 @@ function attachVisualEditor() {
   if (!document || attachedVisualDocuments.has(document)) return;
   attachedVisualDocuments.add(document);
   const blocks = visualBlocks(document, source.value);
-  visualSelection = undefined;
+  visualSelection = undefined; updateComponentTools();
   const blockByIdentifier = new Map(blocks.map(block => [block.identifier, block]));
   document.querySelectorAll('.content').forEach(content => {
     content.contentEditable = 'false';
@@ -124,11 +125,11 @@ function attachVisualEditor() {
   });
   document.addEventListener('focusin', event => {
     const block = blockByIdentifier.get(event.target.closest?.('[data-visual-block]')?.dataset.visualBlock);
-    if (block) visualSelection = block;
+    if (block) { visualSelection = block; updateComponentTools(); }
   });
   document.addEventListener('click', event => {
     const block = blockByIdentifier.get(event.target.closest?.('[data-visual-block]')?.dataset.visualBlock);
-    if (block) visualSelection = block;
+    if (block) { visualSelection = block; updateComponentTools(); }
     const figure = event.target.closest?.('figure[data-image-editable]');
     if (!figure) return;
     event.preventDefault();
@@ -136,6 +137,7 @@ function attachVisualEditor() {
     if (range) openImageDialog(range);
     else message.textContent = 'This image could not be located. Switch to Source to edit it.';
   });
+  document.addEventListener('beforeinput', historyInput);
   document.body.addEventListener('input', event => {
     const element = event.target.nodeType === Node.ELEMENT_NODE ? event.target : event.target.parentElement;
     const blockElement = element?.closest('[data-visual-block]');
@@ -155,9 +157,10 @@ function attachVisualEditor() {
         following.end += difference;
       }
     }
-    updateStatusControl(); renderSoon();
+    updateStatusControl(); renderSoon(event);
   });
   document.addEventListener('keydown', event => {
+    if (historyShortcut(event)) return;
     const figure = event.target.closest?.('figure[data-image-editable]');
     if (figure && ['Enter', ' '].includes(event.key)) {
       event.preventDefault();
@@ -177,7 +180,7 @@ function attachVisualEditor() {
   }
 }
 function showEditorMode(mode) {
-  editorMode = mode;
+  editorMode = mode; history.lastTyped = 0; updateComponentTools();
   const isVisual = mode === 'visual';
   visual.hidden = !isVisual; source.hidden = isVisual; visualHelp.hidden = !isVisual;
   visualMode.classList.toggle('active', isVisual); sourceMode.classList.toggle('active', !isVisual);
@@ -188,7 +191,7 @@ function showEditorMode(mode) {
   else { invalidateVisualRender(); source.focus(); }
 }
 function invalidateVisualRender() {
-  visualSelection = undefined;
+  visualSelection = undefined; updateComponentTools();
   visualRenderSequence += 1;
   visualRenderController?.abort();
   visualRenderController = undefined;
@@ -314,7 +317,9 @@ function dirty() {
   state.classList.toggle('dirty', changed);
   return changed;
 }
-function renderSoon() {
+function renderSoon(event) {
+  history.record(source.value, event?.type === 'input');
+  updateHistoryButtons();
   dirty(); writeDraft(); updateCursorStatus(); clearTimeout(previewTimer);
   previewTimer = setTimeout(render, 350);
   clearTimeout(validationTimer);
@@ -437,7 +442,7 @@ async function openHandout({ discardCurrentDraft = false } = {}) {
       ? 'Private library · Saves to private repository · Browser draft recovery off'
       : 'Public library';
     imageContext = undefined; pendingVisualFocus = undefined;
-    source.value = opened.source; selectedAsset = ''; showAssets(); updateStatusControl(); dirty();
+    source.value = opened.source; history.reset(opened.source); selectedAsset = ''; showAssets(); updateStatusControl(); dirty();
     const draft = readDraft(opened.path);
     const canRestore = draft && typeof draft.source === 'string' && draft.source !== opened.source;
     draftRecovery.hidden = !canRestore;
@@ -783,6 +788,7 @@ document.querySelector('#delete-image').addEventListener('click', async () => {
   if (dirty() && !await save()) return imageError('Save the handout before deleting this asset.');
   try {
     await request('/api/assets', { method: 'DELETE', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ path: opened.path, file: selectedAsset }) });
+    history.reset(source.value); updateHistoryButtons();
     opened.assets = opened.assets.filter(asset => asset.file !== selectedAsset); selectedAsset = ''; showAssets(); refreshImageControls();
     imageContext.snapshot = bufferSnapshot();
   } catch (error) { imageError(`Asset not deleted: ${error.message}`); }
@@ -791,17 +797,17 @@ imageDialog.addEventListener('cancel', event => { if (imageBusy) event.preventDe
 imageDialog.querySelector('.dialog-heading').addEventListener('submit', event => { if (imageBusy) event.preventDefault(); });
 imageDialog.addEventListener('close', clearUploadPreview);
 document.querySelector('#toolbar').addEventListener('click', event => {
-  if (!event.target.matches('button:not(#images):not(#visual-mode):not(#source-mode)')) return;
+  if (!event.target.matches('button[data-wrap], button[data-before], button[data-insert], button[data-block]')) return;
   if (editorMode === 'visual') {
     const commands = { '**|**': 'bold', '*|*': 'italic', '- ': 'insertUnorderedList', '## ': 'formatBlock' };
     const key = event.target.dataset.wrap || event.target.dataset.before;
     if (commands[key]) {
+      history.lastTyped = 0;
       visual.contentDocument.execCommand(commands[key], false, key === '## ' ? 'h2' : null);
-      visual.contentDocument.body.dispatchEvent(new Event('input', { bubbles: true }));
+      visualSelection?.element.dispatchEvent(new Event('input', { bubbles: true }));
       visual.contentWindow.focus(); return;
     }
-    showEditorMode('source');
-    message.textContent = 'Switched to Source for this structural editing tool.';
+    insertVisualComponent(event.target); return;
   }
   insert(event.target);
 });
@@ -861,7 +867,20 @@ document.querySelector('#restore-draft').addEventListener('click', () => {
   source.value = draft.source; draftRecovery.hidden = true; renderSoon(); source.focus();
   message.textContent = 'Browser draft restored. Review and save when ready.';
 });
-document.querySelector('#discard-draft').addEventListener('click', async () => { await discardAssets(); opened.assets = opened.assets.filter(asset => !asset.pending); showAssets(); clearDraft(); message.textContent = 'Browser draft and pending assets discarded.'; });
+document.querySelector('#discard-draft').addEventListener('click', async () => {
+  const pendingFiles = opened.assets.filter(asset => asset.pending).map(asset => asset.file);
+  try {
+    await discardAssets();
+    for (const range of figureRanges(source.value).reverse()) {
+      if (pendingFiles.includes(range.file)) source.value = source.value.slice(0, range.start) + source.value.slice(range.end);
+    }
+    if (pendingFiles.length) history.reset(source.value);
+    opened.assets = opened.assets.filter(asset => !asset.pending); showAssets();
+    renderSoon(); clearDraft();
+    if (editorMode === 'visual' && pendingFiles.length) renderVisual();
+    message.textContent = 'Browser draft and pending assets discarded.';
+  } catch (error) { message.textContent = `Draft not discarded: ${error.message}`; }
+});
 document.querySelector('#cancel-assets').addEventListener('click', async () => {
   if (imageBusy) return;
   if (!opened.assets.some(asset => asset.pending) || confirm('Discard all pending asset uploads?')) {
@@ -871,7 +890,7 @@ document.querySelector('#cancel-assets').addEventListener('click', async () => {
       for (const range of figureRanges(source.value).reverse()) {
         if (pendingFiles.includes(range.file)) source.value = source.value.slice(0, range.start) + source.value.slice(range.end);
       }
-      opened.assets = opened.assets.filter(asset => !asset.pending); selectedAsset = ''; showAssets(); renderSoon(); imageDialog.close();
+      opened.assets = opened.assets.filter(asset => !asset.pending); selectedAsset = ''; history.reset(source.value); showAssets(); renderSoon(); imageDialog.close();
       if (editorMode === 'visual') renderVisual();
       message.textContent = 'Pending assets discarded.';
     } catch (error) {
@@ -879,8 +898,172 @@ document.querySelector('#cancel-assets').addEventListener('click', async () => {
     }
   }
 });
-document.addEventListener('keydown', event => { if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 's') { event.preventDefault(); save(); } });
+document.addEventListener('keydown', event => { if (historyShortcut(event)) return; if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 's') { event.preventDefault(); save(); } });
 window.addEventListener('beforeunload', event => { if (dirty() || opened.assets?.some(asset => asset.pending)) event.preventDefault(); });
+
+
+function updateHistoryButtons() {
+  document.querySelector('#undo').disabled = !history.canUndo;
+  document.querySelector('#redo').disabled = !history.canRedo;
+}
+function restoreHistory(redo = false) {
+  if (imageDialog.open || document.querySelector('#details-dialog').open || !(redo ? history.canRedo : history.canUndo)) return;
+  source.value = redo ? history.redo() : history.undo();
+  updateStatusControl(); renderSoon();
+  if (editorMode === 'visual') renderVisual(); else source.focus();
+}
+function historyShortcut(event) {
+  if (!(event.ctrlKey || event.metaKey) || event.altKey || !['z', 'y'].includes(event.key.toLowerCase())) return false;
+  if (imageDialog.open || document.querySelector('#details-dialog').open || (event.target !== source && event.currentTarget === document && event.target.matches?.('input, textarea'))) return false;
+  event.preventDefault();
+  restoreHistory(event.key.toLowerCase() === 'y' || event.shiftKey);
+  return true;
+}
+document.querySelector('#undo').addEventListener('click', () => restoreHistory());
+document.querySelector('#redo').addEventListener('click', () => restoreHistory(true));
+// Retain the canvas selection while a toolbar button receives the click.
+document.querySelector('#toolbar').addEventListener('mousedown', event => {
+  if (editorMode === 'visual' && event.target.matches('button[data-wrap], button[data-before]')) event.preventDefault();
+});
+function insertVisualComponent(button) {
+  const anchor = visualSelection;
+  const at = anchor?.end ?? source.value.length;
+  let markup;
+  const kind = button.dataset.block;
+  if (kind === 'procedure') markup = '<ol class="procedure"><li>Step</li></ol>';
+  else if (kind === 'checklist') markup = '<div class="checklist"><ul><li>Item</li></ul></div>';
+  else if (kind === 'grid') markup = '<div class="grid"><div><p>Left column</p></div><div><p>Right column</p></div></div>';
+  else if (kind) markup = `<div class="${kind}"><p>Content</p></div>`;
+  else if (button.dataset.insert?.includes('pagebreak')) markup = '<!-- pagebreak -->';
+  else markup = '<table><thead><tr><th>Heading</th><th>Heading</th></tr></thead><tbody><tr><td>Value</td><td>Value</td></tr></tbody></table>';
+  source.setRangeText(`\n\n${markup}\n\n`, at, at, 'end');
+  if (markup.includes('<!-- pagebreak -->') && /^pageCount:/m.test(source.value.split(/^---\s*$/m)[1] || '')) {
+    source.value = updateMetadataFields(source.value, { pageCount: (source.value.match(/^<!--\s*pagebreak\s*-->\s*$/gm) || []).length + 1 });
+  }
+  renderSoon(); renderVisual();
+  message.textContent = anchor ? 'Inserted after the selected section. Click the new component to edit it.' : 'Inserted at the end. Click the new component to edit it.';
+}
+
+const detailsDialog = document.querySelector('#details-dialog');
+const detailsForm = document.querySelector('#details-form');
+const detailsError = document.querySelector('#details-error');
+let detailsSnapshot;
+let detailsMetadata;
+const sourceFields = {
+  web: ['title', 'organization', 'url', 'accessDate', 'publicationDate', 'updateDate'],
+  'non-web': ['title', 'organization', 'citation', 'publicationDate', 'updateDate'],
+  interview: ['title', 'interviewee', 'role', 'interviewDate'],
+  local: ['title', 'provider', 'location', 'receivedDate']
+};
+const fieldLabels = { accessDate: 'Access date', publicationDate: 'Publication date', updateDate: 'Update date', interviewDate: 'Interview date', receivedDate: 'Received date', url: 'URL' };
+function addSourceRow(entry = { type: 'web' }) {
+  const fieldset = document.createElement('fieldset');
+  const legend = document.createElement('legend'); legend.textContent = 'Source'; fieldset.append(legend);
+  const typeLabel = document.createElement('label'); typeLabel.textContent = 'Source type';
+  const type = document.createElement('select'); type.name = 'type';
+  for (const value of Object.keys(sourceFields)) type.add(new Option(value, value));
+  type.value = entry.type; typeLabel.append(type); fieldset.append(typeLabel);
+  const fields = document.createElement('div'); fields.className = 'source-fields'; fieldset.append(fields);
+  // Keep unfamiliar fields on existing records, including when switching type.
+  fieldset.sourceEntry = { ...entry };
+  const draw = () => {
+    fields.querySelectorAll('input').forEach(input => { fieldset.sourceEntry[input.name] = input.value; });
+    fields.replaceChildren();
+    for (const name of sourceFields[type.value] || []) {
+      const label = document.createElement('label'); label.textContent = fieldLabels[name] || name[0].toUpperCase() + name.slice(1);
+      const input = document.createElement('input'); input.name = name; input.value = fieldset.sourceEntry[name] ?? '';
+      input.type = /Date$/.test(name) ? 'date' : name === 'url' ? 'url' : 'text';
+      input.required = name === 'title'; label.append(input); fields.append(label);
+    }
+  };
+  type.addEventListener('change', draw); draw();
+  const remove = document.createElement('button'); remove.type = 'button'; remove.textContent = 'Remove source'; remove.addEventListener('click', () => fieldset.remove()); fieldset.append(remove);
+  document.querySelector('#details-sources').append(fieldset);
+}
+document.querySelector('#add-source').addEventListener('click', () => addSourceRow());
+document.querySelector('#details').addEventListener('click', async () => {
+  const snapshot = bufferSnapshot();
+  try {
+    const { metadata } = await request('/api/details', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(snapshot) });
+    if (!isCurrentBuffer(snapshot)) return;
+    detailsSnapshot = snapshot; detailsMetadata = metadata;
+    for (const name of ['title', 'version', 'lastReviewed']) detailsForm.querySelector(`.details-fields [name="${name}"]`).value = metadata[name] ?? '';
+    for (const name of ['editor', 'subjectMatter']) detailsForm.querySelector(`.details-fields [name="${name}"]`).value = metadata.reviewers?.[name] ?? '';
+    document.querySelector('#details-sources').replaceChildren();
+    for (const entry of Array.isArray(metadata.sources) ? metadata.sources : []) addSourceRow(entry);
+    detailsError.textContent = ''; document.querySelector('#approval-result').textContent = ''; detailsDialog.showModal();
+  } catch (error) { message.textContent = `Handout details: ${error.message}`; }
+});
+function collectDetails() {
+  const sources = [...document.querySelectorAll('#details-sources fieldset')].map(row => {
+    const entry = { ...row.sourceEntry, type: row.querySelector('select').value };
+    row.querySelectorAll('input').forEach(input => { if (input.value) entry[input.name] = input.value; else delete entry[input.name]; });
+    return entry;
+  });
+  if (!sources.length) throw Error('Add at least one source.');
+  const fields = { reviewers: { ...detailsMetadata.reviewers }, sources };
+  for (const name of ['title', 'version', 'lastReviewed']) fields[name] = detailsForm.querySelector(`.details-fields [name="${name}"]`).value;
+  for (const name of ['editor', 'subjectMatter']) fields.reviewers[name] = detailsForm.querySelector(`.details-fields [name="${name}"]`).value;
+  return fields;
+}
+detailsForm.addEventListener('submit', event => {
+  event.preventDefault();
+  if (!isCurrentBuffer(detailsSnapshot)) { detailsError.textContent = 'The document changed. Close and reopen details before applying.'; return; }
+  try {
+    source.value = updateMetadataFields(source.value, collectDetails());
+    renderSoon(); if (editorMode === 'visual') renderVisual();
+    detailsDialog.close(); message.textContent = 'Details applied. Review validation and Save to keep your changes.';
+  } catch (error) { detailsError.textContent = error.message; }
+});
+
+function historyInput(event) {
+  if (!['historyUndo', 'historyRedo'].includes(event.inputType)) return;
+  event.preventDefault(); restoreHistory(event.inputType === 'historyRedo');
+}
+source.addEventListener('beforeinput', historyInput);
+
+
+function updateComponentTools() {
+  const block = editorMode === 'visual' && visualSelection?.element;
+  const table = block && (block.matches('table') ? block : block.querySelector('table'));
+  for (const id of ['table-row', 'table-column']) document.querySelector(`#${id}`).disabled = !table;
+  document.querySelector('#remove-component').disabled = !block || !block.matches('.warning, .checklist, .procedure, .local-info, .sources, .grid, table');
+}
+for (const action of ['row', 'column']) document.querySelector(`#table-${action}`).addEventListener('click', () => {
+  const block = visualSelection?.element;
+  const table = block?.matches('table') ? block : block?.querySelector('table');
+  if (!table) return;
+  if (action === 'row') {
+    const body = table.tBodies[0] || table.createTBody();
+    const row = body.insertRow();
+    const columns = Math.max(1, ...[...table.rows].map(row => row.cells.length));
+    for (let i = 0; i < columns; i++) row.insertCell().textContent = 'Value';
+  } else {
+    for (const row of table.rows) {
+      const cell = table.ownerDocument.createElement(row.parentElement.tagName === 'THEAD' ? 'th' : 'td');
+      cell.textContent = cell.tagName === 'TH' ? 'Heading' : 'Value'; row.append(cell);
+    }
+  }
+  block.dispatchEvent(new Event('input', { bubbles: true }));
+});
+document.querySelector('#remove-component').addEventListener('click', () => {
+  if (!visualSelection || document.querySelector('#remove-component').disabled) return;
+  source.setRangeText('', visualSelection.start, visualSelection.end, 'end'); renderSoon(); renderVisual();
+});
+document.querySelector('#check-approval').addEventListener('click', async () => {
+  const output = document.querySelector('#approval-result');
+  output.textContent = 'Checking approval requirements…';
+  try {
+    const result = await request('/api/validate', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ ...detailsSnapshot, source: setHandoutStatus(updateMetadataFields(detailsSnapshot.source, collectDetails()), 'approved'), phase: 'syntax', session: `${session}-approval` }) });
+    output.textContent = result.valid ? 'These details pass source approval checks. The publishing build must also verify the proof record and layout.' : result.issues.map(issue => issue.message).join(' ');
+    output.textContent += ' This check does not change the document status or save changes.';
+  } catch (error) { output.textContent = error.message; }
+});
+
+document.querySelector('.tool-toggle').addEventListener('click', event => {
+  const expanded = document.querySelector('.tool-overflow').toggleAttribute('open');
+  event.currentTarget.setAttribute('aria-expanded', String(expanded));
+});
 
 handouts = await request('/api/handouts');
 populateHandouts();
