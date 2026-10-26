@@ -1,4 +1,3 @@
-import { createHash } from 'node:crypto';
 import fs from 'node:fs/promises';
 import { constants } from 'node:fs';
 import path from 'node:path';
@@ -9,16 +8,6 @@ const IMAGE_TYPES = new Map([
   ['image/jpeg', '.jpg'],
   ['image/svg+xml', '.svg']
 ]);
-
-export const sourceVersion = source => createHash('sha256').update(source).digest('hex');
-
-export function safeHandoutPath(root, relativePath) {
-  if (typeof relativePath !== 'string' || !relativePath.endsWith('.md')) throw Error('A Markdown handout path is required');
-  const handouts = path.resolve(root, 'handouts');
-  const resolved = path.resolve(root, relativePath);
-  if (resolved === handouts || !resolved.startsWith(`${handouts}${path.sep}`)) throw Error('Handout path must remain inside handouts/');
-  return resolved;
-}
 
 export function safeAssetName(name, mimeType) {
   const extension = IMAGE_TYPES.get(mimeType);
@@ -64,36 +53,6 @@ export async function writeJsonAtomic(file, value) {
   const temporary = `${file}.${process.pid}.tmp`;
   await fs.writeFile(temporary, `${JSON.stringify(value, null, 2)}\n`);
   await fs.rename(temporary, file);
-}
-
-export async function addAsset(root, code, request) {
-  const { directory, file: manifestFile, manifest } = await readManifest(root, code);
-  const file = safeAssetName(request.name, request.mimeType);
-  if (manifest.assets.some(asset => asset.file === file)) throw Error(`${file} already exists`);
-  const entry = {
-    file,
-    type: request.type,
-    creator: request.creator?.trim(),
-    source: request.source?.trim(),
-    license: request.license?.trim(),
-    alt: request.decorative ? '' : request.alt?.trim(),
-    ...(request.caption?.trim() ? { caption: request.caption.trim() } : {}),
-    decorative: Boolean(request.decorative)
-  };
-  validateAssetEntry(entry, code);
-  const bytes = decodeImage(request.dataUrl, request.mimeType, `${code}/${file}`);
-  await fs.mkdir(directory, { recursive: true });
-  const storedFile = path.join(directory, encodedAssetName(file));
-  const encoded = `${bytes.toString('base64').match(/.{1,76}/g).join('\n')}\n`;
-  await fs.writeFile(storedFile, encoded, { flag: 'wx' });
-  try {
-    manifest.assets.push(entry);
-    await writeJsonAtomic(manifestFile, manifest);
-  } catch (error) {
-    await fs.rm(storedFile, { force: true });
-    throw error;
-  }
-  return entry;
 }
 
 /** Prepare and validate an upload without changing the published asset tree. */
