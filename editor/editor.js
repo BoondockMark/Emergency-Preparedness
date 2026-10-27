@@ -1,3 +1,4 @@
+import { createReviewControls } from './review-controls.js';
 import { createLinkControls } from './link-controls.js';
 import { createCommandControls } from './command-controls.js';
 import { createNavigationControls } from './navigation-controls.js';
@@ -966,7 +967,7 @@ document.querySelector('#cancel-assets').addEventListener('click', async () => {
     }
   }
 });
-document.addEventListener('keydown', event => { if (historyShortcut(event)) return; if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 's') { event.preventDefault(); if (!document.querySelector('#commands-dialog[open], #shortcuts-dialog[open], #link-dialog[open]')) save(); } });
+document.addEventListener('keydown', event => { if (historyShortcut(event)) return; if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 's') { event.preventDefault(); if (!document.querySelector('#commands-dialog[open], #shortcuts-dialog[open], #link-dialog[open], #review-dialog[open]')) save(); } });
 window.addEventListener('beforeunload', event => { if (dirty() || opened.assets?.some(asset => asset.pending)) event.preventDefault(); });
 
 
@@ -1131,6 +1132,21 @@ document.querySelector('#check-approval').addEventListener('click', async () => 
 document.querySelector('.tool-toggle').addEventListener('click', event => {
   const expanded = document.querySelector('.tool-overflow').toggleAttribute('open');
   event.currentTarget.setAttribute('aria-expanded', String(expanded));
+});
+
+createReviewControls({
+  request, message,
+  context: () => ({ unsaved: source.value !== opened.source || opened.assets?.some(asset => asset.pending) }),
+  openHandout: async row => {
+    if (row.path === opened.path && row.private === opened.private) { previewControls.showEditor(); return true; }
+    const listed = handouts.find(item => item.path === row.path);
+    if (!listed || listed.private !== row.private) throw Error('The library list changed. Refresh the library list and dashboard before opening this handout.');
+    const search = handoutSearch.value, filter = needsFixing.checked;
+    handoutSearch.value = ''; needsFixing.checked = false; populateHandouts(row.path); select.value = row.path;
+    await openHandout();
+    if (opened.path !== row.path) { handoutSearch.value = search; needsFixing.checked = filter; populateHandouts(opened.path); return false; }
+    previewControls.showEditor(); return true;
+  }
 });
 
 linkControls = createLinkControls({

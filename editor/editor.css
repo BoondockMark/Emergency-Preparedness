@@ -233,3 +233,31 @@ body.preview-only main { grid-template-columns: minmax(0, 1fr); }
 #link-form p { margin: .25rem 0; overflow-wrap: anywhere; }
 #link-address-help, #link-note { font-size: .9rem; color: #475569; }
 #link-error { color: #991b1b; }
+
+#review-dialog { width: min(1200px, calc(100vw - 1rem)); }
+.review-actions, .review-reminder, .review-filters, .review-totals { display: flex; flex-wrap: wrap; gap: .6rem; margin: .7rem 0; }
+.review-reminder label { display: flex; gap: .4rem; align-items: center; }
+.review-filters label { display: grid; gap: .25rem; flex: 1 1 9rem; min-width: 0; }
+.review-filters input, .review-filters select { width: 100%; min-width: 0; padding: .35rem; }
+.review-filters label:first-child { flex-basis: 14rem; }
+.review-help, #review-snapshot { color: #475569; font-size: .9rem; }
+#review-unsaved { padding: .65rem; background: #fef3c7; border-left: 3px solid #d97706; }
+#review-unsaved[hidden], #review-stop[hidden], #review-empty[hidden] { display: none; }
+.review-totals button { padding: .5rem .65rem; border: 1px solid #94a3b8; border-radius: .3rem; background: #f8fafc; }
+.review-totals button[aria-pressed="true"] { border-color: #1d4ed8; background: #dbeafe; }
+.review-totals strong { margin-left: .4rem; }
+.review-table-wrap { overflow-x: auto; }
+#review-table { width: 100%; border-collapse: collapse; margin-top: .6rem; font-size: .9rem; }
+#review-table th, #review-table td { text-align: left; vertical-align: top; padding: .65rem .45rem; border-bottom: 1px solid #cbd5e1; overflow-wrap: anywhere; max-width: 20rem; }
+#review-table small { display: block; margin-top: .3rem; color: #475569; }
+#review-table td:first-child { min-width: 10rem; }
+#review-table ul { padding-left: 1.2rem; }
+.review-error { color: #991b1b; }
+@media (max-width: 700px) {
+  #review-table thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+  #review-table, #review-table tbody, #review-table tr, #review-table td { display: block; width: 100%; max-width: none; }
+  #review-table tr { padding: .5rem; margin-bottom: .65rem; background: #f8fafc; border: 1px solid #cbd5e1; }
+  #review-table td { border: 0; padding: .3rem; }
+  #review-table td::before { content: attr(data-label); display: block; font-weight: 600; color: #475569; margin-bottom: .2rem; }
+  .review-reminder label { flex: 1 1 10rem; }
+}

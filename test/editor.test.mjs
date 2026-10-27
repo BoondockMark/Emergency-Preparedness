@@ -24,7 +24,7 @@ async function setup(t) {
   const secondSource = source.replace('code: STH-001', 'code: STH-002').replace('title: Fixture', 'title: Second fixture');
   await fs.writeFile(path.join(root, 'handouts/section/second.md'), secondSource);
   await fs.copyFile(path.join(repository, 'templates/handout.html'), path.join(root, 'templates/handout.html'));
-  for (const name of ['index.html', 'editor.js', 'editor.css', 'editor-model.js', 'preview-controls.js', 'library-controls.js', 'proof-controls.js', 'change-controls.js', 'change-model.js', 'navigation-controls.js', 'navigation-model.js', 'command-controls.js', 'link-controls.js', 'link-model.js']) await fs.copyFile(path.join(repository, 'editor', name), path.join(root, 'editor', name));
+  for (const name of ['index.html', 'editor.js', 'editor.css', 'editor-model.js', 'preview-controls.js', 'library-controls.js', 'proof-controls.js', 'change-controls.js', 'change-model.js', 'navigation-controls.js', 'navigation-model.js', 'command-controls.js', 'link-controls.js', 'link-model.js', 'review-controls.js', 'review-model.js']) await fs.copyFile(path.join(repository, 'editor', name), path.join(root, 'editor', name));
   await fs.copyFile(path.join(repository, 'assets/styles/print.css'), path.join(root, 'assets/styles/print.css'));
   await fs.cp(path.join(repository, 'assets/fonts'), path.join(root, 'assets/fonts'), { recursive: true });
   const assetDirectory = path.join(root, 'assets/handouts/STH-001');
@@ -36,7 +36,7 @@ async function setup(t) {
   }] }));
   server = await createEditorServer({ root });
   await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
-  return { root, source, base: `http://127.0.0.1:${server.address().port}`, file: path.join(root, 'handouts/section/example.md') };
+  return { root, source, server, base: `http://127.0.0.1:${server.address().port}`, file: path.join(root, 'handouts/section/example.md') };
 }
 
 async function openEditor(t, { mode = 'source' } = {}) {
@@ -155,7 +155,10 @@ test('editor scan validates a handout from disk without opening it', async t => 
   await fs.writeFile(file, 'not valid front matter');
   const invalid = await fetch(`${base}/api/scan`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ path: 'handouts/section/example.md' }) });
   assert.equal(invalid.status, 200);
-  assert.deepEqual(await invalid.json(), { path: 'handouts/section/example.md', formatting: 'error', issueCount: 1 });
+  const scanned = await invalid.json();
+  assert.deepEqual({ path: scanned.path, formatting: scanned.formatting, issueCount: scanned.issueCount }, { path: 'handouts/section/example.md', formatting: 'error', issueCount: 1 });
+  assert.equal(typeof scanned.revision, 'string');
+  assert.equal(scanned.issues.length, 1);
 });
 
 test('editor rejects traversal and only opens discovered markdown paths', async t => {
@@ -1776,6 +1779,7 @@ test('command palette filters actions, skips unavailable commands, and shows sho
   await waitForText(page, '#command-count', 'No matching commands');
   assert.equal(await page.$eval('#command-query', input => input.hasAttribute('aria-activedescendant')), false);
   await page.keyboard.press('Escape');
+  await page.waitForFunction(() => !document.querySelector('#commands-dialog').open && !document.querySelector('#command-query').value);
   assert.equal(await value(page, '#command-query'), '');
   assert.equal(await page.$$eval('#command-results li', items => items.length), 0);
   assert.equal(await value(page, '#source'), source);
@@ -1932,4 +1936,112 @@ test('existing unsafe and image links can be removed without following their des
   const result = await value(page, '#source');
   assert.match(result, /<img src="\.\.\/assets\/handouts\/STH-001\/route.svg" alt="A route marker.">/);
   assert.doesNotMatch(result, /<a\b/);
+});
+
+test('review dashboard API reads current saved metadata, invalidates changed checks and tolerates broken or missing files', async t => {
+  const { base, file, root, source } = await setup(t);
+  let response = await fetch(`${base}/api/review`); assert.match(response.headers.get('cache-control'), /no-store/);
+  let snapshot = await response.json(); assert.equal(snapshot.handouts.length, 2); assert.equal(snapshot.handouts[0].reviewers.editor, 'Unassigned');
+  assert.equal(snapshot.handouts[0].validation.formatting, 'unchecked'); assert.equal('source' in snapshot.handouts[0], false);
+  await fs.writeFile(file, source.replace('version: 1.0', 'version: invalid'));
+  await fetch(`${base}/api/scan`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ path: 'handouts/section/example.md' }) });
+  snapshot = await (await fetch(`${base}/api/review`)).json();
+  assert.equal(snapshot.handouts[0].validation.formatting, 'error'); assert.ok(snapshot.handouts[0].validation.issues.length);
+  await fs.writeFile(file, source.replace('title: Fixture', 'title: Saved title').replace('lastReviewed: 2026-01-01', 'lastReviewed: 2020-01-01'));
+  await fs.writeFile(path.join(root, 'handouts/section/second.md'), 'Broken front matter');
+  snapshot = await (await fetch(`${base}/api/review`)).json();
+  assert.equal(snapshot.handouts[0].title, 'Saved title'); assert.equal(snapshot.handouts[0].lastReviewed, '2020-01-01'); assert.equal(snapshot.handouts[0].validation.formatting, 'unchecked');
+  assert.match(snapshot.handouts[1].metadataError, /delimiters/);
+  await fs.rm(file); snapshot = await (await fetch(`${base}/api/review`)).json();
+  assert.match(snapshot.handouts[0].readError, /missing on disk/); assert.equal(snapshot.handouts.length, 2);
+});
+
+test('review dashboard shares simultaneous saved-file checks without superseding either request', async t => {
+  const { base } = await setup(t);
+  const scan = () => fetch(`${base}/api/scan`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ path: 'handouts/section/example.md' }) });
+  const responses = await Promise.all([scan(), scan()]);
+  assert.deepEqual(responses.map(response => response.status), [200, 200]);
+  const results = await Promise.all(responses.map(response => response.json()));
+  assert.equal(results[0].checkedAt, results[1].checkedAt);
+});
+
+test('review dashboard filters saved dates and reviewers, preserves the open buffer, and respects discard decisions', async t => {
+  const { page, source, root } = await openEditor(t);
+  const second = path.join(root, 'handouts/section/second.md');
+  await fs.writeFile(second, (await fs.readFile(second, 'utf8')).replaceAll('Unassigned', 'Alice').replace('subjectMatter: Alice', 'subjectMatter: Blair').replace('lastReviewed: 2026-01-01', 'lastReviewed: 2099-01-01'));
+  await appendSource(page, '\nUnsaved local text.'); const before = await value(page, '#source');
+  await page.click('#review-dashboard'); await waitForText(page, '#review-state', 'Saved data loaded');
+  assert.equal(await page.$$eval('#review-rows tr', rows => rows.length), 2);
+  assert.equal(await page.$eval('#review-unsaved', element => element.hidden), false);
+  assert.doesNotMatch(await text(page, '#review-rows'), /Unsaved local text/);
+  await page.$eval('#review-date', input => { input.value = '2030-01-01'; input.dispatchEvent(new Event('input', { bubbles: true })); });
+  await page.click('[data-review-filter="due"]'); assert.equal(await page.$$eval('#review-rows tr', rows => rows.length), 1);
+  await page.click('[data-review-filter="reviewers"]'); assert.equal(await page.$$eval('#review-rows tr', rows => rows.length), 1);
+  await page.click('[data-review-filter="all"]'); await page.type('#review-search', 'Alice');
+  assert.equal(await page.$$eval('#review-rows tr', rows => rows.length), 1);
+  page.once('dialog', dialog => dialog.dismiss()); await page.click('#review-rows button');
+  assert.equal(await value(page, '#source'), before); assert.equal(await page.$eval('#review-dialog', dialog => dialog.open), true);
+  page.once('dialog', dialog => dialog.accept()); await page.click('#review-rows button');
+  await page.waitForFunction(() => !document.querySelector('#review-dialog').open);
+  assert.match(await value(page, '#source'), /code: STH-002/);
+  assert.equal(await value(page, '#review-search'), ''); assert.equal(await page.$$eval('#review-rows tr', rows => rows.length), 0);
+  assert.equal(await fs.readFile(path.join(root, 'handouts/section/example.md'), 'utf8'), source);
+});
+
+test('review dashboard checks saved files without validating or saving unsaved editor text', async t => {
+  const { page, file, source } = await openEditor(t);
+  await appendSource(page, '\nUnsaved buffer.');
+  const invalid = source.replace('version: 1.0', 'version: invalid'); await fs.writeFile(file, invalid);
+  await page.click('#review-dashboard'); await waitForText(page, '#review-state', 'Saved data loaded');
+  await page.click('#review-check'); await waitForText(page, '#review-state', 'Checks finished');
+  assert.match(await text(page, '#review-rows'), /Validation errors/);
+  assert.match(await value(page, '#source'), /Unsaved buffer/); assert.equal(await fs.readFile(file, 'utf8'), invalid);
+  await page.click('[data-review-filter="errors"]'); assert.equal(await page.$$eval('#review-rows tr', rows => rows.length), 1);
+  await page.keyboard.press('Escape');
+});
+
+test('review dashboard stops after the current check and ignores data arriving after close', async t => {
+  const { page } = await openEditor(t);
+  await waitForText(page, '#scan-state', 'Scan complete');
+  await page.click('#review-dashboard'); await waitForText(page, '#review-state', 'Saved data loaded');
+  await page.setRequestInterception(true);
+  let held, scanned = 0, holdReview = false;
+  page.on('request', request => {
+    if (request.url().endsWith('/api/scan')) { scanned++; held = request; return; }
+    if (holdReview && request.url().endsWith('/api/review')) { held = request; return; }
+    request.continue();
+  });
+  const checkStarted = page.waitForRequest(request => request.url().endsWith('/api/scan'));
+  await page.click('#review-check'); await checkStarted;
+  await page.click('#review-stop'); const current = held; held = undefined; await current.continue();
+  await waitForText(page, '#review-state', 'Stopped'); assert.equal(scanned, 1);
+  await page.keyboard.press('Escape');
+  holdReview = true; const readStarted = page.waitForRequest(request => request.url().endsWith('/api/review'));
+  await page.click('#review-dashboard'); await readStarted;
+  await page.click('#review-dialog .dialog-heading button');
+  const response = page.waitForResponse(response => response.url().endsWith('/api/review'));
+  await held.continue(); await response;
+  assert.equal(await page.$eval('#review-dialog', dialog => dialog.open), false);
+  assert.equal(await page.$$eval('#review-rows tr', rows => rows.length), 0);
+});
+
+test('review checks close a validation browser that finishes launching after server shutdown', { timeout: 30_000 }, async t => {
+  const { base, server } = await setup(t);
+  const originalLaunch = puppeteer.launch;
+  let release, started, ready;
+  const gate = new Promise(resolve => { release = resolve; });
+  const starting = new Promise(resolve => { started = resolve; });
+  const browserReady = new Promise(resolve => { ready = resolve; });
+  puppeteer.launch = async (...args) => { started(); await gate; const browser = await originalLaunch.call(puppeteer, ...args); ready(browser); return browser; };
+  t.after(() => { release(); puppeteer.launch = originalLaunch; });
+  const request = fetch(`${base}/api/scan`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ path: 'handouts/section/example.md' }) }).catch(() => undefined);
+  await starting;
+  server.closeAllConnections(); await new Promise(resolve => server.close(resolve));
+  release(); const browser = await browserReady; t.after(() => browser.close());
+  const process = browser.process();
+  if (process.exitCode === null && process.signalCode === null) await new Promise((resolve, reject) => {
+    const timer = setTimeout(() => reject(Error('Validation browser was left running after shutdown')), 10_000);
+    process.once('exit', () => { clearTimeout(timer); resolve(); });
+  });
+  assert.equal(browser.connected, false); await request;
 });

@@ -31,6 +31,7 @@ export function createCommandControls({ context, capture, message, showEditor })
     button('#undo', 'Undo last edit', 'Editing', 'history restore', 'Ctrl/Cmd+Z'),
     button('#redo', 'Redo edit', 'Editing', 'history', 'Ctrl/Cmd+Shift+Z'),
     button('#details', 'Edit handout details', 'Handout', 'title version reviewers sources metadata'),
+    button('#review-dashboard', 'Open review dashboard', 'Library', 'overdue reviewers validation queue dates'),
     button('#review-changes', 'Review unsaved changes', 'Handout', 'diff compare merge disk conflict'),
     button('#revert', 'Revert handout from disk', 'Handout', 'reload discard edits'),
     button('#new-handout', 'Create new handout', 'Library', 'template draft'),
