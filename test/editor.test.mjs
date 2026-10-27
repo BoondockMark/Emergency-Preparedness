@@ -23,7 +23,7 @@ async function setup(t) {
   const secondSource = source.replace('code: STH-001', 'code: STH-002').replace('title: Fixture', 'title: Second fixture');
   await fs.writeFile(path.join(root, 'handouts/section/second.md'), secondSource);
   await fs.copyFile(path.join(repository, 'templates/handout.html'), path.join(root, 'templates/handout.html'));
-  for (const name of ['index.html', 'editor.js', 'editor.css', 'editor-model.js', 'preview-controls.js', 'library-controls.js']) await fs.copyFile(path.join(repository, 'editor', name), path.join(root, 'editor', name));
+  for (const name of ['index.html', 'editor.js', 'editor.css', 'editor-model.js', 'preview-controls.js', 'library-controls.js', 'proof-controls.js']) await fs.copyFile(path.join(repository, 'editor', name), path.join(root, 'editor', name));
   await fs.copyFile(path.join(repository, 'assets/styles/print.css'), path.join(root, 'assets/styles/print.css'));
   await fs.cp(path.join(repository, 'assets/fonts'), path.join(root, 'assets/fonts'), { recursive: true });
   const assetDirectory = path.join(root, 'assets/handouts/STH-001');
@@ -1359,4 +1359,179 @@ test('browser refresh preserves unsaved text and selections and creation require
   assert.equal(await value(page, '#source'), dirtySource);
   assert.equal(await text(page, '#state'), 'Unsaved changes');
   assert.deepEqual(await page.$eval('#source', input => [input.selectionStart, input.selectionEnd]), [10, 20]);
+});
+
+async function waitForPdfProof(base, job, session) {
+  for (let attempt = 0; attempt < 600; attempt++) {
+    const result = await libraryPost(base, '/api/proofs/status', { id: job.id, session });
+    assert.equal(result.status, 200, JSON.stringify(result.data));
+    if (['ready', 'failed', 'cancelled'].includes(result.data.state)) return result.data;
+    await new Promise(resolve => setTimeout(resolve, 50));
+  }
+  throw Error('PDF proof did not finish');
+}
+async function downloadPdfProof(base, job, session) {
+  return fetch(base + '/api/proofs/download', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ id: job.id, session }) });
+}
+async function canonicalProof(t, root, source) {
+  const { copyAssets, openPrintPage, prepareDirectories, renderPrintPdf } = await import('../scripts/lib/artifact-generation.mjs');
+  const { loadAssetManifests } = await import('../scripts/lib/asset-validation.mjs');
+  const output = await fs.mkdtemp(path.join(os.tmpdir(), 'canonical-editor-proof-'));
+  t.after(() => fs.rm(output, { recursive: true, force: true }));
+  const manifests = await loadAssetManifests(root);
+  await prepareDirectories(root, output); await copyAssets(root, output, manifests);
+  const template = await fs.readFile(path.join(root, 'templates/handout.html'), 'utf8');
+  const html = renderHandoutSource(template, source, { sourcePath: 'handouts/section/example.md', manifests });
+  const document = parseHandoutSource(source, 'handouts/section/example.md', manifests);
+  const file = path.join(output, 'html', `${document.meta.code}.html`); await fs.writeFile(file, html);
+  const browser = await puppeteer.launch(browserOptions());
+  try { const page = await openPrintPage(browser, file); return await renderPrintPdf(page, document.meta.code, document.meta.pageCount); }
+  finally { await browser.close(); }
+}
+
+test('PDF proof matches canonical renderer bytes and exports unsaved text without writing source or artifacts', { timeout: 60_000 }, async t => {
+  const { base, root, source, file } = await setup(t);
+  const session = 'proof-canonical-session';
+  const snapshot = source + '\nThis text was not saved.';
+  const started = await libraryPost(base, '/api/proofs/start', { path: 'handouts/section/example.md', source: snapshot, session });
+  assert.equal(started.status, 202);
+  const result = await waitForPdfProof(base, started.data, session);
+  assert.equal(result.state, 'ready', JSON.stringify(result));
+  assert.equal(result.pageCount, 2);
+  const response = await downloadPdfProof(base, result, session);
+  assert.equal(response.status, 200);
+  assert.equal(response.headers.get('content-type'), 'application/pdf');
+  assert.match(response.headers.get('content-disposition'), /STH-001-proof.pdf/);
+  assert.equal(response.headers.get('cache-control'), 'no-store');
+  const bytes = Buffer.from(await response.arrayBuffer());
+  assert.deepEqual(bytes, await canonicalProof(t, root, snapshot));
+  const { getPdfPageCount, inspectEmbeddedFonts } = await import('../scripts/lib/pdf-validation.mjs');
+  assert.equal(await getPdfPageCount(bytes), 2);
+  assert.ok(inspectEmbeddedFonts(bytes).embeddedPrograms);
+  const { createHash } = await import('node:crypto');
+  assert.equal(result.pdfSha256, createHash('sha256').update(bytes).digest('hex'));
+  assert.equal(await fs.readFile(file, 'utf8'), source);
+  await assert.rejects(fs.access(path.join(root, 'docs/pdfs/STH-001.pdf')));
+  const other = await libraryPost(base, '/api/proofs/status', { id: result.id, session: 'other-editor-session' });
+  assert.equal(other.status, 404);
+  assert.equal((await downloadPdfProof(base, result, 'other-editor-session')).status, 404);
+});
+
+test('PDF proof reports source and layout failures and refuses their downloads', { timeout: 60_000 }, async t => {
+  const { base, source } = await setup(t);
+  const session = 'proof-invalid-session';
+  for (const invalid of [source.replace('title: Fixture', 'title:'), source + '\n<div style="height:20in">Overflowing content</div>']) {
+    const started = await libraryPost(base, '/api/proofs/start', { path: 'handouts/section/example.md', source: invalid, session });
+    const result = await waitForPdfProof(base, started.data, session);
+    assert.equal(result.state, 'failed');
+    assert.ok(result.issues.length > 0);
+    assert.equal((await downloadPdfProof(base, result, session)).status, 409);
+  }
+  const forbidden = await libraryPost(base, '/api/proofs/start', { path: '../outside.md', source, session });
+  assert.equal(forbidden.status, 400);
+});
+
+test('PDF proof snapshots pending images even if the upload is discarded during the build', { timeout: 60_000 }, async t => {
+  const { base, source, file, root } = await setup(t);
+  const session = 'proof-staged-session';
+  const svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10"><title>Proof route</title><circle cx="5" cy="5" r="3"/></svg>';
+  const upload = await libraryPost(base, '/api/assets', { path: 'handouts/section/example.md', session, name: 'Proof route.svg', mimeType: 'image/svg+xml', dataUrl: `data:image/svg+xml;base64,${Buffer.from(svg).toString('base64')}`, type: 'diagram', alt: 'A proof route.', creator: 'Tester', source: 'Test', license: 'Test', options: { width: 20, align: 'left' } });
+  assert.equal(upload.status, 201, JSON.stringify(upload.data));
+  const started = await libraryPost(base, '/api/proofs/start', { path: 'handouts/section/example.md', session, source: source + '\n' + upload.data.markup });
+  await libraryPost(base, '/api/assets/discard', { path: 'handouts/section/example.md', session });
+  const result = await waitForPdfProof(base, started.data, session);
+  assert.equal(result.state, 'ready', JSON.stringify(result));
+  assert.equal((await downloadPdfProof(base, result, session)).status, 200);
+  assert.equal(await fs.readFile(file, 'utf8'), source);
+  const manifest = JSON.parse(await fs.readFile(path.join(root, 'assets/handouts/STH-001/manifest.json'), 'utf8'));
+  assert.equal(manifest.assets.length, 1);
+});
+
+test('approved PDF proofs enforce proof records and exact PDF checksums', { timeout: 60_000 }, async t => {
+  const { base, root, source } = await setup(t);
+  const session = 'proof-approval-session';
+  const approved = source.replace('status: draft', 'status: approved').replace('editor: Unassigned', 'editor: Alice').replace('subjectMatter: Unassigned', 'subjectMatter: Bob');
+  const missing = await libraryPost(base, '/api/proofs/start', { path: 'handouts/section/example.md', session, source: approved });
+  const rejected = await waitForPdfProof(base, missing.data, session);
+  assert.equal(rejected.state, 'failed');
+  assert.match(rejected.error, /require proofRecord/);
+  assert.equal((await downloadPdfProof(base, rejected, session)).status, 409);
+  const candidate = approved.replace('status: approved', 'status: approved\nproofRecord: docs/publishing/proofs/candidate.md');
+  const directory = path.join(root, 'docs/publishing/proofs'); await fs.mkdir(directory, { recursive: true });
+  const record = `handoutCode: STH-001\npdfPath: docs/pdfs/STH-001.pdf\nsourceCommit: ${'a'.repeat(40)}\npdfSha256: CHECKSUM\nprinterModel: Test\ndriverOrApplication: Test\npaperSize: Letter\nscaling: 100%\nduplex: Long edge\nreviewer: Alice\ndate: 2026-10-26\ngrayscaleOutcome: PASS\npunchClearanceOutcome: PASS\nmeasuredAlignment: PASS\n`;
+  await fs.writeFile(path.join(directory, 'candidate.md'), record.replace('CHECKSUM', '0'.repeat(64)));
+  const wrong = await libraryPost(base, '/api/proofs/start', { path: 'handouts/section/example.md', session, source: candidate });
+  const badChecksum = await waitForPdfProof(base, wrong.data, session);
+  assert.match(badChecksum.error, /checksum does not match/);
+  const { createHash } = await import('node:crypto');
+  const checksum = createHash('sha256').update(await canonicalProof(t, root, candidate)).digest('hex');
+  await fs.writeFile(path.join(directory, 'candidate.md'), record.replace('CHECKSUM', checksum));
+  const valid = await libraryPost(base, '/api/proofs/start', { path: 'handouts/section/example.md', session, source: candidate });
+  const result = await waitForPdfProof(base, valid.data, session);
+  assert.equal(result.state, 'ready', JSON.stringify(result));
+  assert.equal(result.pdfSha256, checksum);
+});
+
+test('PDF jobs can be cancelled and active builds are bounded', { timeout: 60_000 }, async t => {
+  const { base, source } = await setup(t);
+  const payload = { path: 'handouts/section/example.md', source };
+  const first = await libraryPost(base, '/api/proofs/start', { ...payload, session: 'proof-capacity-one' });
+  const second = await libraryPost(base, '/api/proofs/start', { ...payload, session: 'proof-capacity-two' });
+  const third = await libraryPost(base, '/api/proofs/start', { ...payload, session: 'proof-capacity-three' });
+  assert.equal(first.status, 202); assert.equal(second.status, 202); assert.equal(third.status, 429);
+  for (const [job, session] of [[first.data, 'proof-capacity-one'], [second.data, 'proof-capacity-two']]) {
+    const cancel = await libraryPost(base, '/api/proofs/cancel', { id: job.id, session });
+    assert.equal(cancel.status, 200);
+    assert.equal((await libraryPost(base, '/api/proofs/status', { id: job.id, session })).status, 404);
+  }
+  const next = await libraryPost(base, '/api/proofs/start', { ...payload, session: 'proof-capacity-three' });
+  assert.equal(next.status, 202);
+  assert.equal((await waitForPdfProof(base, next.data, 'proof-capacity-three')).state, 'ready');
+});
+
+test('PDF proof applies the full build image-resolution requirement', { timeout: 60_000 }, async t => {
+  const { base, source } = await setup(t);
+  const session = 'proof-resolution-session';
+  const png = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jfbkAAAAASUVORK5CYII=';
+  const upload = await libraryPost(base, '/api/assets', { path: 'handouts/section/example.md', session, name: 'pixel.png', mimeType: 'image/png', dataUrl: `data:image/png;base64,${png}`, type: 'photograph', alt: 'Single pixel.', creator: 'Tester', source: 'Test', license: 'Test', options: { width: 20 } });
+  assert.equal(upload.status, 201);
+  const started = await libraryPost(base, '/api/proofs/start', { path: 'handouts/section/example.md', session, source: source + '\n' + upload.data.markup });
+  const result = await waitForPdfProof(base, started.data, session);
+  assert.equal(result.state, 'failed');
+  assert.match(result.error, /below 200 PPI/);
+  assert.equal((await downloadPdfProof(base, result, session)).status, 409);
+});
+
+test('browser builds and downloads a proof, marks edited proofs stale, and rebuilds the current text', { timeout: 60_000 }, async t => {
+  const { page, source, file } = await openEditor(t);
+  await page.evaluate(() => {
+    const original = URL.createObjectURL.bind(URL);
+    URL.createObjectURL = blob => { window.downloadedProofBlob = blob; return original(blob); };
+    document.addEventListener('click', event => { if (event.target.matches('a[download]')) { event.preventDefault(); window.downloadedProofName = event.target.download; } });
+  });
+  await page.click('#build-proof'); await page.waitForSelector('#proof-dialog[open]');
+  await page.keyboard.press('Escape');
+  await replaceSource(page, source + '\nAn edit made while the proof was building.');
+  await page.waitForFunction(() => document.querySelector('#proof-state').textContent === 'PDF proof ready.');
+  assert.equal(await page.$eval('#proof-download', button => button.disabled), true);
+  assert.equal(await page.$eval('#proof-stale', element => element.hidden), false);
+  await page.click('#build-proof');
+  await page.waitForFunction(() => !document.querySelector('#proof-download').disabled);
+  assert.match(await text(page, '#proof-summary'), /2 pages.*Built from unsaved edits/);
+  await page.click('#proof-download');
+  await page.waitForFunction(() => window.downloadedProofName === 'STH-001-proof.pdf');
+  assert.equal(await page.evaluate(() => window.downloadedProofBlob.type), 'application/pdf');
+  assert.equal(await page.evaluate(async () => String.fromCharCode(...new Uint8Array(await window.downloadedProofBlob.arrayBuffer()).slice(0, 5))), '%PDF-');
+  assert.equal(await fs.readFile(file, 'utf8'), source);
+});
+
+test('browser proof validation links return to the source line that needs fixing', { timeout: 60_000 }, async t => {
+  const { page, source } = await openEditor(t);
+  await replaceSource(page, source.replace('title: Fixture', 'title:'));
+  await page.click('#build-proof');
+  await page.waitForSelector('#proof-issues button');
+  assert.equal(await page.$eval('#proof-download', button => button.disabled), true);
+  await page.click('#proof-issues button');
+  assert.equal(await page.$eval('#proof-dialog', dialog => dialog.open), false);
+  assert.equal(await page.$eval('#source', source => source.value.slice(source.selectionStart, source.selectionEnd)), 'title:');
 });

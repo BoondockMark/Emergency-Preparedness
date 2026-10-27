@@ -172,3 +172,11 @@ body.preview-only main { grid-template-columns: minmax(0, 1fr); }
 
 #create-form .details-fields { grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr)); }
 #create-form .details-fields > label:first-child { grid-column: 1 / -1; }
+
+#proof-progress { width: 100%; }
+#proof-progress[hidden], #proof-stale[hidden], #proof-cancel[hidden] { display: none; }
+#proof-stale { padding: .6rem; background: #fef3c7; color: #92400e; }
+#proof-issues { padding-left: 1.5rem; }
+#proof-issues li { margin: .4rem 0; overflow-wrap: anywhere; }
+#proof-issues button { text-align: left; max-width: 100%; }
+#proof-download { padding: .5rem .8rem; background: #1d4ed8; border: 1px solid #1d4ed8; border-radius: .3rem; color: white; }

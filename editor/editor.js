@@ -1,3 +1,4 @@
+import { createProofControls } from './proof-controls.js';
 import { createLibraryControls } from './library-controls.js';
 import { createPreviewControls } from './preview-controls.js';
 import { EditHistory, updateMetadataFields, figureAtOffset, figureRanges, handoutNeedsFixing, handoutOptionLabel, indentSelection, prefixLines, readHandoutStatus, selectionDetails, setHandoutStatus } from './editor-model.js';
@@ -26,6 +27,7 @@ const draftRecovery = document.querySelector('#draft-recovery');
 const imageDialog = document.querySelector('#image-dialog');
 const assetList = document.querySelector('#asset-list');
 let opened = { source: '', revision: '' };
+let proofControls;
 let selectedAsset = '';
 let imageContext;
 let imageBusy = false;
@@ -327,6 +329,7 @@ function dirty() {
   return changed;
 }
 function renderSoon(event) {
+  proofControls?.changed();
   history.record(source.value, event?.type === 'input');
   updateHistoryButtons();
   dirty(); writeDraft(); updateCursorStatus(); clearTimeout(previewTimer);
@@ -921,14 +924,14 @@ function updateHistoryButtons() {
   document.querySelector('#redo').disabled = !history.canRedo;
 }
 function restoreHistory(redo = false) {
-  if (imageDialog.open || document.querySelector('#details-dialog').open || !(redo ? history.canRedo : history.canUndo)) return;
+  if (document.querySelector('dialog[open]') || !(redo ? history.canRedo : history.canUndo)) return;
   source.value = redo ? history.redo() : history.undo();
   updateStatusControl(); renderSoon();
   if (editorMode === 'visual') renderVisual(); else source.focus();
 }
 function historyShortcut(event) {
   if (!(event.ctrlKey || event.metaKey) || event.altKey || !['z', 'y'].includes(event.key.toLowerCase())) return false;
-  if (imageDialog.open || document.querySelector('#details-dialog').open || (event.target !== source && event.currentTarget === document && event.target.matches?.('input, textarea'))) return false;
+  if (document.querySelector('dialog[open]') || (event.target !== source && event.currentTarget === document && event.target.matches?.('input, textarea'))) return false;
   event.preventDefault();
   restoreHistory(event.key.toLowerCase() === 'y' || event.shiftKey);
   return true;
@@ -1079,10 +1082,16 @@ document.querySelector('.tool-toggle').addEventListener('click', event => {
   event.currentTarget.setAttribute('aria-expanded', String(expanded));
 });
 
+proofControls = createProofControls({
+  request, selectIssue,
+  context: () => ({ ...bufferSnapshot(), private: opened.private, unsaved: source.value !== opened.source || opened.assets?.some(asset => asset.pending) })
+});
+
 createLibraryControls({
   request, message,
   context: () => ({ ...opened, session, unsaved: dirty() || opened.assets?.some(asset => asset.pending) }),
   install: async (result, createdPath) => {
+    proofControls.invalidate();
     scanGeneration++;
     const previous = handouts.find(item => item.path === opened.path);
     handouts = result.handouts;

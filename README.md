@@ -156,6 +156,28 @@ removing pages clamps the position to the remaining document. These controls aff
 the on-screen preview only; PDF generation and layout validation use the original
 print geometry. Choosing a source-only validation issue brings the editor back.
 
+**Build PDF proof** generates a downloadable proof of the selected handout from
+its current editor text and images, including unsaved edits and pending uploads.
+Progress covers source checks, asset preparation, print layout, PDF generation,
+and approval-record verification. Source/metadata, clipping, missing links,
+low-resolution images, page-count, or embedded-font failures block the download;
+accessibility warnings remain visible. Click a source-mapped finding to return to
+the affected line. **Cancel build** stops an active job. Closing the dialog keeps
+the build running so you can continue editing.
+
+Proofs use the same pinned browser, fonts, PDF settings, timestamp normalization,
+and single-handout print checks as the command-line renderer. Approved handouts must also pass the
+existing proof-record and exact-checksum checks. Ready PDFs are kept in memory
+for up to 15 minutes and are accessible only to the editor session that built them.
+Private scratch files and browser profiles stay in the private checkout's
+`build/editor/` area and are removed when the job finishes or is cancelled.
+
+The proof button does not save source, commit pending uploads, update `docs/pdfs/`,
+or publish anything. Editing the text or refreshing the library marks an existing
+proof out of date and disables its download until you rebuild. Downloads are named
+`<CODE>-proof.pdf`. The full binder, committed proofs, and release checks still use
+`npm run build` and the normal review/publication workflow.
+
 **Handout details** opens a form for the title, version, review date, reviewers,
 and structured sources. Choose a source type to see the relevant fields; add or
 remove sources as needed. **Check approval readiness** checks the form against
