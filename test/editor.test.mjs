@@ -23,7 +23,7 @@ async function setup(t) {
   const secondSource = source.replace('code: STH-001', 'code: STH-002').replace('title: Fixture', 'title: Second fixture');
   await fs.writeFile(path.join(root, 'handouts/section/second.md'), secondSource);
   await fs.copyFile(path.join(repository, 'templates/handout.html'), path.join(root, 'templates/handout.html'));
-  for (const name of ['index.html', 'editor.js', 'editor.css', 'editor-model.js']) await fs.copyFile(path.join(repository, 'editor', name), path.join(root, 'editor', name));
+  for (const name of ['index.html', 'editor.js', 'editor.css', 'editor-model.js', 'preview-controls.js']) await fs.copyFile(path.join(repository, 'editor', name), path.join(root, 'editor', name));
   await fs.copyFile(path.join(repository, 'assets/styles/print.css'), path.join(root, 'assets/styles/print.css'));
   await fs.cp(path.join(repository, 'assets/fonts'), path.join(root, 'assets/fonts'), { recursive: true });
   const assetDirectory = path.join(root, 'assets/handouts/STH-001');
@@ -752,7 +752,9 @@ test('browser editor navigates validation results and inserts and removes figure
   await page.waitForFunction(() => document.querySelector('#validation-state').textContent.includes('Fix syntax / metadata'));
   await page.waitForSelector('#issues button');
   assert.match(await text(page, '#validation-state'), /Fix syntax \/ metadata/);
+  await page.click('#preview-only');
   await page.click('#issues button');
+  assert.equal(await page.$eval('#preview-only', button => button.getAttribute('aria-pressed')), 'false', 'Source-only findings restore the editor');
   const selectedLine = await page.$eval('#source', element => element.value.slice(element.selectionStart, element.selectionEnd));
   assert.equal(selectedLine, 'title:');
   assert.equal(await page.$eval('#source-mode', button => button.getAttribute('aria-pressed')), 'true');
@@ -1077,4 +1079,139 @@ test('visual typing shortcuts and page breaks share history and keep page counts
   await page.click('#source-mode');
   await page.keyboard.down('Control'); await page.keyboard.press('z'); await page.keyboard.up('Control');
   assert.equal(await value(page, '#source'), source);
+});
+
+test('preview controls fit the page, zoom, and navigate without editing source', { timeout: 60_000 }, async t => {
+  const { page, source } = await openEditor(t);
+  await page.waitForFunction(() => document.querySelector('#preview-page-count').textContent === 'of 2');
+  const fit = await page.$eval('#preview', frame => {
+    const doc = frame.contentDocument;
+    return { pageWidth: doc.querySelector('.sheet').getBoundingClientRect().width, viewport: doc.documentElement.clientWidth, scrollWidth: doc.documentElement.scrollWidth };
+  });
+  assert.ok(fit.pageWidth < fit.viewport, 'Fit to width shows the complete print page');
+  assert.ok(fit.scrollWidth <= fit.viewport + 1, 'Fitted preview has no horizontal scrolling');
+  await page.select('#preview-zoom', '100');
+  assert.equal(await text(page, '#preview-scale'), '100%');
+  assert.equal(Math.round(await page.$eval('#preview', frame => frame.contentDocument.querySelector('.sheet').getBoundingClientRect().width)), 816);
+  await page.click('#preview-next');
+  assert.equal(await value(page, '#preview-page'), '2');
+  assert.equal(await page.$eval('#preview-next', button => button.disabled), true);
+  await page.select('#preview-zoom', 'fit');
+  assert.equal(await value(page, '#preview-page'), '2');
+  await page.$eval('#preview-page', input => { input.value = '1'; input.dispatchEvent(new Event('change', { bubbles: true })); });
+  assert.equal(await value(page, '#preview-page'), '1');
+  await page.select('#preview-zoom', '200');
+  assert.equal(Math.round(await page.$eval('#preview', frame => frame.contentDocument.querySelector('.sheet').getBoundingClientRect().width)), 1632);
+  await page.select('#preview-zoom', '25');
+  await page.click('#preview-next');
+  assert.equal(await value(page, '#preview-page'), '2', 'Page navigation also works when the entire document fits');
+  await page.select('#preview-zoom', '100');
+  assert.equal(await value(page, '#preview-page'), '2', 'Zooming in retains the selected page');
+  await page.select('#preview-zoom', '200');
+  await page.emulateMediaType('print');
+  assert.equal(Math.round(await page.$eval('#preview', frame => frame.contentDocument.querySelector('.sheet').getBoundingClientRect().width)), 816, 'Preview scaling never changes print geometry');
+  await page.emulateMediaType('screen');
+  assert.equal(Math.round(await page.$eval('#preview', frame => frame.contentDocument.querySelector('.sheet').getBoundingClientRect().width)), 1632);
+  assert.equal(await value(page, '#source'), source);
+  assert.equal(await text(page, '#state'), 'Saved');
+});
+
+test('preview refresh retains the page and scroll offset and resets for another handout', { timeout: 60_000 }, async t => {
+  const { page, source } = await openEditor(t);
+  await page.waitForFunction(() => document.querySelector('#preview-page-count').textContent === 'of 2');
+  await page.select('#preview-zoom', '100');
+  await page.click('#preview-next');
+  const scrollPosition = () => page.$eval('#preview', frame => {
+    const doc = frame.contentDocument;
+    const sheet = doc.querySelectorAll('.sheet')[1];
+    const bounds = sheet.getBoundingClientRect();
+    return { offset: -bounds.top / bounds.height, left: frame.contentWindow.scrollX, revision: doc.documentElement.dataset.previewRevision };
+  });
+  await page.$eval('#preview', frame => { frame.contentWindow.scrollBy(80, 90); });
+  const before = await scrollPosition();
+  await replaceSource(page, `${source}\nPreview refresh test.`);
+  await page.waitForFunction(revision => {
+    const doc = document.querySelector('#preview').contentDocument;
+    return doc?.documentElement?.dataset.previewRevision !== revision && doc?.body?.textContent.includes('Preview refresh test.');
+  }, {}, before.revision);
+  await page.waitForFunction(() => document.querySelector('#preview-page').value === '2');
+  const after = await scrollPosition();
+  assert.ok(Math.abs(after.offset - before.offset) < .02, `page-relative offset retained: ${before.offset} -> ${after.offset}`);
+  assert.ok(Math.abs(after.left - before.left) < 2, 'horizontal position retained at manual zoom');
+  // Removing a page clamps the retained location to the remaining document.
+  const onePage = source.replace('pageCount: 2', 'pageCount: 1').replace('<!-- pagebreak -->', '');
+  await replaceSource(page, onePage);
+  await page.waitForFunction(() => document.querySelector('#preview-page-count').textContent === 'of 1');
+  assert.equal(await value(page, '#preview-page'), '1');
+  page.once('dialog', dialog => dialog.accept());
+  await page.select('#handout', 'handouts/section/second.md');
+  await page.waitForFunction(() => document.querySelector('#preview').contentDocument?.title === 'Second fixture');
+  await page.waitForFunction(() => document.querySelector('#preview-page-count').textContent === 'of 2');
+  assert.equal(await value(page, '#preview-page'), '1');
+  assert.equal(await page.$eval('#preview', frame => frame.contentWindow.scrollY), 0);
+});
+
+test('preview panes resize by keyboard and pointer and preview-only mode works on desktop and mobile', { timeout: 60_000 }, async t => {
+  const { page, source } = await openEditor(t);
+  await page.setViewport({ width: 1440, height: 900 });
+  await page.waitForFunction(() => document.querySelector('#preview-page-count').textContent === 'of 2');
+  await page.focus('#pane-splitter');
+  await page.keyboard.press('ArrowRight');
+  assert.equal(await page.$eval('#pane-splitter', splitter => splitter.getAttribute('aria-valuenow')), '49');
+  await page.keyboard.press('Home');
+  assert.equal(await page.$eval('#pane-splitter', splitter => splitter.getAttribute('aria-valuenow')), '25');
+  await page.keyboard.press('End');
+  assert.equal(await page.$eval('#pane-splitter', splitter => splitter.getAttribute('aria-valuenow')), '75');
+  const bounds = await page.$eval('#pane-splitter', splitter => { const r = splitter.getBoundingClientRect(); return { x: r.x + r.width / 2, y: r.y + 20 }; });
+  await page.mouse.move(bounds.x, bounds.y); await page.mouse.down(); await page.mouse.move(850, bounds.y, { steps: 5 }); await page.mouse.up();
+  const split = Number(await page.$eval('#pane-splitter', splitter => splitter.getAttribute('aria-valuenow')));
+  assert.ok(split >= 58 && split <= 61, `Pointer resized the panes: ${split}%`);
+  const initialWidth = await page.$eval('#preview', frame => frame.clientWidth);
+  await page.click('#preview-only');
+  assert.equal(await page.$eval('.editor-column', column => getComputedStyle(column).display), 'none');
+  assert.equal(await page.$eval('#preview-only', button => button.getAttribute('aria-pressed')), 'true');
+  assert.ok(await page.$eval('#preview', frame => frame.clientWidth) > initialWidth);
+  await page.$eval('#preview', frame => frame.contentWindow.focus()); await page.keyboard.press('Escape');
+  assert.equal(await page.$eval('#preview-only', button => button.getAttribute('aria-pressed')), 'false');
+  assert.equal(await page.$eval('#pane-splitter', splitter => splitter.getAttribute('aria-valuenow')), String(split));
+  await page.setViewport({ width: 390, height: 844 });
+  await page.waitForFunction(() => {
+    const doc = document.querySelector('#preview').contentDocument;
+    return doc?.querySelector('.sheet').getBoundingClientRect().width < doc.documentElement.clientWidth;
+  });
+  assert.equal(await page.$eval('#pane-splitter', splitter => getComputedStyle(splitter).display), 'none');
+  assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
+  await page.click('#preview-only');
+  assert.equal(await page.$eval('.editor-column', column => getComputedStyle(column).display), 'none');
+  await page.click('#preview-only');
+  assert.equal(await value(page, '#source'), source);
+});
+
+test('a delayed preview response cannot replace the current proof or its navigation state', { timeout: 60_000 }, async t => {
+  const { page, source } = await openEditor(t);
+  await page.waitForFunction(() => document.querySelector('#preview-page-count').textContent === 'of 2');
+  await page.evaluate(() => {
+    const actualFetch = window.fetch.bind(window);
+    let release;
+    window.releaseOldPreview = () => release?.();
+    window.fetch = (url, options) => {
+      const body = options?.body && JSON.parse(options.body);
+      if (url === '/api/render' && body?.source.includes('Old proof response')) {
+        window.oldPreviewRequested = true;
+        const response = actualFetch(url, { ...options, signal: undefined });
+        return new Promise(resolve => { release = () => response.then(resolve); });
+      }
+      return actualFetch(url, options);
+    };
+  });
+  await replaceSource(page, `${source}\nOld proof response.`);
+  await page.waitForFunction(() => window.oldPreviewRequested);
+  await replaceSource(page, `${source}\nNew proof response.`);
+  await page.waitForFunction(() => document.querySelector('#preview').contentDocument?.body?.textContent.includes('New proof response.'));
+  await page.select('#preview-zoom', '100'); await page.click('#preview-next');
+  await page.evaluate(() => window.releaseOldPreview());
+  await new Promise(resolve => setTimeout(resolve, 100));
+  assert.equal(await page.$eval('#preview', frame => frame.contentDocument.body.textContent.includes('New proof response.')), true);
+  assert.equal(await value(page, '#preview-page'), '2');
+  assert.equal(await text(page, '#preview-scale'), '100%');
 });
