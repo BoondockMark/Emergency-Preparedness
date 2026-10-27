@@ -44,6 +44,7 @@ async function openEditor(t, { mode = 'source' } = {}) {
   const browser = await puppeteer.launch(browserOptions());
   t.after(() => browser.close());
   const page = await browser.newPage();
+  page.on('pageerror', error => t.diagnostic(`Browser error: ${error.message}`));
   await page.goto(context.base, { waitUntil: 'networkidle0' });
   await page.waitForFunction(() => document.querySelector('#source').value.includes('code: STH-001'));
   if (mode === 'source') await page.click('#source-mode');
@@ -301,7 +302,7 @@ test('browser editor controls remain reachable without horizontal overflow at re
   });
   assert.ok(mobilePicker.pickerWidth > 300, 'mobile handout controls occupy their own full-width row');
   assert.ok(mobilePicker.selectTop > mobilePicker.searchTop, 'mobile search and handout selection stack without squeezing');
-  assert.equal(await page.$eval('.tool-overflow summary', summary => getComputedStyle(summary).display !== 'none'), true, 'mobile lower-frequency tools use an overflow disclosure');
+  assert.equal(await page.$eval('.tool-overflow .tool-toggle', summary => getComputedStyle(summary).display !== 'none'), true, 'mobile lower-frequency tools use an overflow disclosure');
   assert.equal(await page.$eval('.tool-overflow-menu', menu => getComputedStyle(menu).display), 'none', 'mobile lower-frequency tools start collapsed');
   assert.equal(await page.$eval('#images', button => button.closest('.tool-overflow') === null), true, 'Images is hidden in the overflow menu');
   const imageButtonBounds = await page.$eval('#images', element => {
@@ -310,7 +311,7 @@ test('browser editor controls remain reachable without horizontal overflow at re
   });
   assert.notEqual(imageButtonBounds.display, 'none');
   assert.ok(imageButtonBounds.width > 0 && imageButtonBounds.left >= 0 && imageButtonBounds.right <= 390, 'Images is not visible at mobile width');
-  await page.$eval('.tool-overflow', element => { element.open = true; });
+  await page.click('.tool-toggle');
   await page.click('#images');
   assert.equal(await page.$eval('#image-dialog', element => element.scrollWidth <= element.clientWidth), true, 'mobile image dialog has horizontal overflow');
   assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth), true, 'open mobile dialog causes page overflow');
@@ -370,7 +371,7 @@ test('browser visual editor ignores a delayed render from an older buffer', { ti
   await page.click('#source-mode');
   await replaceSource(page, `${source}\nNewer visual buffer`);
   await page.click('#visual-mode');
-  await page.waitForFunction(() => document.querySelector('#visual').contentDocument?.body.textContent.includes('Newer visual buffer'));
+  await page.waitForFunction(() => document.querySelector('#visual').contentDocument?.body?.textContent.includes('Newer visual buffer'));
   await page.evaluate(() => window.releaseDelayedVisualRender());
   await new Promise(resolve => setTimeout(resolve, 100));
   assert.equal(await page.$eval('#visual', frame => frame.contentDocument.body.textContent.includes('Newer visual buffer')), true);
@@ -379,7 +380,7 @@ test('browser visual editor ignores a delayed render from an older buffer', { ti
 
 test('browser visual editor ignores a delayed render after changing handouts', { timeout: 45_000 }, async t => {
   const { page } = await openEditor(t, { mode: 'visual' });
-  await page.waitForFunction(() => document.querySelector('#visual').contentDocument?.body.textContent.includes('Fixture'));
+  await page.waitForFunction(() => document.querySelector('#visual').contentDocument?.body?.textContent.includes('Fixture'));
   await page.evaluate(() => {
     const actualFetch = window.fetch.bind(window);
     let release;
@@ -403,7 +404,7 @@ test('browser visual editor ignores a delayed render after changing handouts', {
   await page.click('#visual-mode');
   await page.waitForFunction(() => window.delayedHandoutRenderStarted);
   await page.select('#handout', 'handouts/section/second.md');
-  await page.waitForFunction(() => document.querySelector('#visual').contentDocument?.body.textContent.includes('Second fixture'));
+  await page.waitForFunction(() => document.querySelector('#visual').contentDocument?.body?.textContent.includes('Second fixture'));
   await page.evaluate(() => window.releaseDelayedHandoutRender());
   await new Promise(resolve => setTimeout(resolve, 100));
   assert.equal(await page.$eval('#visual', frame => frame.contentDocument.body.textContent.includes('Second fixture')), true);
@@ -729,7 +730,6 @@ test('browser editor toolbar and keyboard operations transform and save Markdown
   assert.match(await value(page, '#source'), /\nAlpha\nBeta$/);
 
   await page.$eval('#source', element => { element.focus(); element.setSelectionRange(element.value.length, element.value.length); });
-  await page.$eval('.tool-overflow', element => { element.open = true; });
   await page.click('#toolbar [data-insert*="pagebreak"]');
   assert.equal((await value(page, '#source')).endsWith('\n<!-- pagebreak -->\n'), true);
 
@@ -955,4 +955,126 @@ test('visual insertion can add repeated assets before a block with unique captio
   assert.equal(figureRanges(inserted).length, 2);
   assert.match(inserted, /id="sth-001-route-caption-2"/);
   assert.match(inserted, /aria-labelledby="sth-001-route-caption-2"/);
+});
+
+test('details updates preserve body, private flags, proof records, and unfamiliar fields', async () => {
+  const { updateMetadataFields, EditHistory } = await import('../editor/editor-model.js');
+  const { loadDocument } = await import('../scripts/lib/metadata.mjs');
+  const original = (await fixture()).replace('title: Fixture', '# Keep title note\ntitle: Fixture\n# Keep section note').replace('status: draft', 'status: draft\nprivate: true\nproofRecord: docs/publishing/proofs/record.json');
+  const updated = updateMetadataFields(original, {
+    title: 'Title: "quoted" $&',
+    reviewers: { editor: 'Alice', subjectMatter: 'Bob', additionalRole: 'Carol' },
+    sources: [{ type: 'local', title: 'Evidence', provider: 'Test', location: 'Repository', receivedDate: '2026-01-01', customField: 'Keep me' }]
+  });
+  const parsed = loadDocument(updated, 'fixture');
+  assert.equal(parsed.data.title, 'Title: "quoted" $&');
+  assert.match(updated, /title: "Title: \\"quoted\\" \$&"/);
+  assert.match(updated, /# Keep title note/);
+  assert.match(updated, /# Keep section note/);
+  assert.equal(parsed.data.private, true);
+  assert.equal(parsed.data.proofRecord, 'docs/publishing/proofs/record.json');
+  assert.equal(parsed.data.reviewers.additionalRole, 'Carol');
+  assert.equal(parsed.data.sources[0].customField, 'Keep me');
+  assert.equal(parsed.content, loadDocument(original, 'fixture').content);
+  assert.equal(loadDocument(updateMetadataFields(original.replaceAll('\n', '\r\n'), { title: 'CRLF' }), 'fixture').data.title, 'CRLF');
+  assert.throws(() => updateMetadataFields(original, { title: 'Injected\nstatus: approved' }), /one line/);
+  const history = new EditHistory(original);
+  history.record(updated, true, 1000);
+  history.record(updated + 'typing', true, 1100);
+  assert.equal(history.undo(), original);
+  assert.equal(history.redo(), updated + 'typing');
+  history.undo(); history.record('branched');
+  assert.equal(history.canRedo, false);
+  history.reset('another handout');
+  assert.equal(history.canUndo, false);
+});
+
+test('details endpoint reads incomplete drafts without bypassing approval checks', async t => {
+  const { base, source } = await setup(t);
+  const response = await fetch(`${base}/api/details`, { method: 'POST', body: JSON.stringify({ path: 'handouts/section/example.md', source: source.replace('title: Fixture', 'title:') }) });
+  assert.equal(response.status, 200);
+  assert.equal((await response.json()).metadata.title, null);
+  const forbidden = await fetch(`${base}/api/details`, { method: 'POST', body: JSON.stringify({ path: '../outside.md', source }) });
+  assert.equal(forbidden.status, 400);
+});
+
+test('details form applies sources, checks approval, and supports undo across modes and save', { timeout: 60_000 }, async t => {
+  const { page, source, file } = await openEditor(t, { mode: 'visual' });
+  await page.click('#details');
+  await page.waitForSelector('#details-dialog[open]');
+  await page.$eval('#details-form [name="title"]', input => { input.value = 'Updated handout'; });
+  await page.$eval('#details-form [name="editor"]', input => { input.value = 'Alice'; });
+  await page.click('#check-approval');
+  await page.waitForFunction(() => document.querySelector('#approval-result').textContent.includes('subjectMatter'));
+  assert.equal(await value(page, '#source'), source);
+  await page.$eval('#details-sources input[name="provider"]', input => { input.value = 'Updated provider'; });
+  await page.click('#details-form button[type="submit"]');
+  await page.waitForFunction(() => !document.querySelector('#details-dialog').open);
+  assert.match(await value(page, '#source'), /title: "Updated handout"/);
+  assert.match(await value(page, '#source'), /provider: "Updated provider"/);
+  await page.click('#undo');
+  assert.equal(await value(page, '#source'), source);
+  await page.click('#source-mode');
+  await page.click('#redo');
+  assert.match(await value(page, '#source'), /Updated handout/);
+  await page.click('#save');
+  await page.waitForFunction(() => document.querySelector('#state').textContent === 'Saved');
+  assert.match(await fs.readFile(file, 'utf8'), /Updated provider/);
+  await page.click('#undo');
+  assert.equal(await value(page, '#source'), source);
+  assert.equal(await text(page, '#state'), 'Unsaved changes');
+});
+
+test('visual component tools insert at the selected block and edit tables without switching modes', { timeout: 60_000 }, async t => {
+  const { page } = await openEditor(t, { mode: 'visual' });
+  const canvas = await (await page.$('#visual')).contentFrame();
+  await canvas.waitForSelector('[data-visual-block]');
+  await canvas.evaluate(() => [...document.querySelectorAll('[data-visual-block]')].find(block => block.textContent.includes('First page.')).click());
+  await page.click('#toolbar [data-block="warning"]');
+  await page.waitForFunction(() => document.querySelector('#visual').contentDocument?.querySelector('.warning'));
+  const warningSource = await value(page, '#source');
+  assert.ok(warningSource.indexOf('class="warning"') > warningSource.indexOf('First page.'));
+  assert.ok(warningSource.indexOf('class="warning"') < warningSource.indexOf('<!-- pagebreak -->'));
+  assert.equal(await page.$eval('#source', input => input.hidden), true);
+  await page.click('#undo');
+  await page.waitForFunction(() => !document.querySelector('#visual').contentDocument?.querySelector('.warning'));
+  await page.click('#toolbar [data-insert*="Heading"]');
+  await page.waitForFunction(() => document.querySelector('#visual').contentDocument?.querySelector('table'));
+  await (await (await page.$('#visual')).contentFrame()).click('td');
+  await page.click('#table-row');
+  await page.click('#table-column');
+  assert.equal(await page.$eval('#visual', frame => frame.contentDocument.querySelectorAll('table tr').length), 3);
+  assert.equal(await page.$eval('#visual', frame => frame.contentDocument.querySelector('table tr').cells.length), 3);
+  await page.click('#remove-component');
+  await page.waitForFunction(() => !document.querySelector('#visual').contentDocument?.querySelector('table'));
+  await page.click('#undo');
+  await page.waitForFunction(() => document.querySelector('#visual').contentDocument?.querySelectorAll('table tr').length === 3);
+  assert.equal(await page.$eval('#visual-mode', button => button.getAttribute('aria-pressed')), 'true');
+});
+
+test('visual typing shortcuts and page breaks share history and keep page counts valid', { timeout: 60_000 }, async t => {
+  const { page, source } = await openEditor(t, { mode: 'visual' });
+  const canvas = await (await page.$('#visual')).contentFrame();
+  await canvas.waitForSelector('[data-visual-block]');
+  await canvas.evaluate(() => {
+    const paragraph = [...document.querySelectorAll('.content p')].find(element => element.textContent === 'First page.');
+    paragraph.focus();
+    const range = document.createRange(); range.selectNodeContents(paragraph); range.collapse(false);
+    const selection = document.getSelection(); selection.removeAllRanges(); selection.addRange(range);
+  });
+  await page.keyboard.type(' Changed.');
+  assert.match(await value(page, '#source'), /Changed/);
+  await page.keyboard.down('Control'); await page.keyboard.press('z'); await page.keyboard.up('Control');
+  assert.equal(await value(page, '#source'), source);
+  await page.click('#redo');
+  assert.match(await value(page, '#source'), /Changed/);
+  await page.click('#toolbar [data-insert*="pagebreak"]');
+  await page.waitForFunction(() => document.querySelector('#visual').contentDocument?.querySelectorAll('.sheet').length === 3);
+  assert.match(await value(page, '#source'), /^pageCount: 3$/m);
+  await page.click('#undo');
+  await page.waitForFunction(() => document.querySelector('#visual').contentDocument?.querySelectorAll('.sheet').length === 2);
+  assert.match(await value(page, '#source'), /Changed/);
+  await page.click('#source-mode');
+  await page.keyboard.down('Control'); await page.keyboard.press('z'); await page.keyboard.up('Control');
+  assert.equal(await value(page, '#source'), source);
 });

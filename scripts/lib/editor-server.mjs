@@ -8,7 +8,7 @@ import { browserOptions, copyAssets, openPrintPage, prepareDirectories, prepareD
 import { loadAssetManifests, readAssetBytes } from './asset-validation.mjs';
 import { renderHandoutSource } from './content-rendering.mjs';
 import { loadBuildContent } from './private-content.mjs';
-import { loadDocument } from './metadata.mjs';
+import { loadDocument, parseMetadataYaml } from './metadata.mjs';
 import { commitHandoutWithAssets, deleteAsset, figureMarkup, stageAsset } from './editor-support.mjs';
 import { readHandoutStatus } from '../../editor/editor-model.js';
 
@@ -162,6 +162,13 @@ export async function createEditorServer({ root, privateDirectory, publicOnly = 
         const pending = session ? stagedFor({ session, path: relative }) : [];
         const assets = [...(manifests.get(document.meta.code)?.values() ?? []), ...pending.map(item => ({ ...item.entry, pending: true }))];
         return json(response, 200, { path: relative, source, revision: revision(source), code: document.meta.code, assets, private: Boolean(document.contentRoot) });
+      }
+      if (request.method === 'POST' && url.pathname === '/api/details') {
+        const value = await body(request);
+        if (!safeFile(value.path) || typeof value.source !== 'string') return json(response, 400, { error: 'Invalid handout' });
+        const match = value.source.match(/^---\r?\n([\s\S]*?)\r?\n---(?:\r?\n|$)/);
+        if (!match) return json(response, 422, { error: 'Correct the front matter delimiters in Source first.' });
+        return json(response, 200, { metadata: parseMetadataYaml(match[1], value.path) });
       }
       if (request.method === 'POST' && url.pathname === '/api/assets') {
         const value = await body(request);
