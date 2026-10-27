@@ -225,3 +225,11 @@ body.preview-only main { grid-template-columns: minmax(0, 1fr); }
 .shortcut-table { width: 100%; border-collapse: collapse; font-size: .9rem; }
 .shortcut-table th, .shortcut-table td { padding: .55rem .4rem; border-bottom: 1px solid #cbd5e1; text-align: left; vertical-align: top; overflow-wrap: anywhere; }
 .shortcut-table kbd { white-space: normal; font-family: ui-monospace, monospace; }
+
+#link-dialog { width: min(620px, calc(100vw - 1rem)); }
+#link-form { display: grid; gap: .45rem; margin-top: .75rem; }
+#link-form > label { font-weight: 600; }
+#link-form > input { width: 100%; min-width: 0; padding: .5rem; font: inherit; }
+#link-form p { margin: .25rem 0; overflow-wrap: anywhere; }
+#link-address-help, #link-note { font-size: .9rem; color: #475569; }
+#link-error { color: #991b1b; }
