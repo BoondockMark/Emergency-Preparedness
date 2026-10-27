@@ -1,3 +1,4 @@
+import { createChangeControls } from './change-controls.js';
 import { createProofControls } from './proof-controls.js';
 import { createLibraryControls } from './library-controls.js';
 import { createPreviewControls } from './preview-controls.js';
@@ -28,6 +29,8 @@ const imageDialog = document.querySelector('#image-dialog');
 const assetList = document.querySelector('#asset-list');
 let opened = { source: '', revision: '' };
 let proofControls;
+let changeControls;
+let saving;
 let selectedAsset = '';
 let imageContext;
 let imageBusy = false;
@@ -298,7 +301,7 @@ function readDraft(path) {
 }
 function writeDraft() {
   if (opened.private || !opened.path || !dirty()) return;
-  try { localStorage.setItem(draftKey(opened.path), JSON.stringify({ source: source.value, revision: opened.revision, updatedAt: Date.now() })); } catch { /* Editing must continue if storage is unavailable. */ }
+  try { localStorage.setItem(draftKey(opened.path), JSON.stringify({ source: source.value, revision: opened.revision, baseSource: opened.baseAvailable === false ? undefined : opened.source, updatedAt: Date.now() })); } catch { /* Editing must continue if storage is unavailable. */ }
 }
 function clearDraft(path = opened.path) {
   try { if (!opened.private) localStorage.removeItem(draftKey(path)); } catch { /* Storage may be disabled. */ }
@@ -319,16 +322,18 @@ async function request(url, options) {
   const response = await fetch(url, options);
   const type = response.headers.get('content-type') || '';
   const value = type.includes('application/json') ? await response.json() : await response.text();
-  if (!response.ok) throw Error(value.error || value);
+  if (!response.ok) throw Object.assign(Error(value.error || value), { status: response.status });
   return value;
 }
 function dirty() {
   const changed = source.value !== opened.source;
-  state.textContent = changed ? 'Unsaved changes' : 'Saved';
-  state.classList.toggle('dirty', changed);
+  const unsaved = changed || opened.assets?.some(asset => asset.pending);
+  state.textContent = unsaved ? 'Unsaved changes' : 'Saved';
+  state.classList.toggle('dirty', Boolean(unsaved));
   return changed;
 }
 function renderSoon(event) {
+  changeControls?.changed();
   proofControls?.changed();
   history.record(source.value, event?.type === 'input');
   updateHistoryButtons();
@@ -459,6 +464,7 @@ async function openHandout({ discardCurrentDraft = false } = {}) {
       ? 'Private library · Saves to private repository · Browser draft recovery off'
       : 'Public library';
     imageContext = undefined; pendingVisualFocus = undefined;
+    opened.baseAvailable = true; completedSyntaxValidation = undefined; changeControls?.clear();
     source.value = opened.source; history.reset(opened.source); selectedAsset = ''; showAssets(); updateStatusControl(); dirty();
     const draft = readDraft(opened.path);
     const canRestore = draft && typeof draft.source === 'string' && draft.source !== opened.source;
@@ -467,14 +473,29 @@ async function openHandout({ discardCurrentDraft = false } = {}) {
     renderSoon(); showEditorMode(editorMode);
   } catch (error) { message.textContent = error.message; }
 }
-async function save() {
+function save() {
+  if (document.querySelector('#changes-dialog').open) { document.querySelector('#changes-status').textContent = 'Apply or close this comparison before saving.'; return Promise.resolve(false); }
+  if (saving) return saving;
+  const button = document.querySelector('#save'); const revert = document.querySelector('#revert');
+  button.disabled = true; revert.disabled = true; button.textContent = 'Saving…';
+  saving = saveSnapshot().finally(() => { saving = undefined; button.disabled = false; revert.disabled = false; button.textContent = 'Save'; });
+  return saving;
+}
+async function saveSnapshot() {
+  const listed = handouts.find(item => item.path === opened.path);
+  if (listed && typeof listed.private === 'boolean' && listed.private !== opened.private) {
+    message.textContent = 'Not saved: The handout now belongs to a different library. Reopen the intended handout before saving.';
+    changeControls?.conflict(); return false;
+  }
+  const initialPath = opened.path;
+  let snapshot;
   try {
     clearTimeout(validationTimer);
-    let snapshot;
     let syntax;
     do {
       snapshot = bufferSnapshot();
       syntax = await syntaxForSave(snapshot);
+      if (opened.path !== initialPath) { message.textContent = 'Save cancelled because a different handout is open.'; return false; }
     } while (!isCurrentBuffer(snapshot));
     if (!syntax.valid) {
       showIssues(syntax.issues);
@@ -495,9 +516,20 @@ async function save() {
         return false;
       }
     }
-    const result = await request('/api/save', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ ...snapshot, revision: opened.revision }) });
-    opened = { ...opened, ...snapshot, revision: result.revision, assets: opened.assets.map(asset => ({ ...asset, pending: false })) }; showAssets(); updateHandout(snapshot.path, { status: result.status }); clearDraft(); dirty(); message.textContent = 'Saved.'; return true;
-  } catch (error) { message.textContent = `Not saved: ${error.message}`; return false; }
+    const result = await request('/api/save', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ ...snapshot, revision: opened.revision, private: opened.private }) });
+    updateHandout(snapshot.path, { status: result.status });
+    if (opened.path !== snapshot.path) { message.textContent = 'Saved the previous handout. Your current text is unchanged.'; return true; }
+    opened = { ...opened, ...snapshot, revision: result.revision, baseAvailable: true, assets: opened.assets.map(asset => result.committedAssets?.includes(asset.file) ? { ...asset, pending: false } : asset) };
+    showAssets(); clearDraft(); changeControls?.clear(); changeControls?.changed();
+    const newerEdits = dirty() || opened.assets.some(asset => asset.pending);
+    if (newerEdits) writeDraft();
+    message.textContent = newerEdits ? 'Saved an earlier snapshot. Newer edits or uploads remain unsaved.' : 'Saved.';
+    return !newerEdits;
+  } catch (error) {
+    message.textContent = `Not saved: ${error.message}`;
+    if (error.status === 409 && snapshot?.path === opened.path) changeControls?.conflict();
+    return false;
+  }
 }
 function insert(button) {
   const start = source.selectionStart; const end = source.selectionEnd; const selected = source.value.slice(start, end);
@@ -881,8 +913,16 @@ source.addEventListener('keydown', event => {
 document.querySelector('#restore-draft').addEventListener('click', () => {
   const draft = readDraft(opened.path);
   if (!draft || draftRecovery.dataset.path !== opened.path) return;
-  source.value = draft.source; draftRecovery.hidden = true; renderSoon(); source.focus();
-  message.textContent = 'Browser draft restored. Review and save when ready.';
+  const changedOnDisk = draft.revision !== opened.revision;
+  if (changedOnDisk) {
+    opened.baseAvailable = typeof draft.baseSource === 'string';
+    if (opened.baseAvailable) opened.source = draft.baseSource;
+    opened.revision = typeof draft.revision === 'string' ? draft.revision : '';
+  }
+  source.value = draft.source; draftRecovery.hidden = true; renderSoon(); updateStatusControl();
+  if (editorMode === 'visual') renderVisual(); else source.focus();
+  if (changedOnDisk) changeControls?.conflict();
+  message.textContent = changedOnDisk ? 'Browser draft restored from an older disk version. Compare disk changes before saving.' : 'Browser draft restored. Review and save when ready.';
 });
 document.querySelector('#discard-draft').addEventListener('click', async () => {
   const pendingFiles = opened.assets.filter(asset => asset.pending).map(asset => asset.file);
@@ -1082,6 +1122,20 @@ document.querySelector('.tool-toggle').addEventListener('click', event => {
   event.currentTarget.setAttribute('aria-expanded', String(expanded));
 });
 
+changeControls = createChangeControls({
+  request, message,
+  context: () => ({ ...opened, source: source.value, baseSource: opened.baseAvailable === false ? undefined : opened.source, session }),
+  adopt: async (snapshot, disk, text) => {
+    if (opened.path !== snapshot.path || source.value !== snapshot.source || opened.revision !== snapshot.revision || opened.private !== disk.private) throw Error('The editor or library changed. Reopen the comparison before applying it.');
+    opened = { ...opened, source: disk.source, revision: disk.revision, code: disk.code, assets: disk.assets, baseAvailable: true };
+    completedSyntaxValidation = undefined; proofControls?.invalidate();
+    source.value = text; imageContext = undefined; pendingVisualFocus = undefined;
+    updateStatusControl(); showAssets(); renderSoon();
+    if (!dirty()) clearDraft();
+    if (editorMode === 'visual') renderVisual(); else source.focus();
+  }
+});
+
 proofControls = createProofControls({
   request, selectIssue,
   context: () => ({ ...bufferSnapshot(), private: opened.private, unsaved: source.value !== opened.source || opened.assets?.some(asset => asset.pending) })
@@ -1091,7 +1145,7 @@ createLibraryControls({
   request, message,
   context: () => ({ ...opened, session, unsaved: dirty() || opened.assets?.some(asset => asset.pending) }),
   install: async (result, createdPath) => {
-    proofControls.invalidate();
+    completedSyntaxValidation = undefined; proofControls.invalidate();
     scanGeneration++;
     const previous = handouts.find(item => item.path === opened.path);
     handouts = result.handouts;

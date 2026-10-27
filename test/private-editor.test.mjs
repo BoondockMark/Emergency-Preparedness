@@ -11,7 +11,8 @@ const repository = path.resolve(import.meta.dirname, '..');
 const handoutPath = 'handouts/start-here/record.md';
 async function setup(t, { publicOnly = false } = {}) {
   const directory = await fs.mkdtemp(path.join(os.tmpdir(), 'private-editor-'));
-  t.after(() => fs.rm(directory, { recursive: true, force: true }));
+  let server;
+  t.after(async () => { if (server) await new Promise(resolve => { server.closeAllConnections(); server.close(resolve); }); await fs.rm(directory, { recursive: true, force: true }); });
   const root = path.join(directory, 'public');
   const privateRoot = path.join(directory, 'private');
   const fixture = await fs.readFile(path.join(repository, 'test/unit-fixtures/front-matter.md'), 'utf8');
@@ -30,9 +31,8 @@ async function setup(t, { publicOnly = false } = {}) {
   const entry = { file: 'map.svg', type: 'diagram', creator: 'Test', source: 'Test', license: 'Test', alt: 'Test map', decorative: false };
   await fs.writeFile(path.join(assets, 'map.svg'), svg);
   await fs.writeFile(path.join(assets, 'manifest.json'), JSON.stringify({ assets: [entry] }));
-  const server = await createEditorServer({ root, privateDirectory: privateRoot, publicOnly });
+  server = await createEditorServer({ root, privateDirectory: privateRoot, publicOnly });
   await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
-  t.after(() => new Promise(resolve => { server.closeAllConnections(); server.close(resolve); }));
   const base = `http://127.0.0.1:${server.address().port}`;
   const get = async url => (await fetch(base + url)).json();
   const post = async (url, data) => {
@@ -200,4 +200,52 @@ test('private PDF proof downloads are session scoped and leave no public artifac
   t.after(() => new Promise(resolve => { publicServer.closeAllConnections(); publicServer.close(resolve); }));
   const denied = await fetch(`http://127.0.0.1:${publicServer.address().port}/api/proofs/download`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ id: job.id, session }) });
   assert.equal(denied.status, 404);
+});
+
+test('private conflict resolution keeps all versions out of browser storage and writes only to the private checkout', { timeout: 60_000 }, async t => {
+  const { base, root, privateRoot, privateSource, publicSource } = await setup(t);
+  const browser = await puppeteer.launch(browserOptions()); t.after(() => browser.close());
+  const page = await browser.newPage(); await page.goto(base, { waitUntil: 'networkidle0' });
+  await page.select('#handout', handoutPath); await page.waitForFunction(() => document.querySelector('#source').value.includes('PRIVATE TEST RECORD'));
+  await page.click('#source-mode');
+  const yours = privateSource.replace('PRIVATE TEST RECORD', 'PRIVATE LOCAL FACT');
+  const disk = privateSource.replace('PRIVATE TEST RECORD', 'PRIVATE DISK FACT');
+  await page.$eval('#source', (input, text) => { input.value = text; input.dispatchEvent(new Event('input', { bubbles: true })); }, yours);
+  await fs.writeFile(path.join(privateRoot, handoutPath), disk);
+  await page.click('#save'); await page.waitForFunction(() => !document.querySelector('#conflict-banner').hidden);
+  await page.click('#compare-disk'); await page.waitForSelector('.merge-conflict button');
+  assert.match(await page.$eval('#changes-conflicts', element => element.textContent), /PRIVATE LOCAL FACT/);
+  assert.match(await page.$eval('#changes-conflicts', element => element.textContent), /PRIVATE DISK FACT/);
+  assert.deepEqual(await page.evaluate(() => Object.keys(localStorage)), []);
+  await page.click('.merge-conflict button');
+  await page.$eval('#changes-proposed', input => { input.value = input.value.replace('PRIVATE LOCAL FACT', 'PRIVATE LOCAL FACT AND PRIVATE DISK FACT'); input.dispatchEvent(new Event('input', { bubbles: true })); });
+  await page.click('#changes-apply'); await page.click('#save');
+  await page.waitForFunction(() => document.querySelector('#state').textContent === 'Saved');
+  assert.match(await fs.readFile(path.join(privateRoot, handoutPath), 'utf8'), /PRIVATE LOCAL FACT AND PRIVATE DISK FACT/);
+  assert.equal(await fs.readFile(path.join(root, handoutPath), 'utf8'), publicSource);
+  assert.deepEqual(await page.evaluate(() => Object.keys(localStorage)), []);
+  assert.equal(await page.$eval('#changes-diff', element => element.textContent), '');
+});
+
+test('a path changing libraries cannot merge or save an old private buffer into the public checkout', { timeout: 60_000 }, async t => {
+  const { base, root, privateRoot, privateSource, publicSource } = await setup(t);
+  const browser = await puppeteer.launch(browserOptions()); t.after(() => browser.close());
+  const page = await browser.newPage(); await page.goto(base, { waitUntil: 'networkidle0' });
+  await page.select('#handout', handoutPath); await page.waitForFunction(() => document.querySelector('#source').value.includes('PRIVATE TEST RECORD'));
+  const replacement = publicSource.replace('private: true', 'private: false').replace('PUBLIC PLACEHOLDER', 'Public replacement');
+  await fs.writeFile(path.join(root, handoutPath), replacement);
+  await fs.rm(path.join(privateRoot, handoutPath)); await fs.rm(path.join(privateRoot, 'assets/handouts/STH-001'), { recursive: true });
+  await page.click('#refresh-handouts'); await page.waitForFunction(() => !document.querySelector('#refresh-handouts').disabled);
+  await page.click('#review-changes'); await page.click('#changes-compare');
+  await page.waitForFunction(() => document.querySelector('#changes-status').textContent.includes('different library'));
+  assert.equal(await page.$eval('#changes-apply', button => button.disabled), true);
+  await page.keyboard.press('Escape');
+  await page.click('#save');
+  await page.waitForFunction(() => !document.querySelector('#conflict-banner').hidden);
+  assert.equal(await fs.readFile(path.join(root, handoutPath), 'utf8'), replacement);
+  assert.equal(await page.$eval('#source', input => input.value), privateSource);
+  assert.deepEqual(await page.evaluate(() => Object.keys(localStorage)), []);
+  await page.click('#build-proof');
+  await page.waitForFunction(() => document.querySelector('#proof-state').textContent.includes('library changed'));
+  assert.equal(await page.$eval('#proof-download', button => button.disabled), true);
 });

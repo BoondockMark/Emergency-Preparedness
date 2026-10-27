@@ -16,14 +16,15 @@ const fixture = () => fs.readFile(path.join(repository, 'test/unit-fixtures/fron
 
 async function setup(t) {
   const root = await fs.mkdtemp(path.join(os.tmpdir(), 'handout-editor-'));
-  t.after(() => fs.rm(root, { recursive: true, force: true }));
+  let server;
+  t.after(async () => { if (server) await new Promise(resolve => { server.closeAllConnections(); server.close(resolve); }); await fs.rm(root, { recursive: true, force: true }); });
   for (const directory of ['handouts/section', 'templates', 'editor', 'assets/styles']) await fs.mkdir(path.join(root, directory), { recursive: true });
   const source = (await fixture()).replace('Fixture body.', '<div class="custom">Keep **raw** HTML</div>\n\nFirst page.\n<!-- pagebreak -->\nSecond page.').replace('pageCount: 1', 'pageCount: 2');
   await fs.writeFile(path.join(root, 'handouts/section/example.md'), source);
   const secondSource = source.replace('code: STH-001', 'code: STH-002').replace('title: Fixture', 'title: Second fixture');
   await fs.writeFile(path.join(root, 'handouts/section/second.md'), secondSource);
   await fs.copyFile(path.join(repository, 'templates/handout.html'), path.join(root, 'templates/handout.html'));
-  for (const name of ['index.html', 'editor.js', 'editor.css', 'editor-model.js', 'preview-controls.js', 'library-controls.js', 'proof-controls.js']) await fs.copyFile(path.join(repository, 'editor', name), path.join(root, 'editor', name));
+  for (const name of ['index.html', 'editor.js', 'editor.css', 'editor-model.js', 'preview-controls.js', 'library-controls.js', 'proof-controls.js', 'change-controls.js', 'change-model.js']) await fs.copyFile(path.join(repository, 'editor', name), path.join(root, 'editor', name));
   await fs.copyFile(path.join(repository, 'assets/styles/print.css'), path.join(root, 'assets/styles/print.css'));
   await fs.cp(path.join(repository, 'assets/fonts'), path.join(root, 'assets/fonts'), { recursive: true });
   const assetDirectory = path.join(root, 'assets/handouts/STH-001');
@@ -33,9 +34,8 @@ async function setup(t) {
     file: 'route.svg', type: 'diagram', creator: 'Test', source: 'Test fixture', license: 'Test license',
     alt: 'A route marker.', caption: 'Route marker.', decorative: false
   }] }));
-  const server = await createEditorServer({ root });
+  server = await createEditorServer({ root });
   await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
-  t.after(() => new Promise(resolve => { server.closeAllConnections(); server.close(resolve); }));
   return { root, source, base: `http://127.0.0.1:${server.address().port}`, file: path.join(root, 'handouts/section/example.md') };
 }
 
@@ -1534,4 +1534,174 @@ test('browser proof validation links return to the source line that needs fixing
   await page.click('#proof-issues button');
   assert.equal(await page.$eval('#proof-dialog', dialog => dialog.open), false);
   assert.equal(await page.$eval('#source', source => source.value.slice(source.selectionStart, source.selectionEnd)), 'title:');
+});
+
+test('simultaneous saves from the same revision have exactly one winner', async t => {
+  const { base, source, file } = await setup(t);
+  const opened = await (await fetch(base + '/api/handout?path=handouts/section/example.md')).json();
+  const results = await Promise.all(['first', 'second'].map(label => libraryPost(base, '/api/save', { path: opened.path, revision: opened.revision, source: source + `\n${label} edit.`, session: `concurrent-${label}` })));
+  assert.deepEqual(results.map(result => result.status).sort(), [200, 409]);
+  const winner = results.findIndex(result => result.status === 200);
+  assert.equal(await fs.readFile(file, 'utf8'), source + `\n${winner === 0 ? 'first' : 'second'} edit.`);
+});
+
+test('uploads arriving during a save remain pending and can be saved afterward', async t => {
+  const { base, source } = await setup(t);
+  const opened = await (await fetch(base + '/api/handout?path=handouts/section/example.md')).json();
+  const session = 'late-upload-session';
+  const upload = name => libraryPost(base, '/api/assets', { path: opened.path, session, name, mimeType: 'image/svg+xml', dataUrl: `data:image/svg+xml;base64,${Buffer.from('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10"><title>Image</title><circle cx="5" cy="5" r="4"/></svg>').toString('base64')}`, type: 'diagram', alt: name, creator: 'Tester', source: 'Test', license: 'Test', options: { width: 20 } });
+  const first = await upload('first.svg'); assert.equal(first.status, 201);
+  const realCopy = fs.copyFile;
+  let release; let reached;
+  const paused = new Promise(resolve => { reached = resolve; });
+  const continueCopy = new Promise(resolve => { release = resolve; });
+  fs.copyFile = async (...args) => { if (String(args[0]).endsWith('first.svg.base64')) { reached(); await continueCopy; } return realCopy(...args); };
+  t.after(() => { fs.copyFile = realCopy; release(); });
+  const saving = libraryPost(base, '/api/save', { path: opened.path, session, revision: opened.revision, source: source + '\n' + first.data.markup });
+  await paused;
+  const second = await upload('later.svg'); assert.equal(second.status, 201);
+  release(); const saved = await saving;
+  assert.equal(saved.status, 200);
+  assert.deepEqual(saved.data.committedAssets, ['first.svg']);
+  const after = await (await fetch(base + `/api/handout?path=${opened.path}&session=${session}`)).json();
+  assert.equal(after.assets.find(asset => asset.file === 'later.svg').pending, true);
+  const final = await libraryPost(base, '/api/save', { path: opened.path, session, revision: saved.data.revision, source: after.source + '\n' + second.data.markup });
+  assert.equal(final.status, 200);
+  assert.deepEqual(final.data.committedAssets, ['later.svg']);
+});
+
+test('change review merges independent disk edits without writing until Save and supports undo', { timeout: 60_000 }, async t => {
+  const { page, source, file } = await openEditor(t);
+  const yours = source.replace('First page.', 'Your first paragraph.');
+  const disk = source.replace('Second page.', 'Disk second paragraph.');
+  await replaceSource(page, yours);
+  await page.click('#review-changes');
+  await page.waitForSelector('#changes-dialog[open]');
+  assert.match(await text(page, '#changes-diff'), /Your first paragraph/);
+  assert.match(await text(page, '#changes-summary'), /1 added line.*1 removed line/);
+  await fs.writeFile(file, disk);
+  await page.click('#changes-compare');
+  await page.waitForFunction(() => !document.querySelector('#changes-apply').disabled);
+  const merged = await value(page, '#changes-proposed');
+  assert.match(merged, /Your first paragraph/); assert.match(merged, /Disk second paragraph/);
+  assert.equal(await fs.readFile(file, 'utf8'), disk);
+  await page.click('#changes-apply');
+  assert.equal(await value(page, '#source'), merged);
+  assert.equal(await fs.readFile(file, 'utf8'), disk);
+  await page.click('#undo'); assert.equal(await value(page, '#source'), yours);
+  await page.click('#redo'); assert.equal(await value(page, '#source'), merged);
+  await page.click('#save'); await page.waitForFunction(() => document.querySelector('#state').textContent === 'Saved');
+  assert.equal(await fs.readFile(file, 'utf8'), merged);
+});
+
+test('overlapping changes require a choice and another disk change remains protected after applying', { timeout: 60_000 }, async t => {
+  const { page, source, file } = await openEditor(t);
+  const yours = source.replace('title: Fixture', 'title: Your heading');
+  const disk = source.replace('title: Fixture', 'title: Disk heading');
+  await replaceSource(page, yours); await fs.writeFile(file, disk);
+  await page.click('#save'); await page.waitForFunction(() => !document.querySelector('#conflict-banner').hidden);
+  await page.click('#compare-disk'); await page.waitForSelector('.merge-conflict button');
+  assert.equal(await page.$eval('#changes-apply', button => button.disabled), true);
+  assert.match(await text(page, '#changes-conflicts'), /Your heading/); assert.match(await text(page, '#changes-conflicts'), /Disk heading/);
+  await page.click('.merge-conflict button');
+  assert.equal(await page.$eval('#changes-apply', button => button.disabled), false);
+  await page.$eval('#changes-proposed', input => { input.value += '\nManually combined explanation.'; input.dispatchEvent(new Event('input', { bubbles: true })); });
+  await page.click('#changes-apply');
+  const applied = await value(page, '#source'); assert.match(applied, /Your heading/); assert.match(applied, /Manually combined/);
+  await fs.writeFile(file, disk + '\nChanged again.');
+  await page.click('#save'); await page.waitForFunction(() => !document.querySelector('#conflict-banner').hidden);
+  assert.equal(await value(page, '#source'), applied);
+  assert.equal(await fs.readFile(file, 'utf8'), disk + '\nChanged again.');
+});
+
+test('restoring an older browser draft retains its original baseline for a safe three-way merge', { timeout: 60_000 }, async t => {
+  const { page, source, base, file } = await openEditor(t);
+  const opened = await (await fetch(base + '/api/handout?path=handouts/section/example.md')).json();
+  const yours = source.replace('First page.', 'Recovered browser edit.');
+  const disk = source.replace('Second page.', 'New disk edit.');
+  await page.evaluate(({ source, yours, revision }) => localStorage.setItem('handout-editor:draft:handouts/section/example.md', JSON.stringify({ source: yours, baseSource: source, revision, updatedAt: Date.now() })), { source, yours, revision: opened.revision });
+  await fs.writeFile(file, disk); await page.reload({ waitUntil: 'networkidle0' });
+  await page.waitForFunction(() => !document.querySelector('#draft-recovery').hidden);
+  await page.click('#restore-draft');
+  assert.equal(await value(page, '#source'), yours);
+  assert.equal(await page.$eval('#conflict-banner', banner => banner.hidden), false);
+  const recovered = await page.evaluate(() => JSON.parse(localStorage.getItem('handout-editor:draft:handouts/section/example.md')));
+  assert.equal(recovered.baseSource, source); assert.equal(recovered.revision, opened.revision);
+  await page.click('#compare-disk'); await page.waitForFunction(() => !document.querySelector('#changes-apply').disabled);
+  assert.match(await value(page, '#changes-proposed'), /Recovered browser edit/); assert.match(await value(page, '#changes-proposed'), /New disk edit/);
+  await page.click('#changes-apply'); await page.click('#save');
+  await page.waitForFunction(() => document.querySelector('#state').textContent === 'Saved');
+  assert.match(await fs.readFile(file, 'utf8'), /Recovered browser edit/); assert.match(await fs.readFile(file, 'utf8'), /New disk edit/);
+});
+
+test('legacy browser drafts without a baseline require explicit review and using disk text remains undoable', { timeout: 60_000 }, async t => {
+  const { page, source, base, file } = await openEditor(t);
+  const opened = await (await fetch(base + '/api/handout?path=handouts/section/example.md')).json();
+  const yours = source + '\nLegacy browser draft.'; const disk = source + '\nNew disk paragraph.';
+  await page.evaluate(({ yours, revision }) => localStorage.setItem('handout-editor:draft:handouts/section/example.md', JSON.stringify({ source: yours, revision, updatedAt: Date.now() })), { yours, revision: opened.revision });
+  await fs.writeFile(file, disk); await page.reload({ waitUntil: 'networkidle0' });
+  await page.waitForFunction(() => !document.querySelector('#draft-recovery').hidden); await page.click('#restore-draft');
+  await page.click('#review-changes'); await page.waitForSelector('.merge-conflict button');
+  assert.equal(await page.$eval('#changes-apply', button => button.disabled), true);
+  assert.match(await text(page, '#changes-status'), /no saved baseline/);
+  await page.click('#changes-use-disk'); assert.equal(await value(page, '#source'), disk);
+  assert.equal(await page.evaluate(() => localStorage.getItem('handout-editor:draft:handouts/section/example.md')), null);
+  await page.click('#undo'); assert.equal(await value(page, '#source'), yours);
+  assert.equal(await fs.readFile(file, 'utf8'), disk);
+});
+
+test('edits made while a save response is delayed remain in the browser draft with the new saved baseline', { timeout: 60_000 }, async t => {
+  const { page, source, file } = await openEditor(t);
+  await page.evaluate(() => {
+    const actual = window.fetch.bind(window); let release;
+    window.releaseSave = () => release?.();
+    window.fetch = (url, options) => {
+      if (url === '/api/save') { window.saveStarted = true; const response = actual(url, options); return new Promise(resolve => { release = () => response.then(resolve); }); }
+      return actual(url, options);
+    };
+  });
+  const first = source + '\nFirst saved edit.'; const latest = first + '\nNewer unsaved edit.';
+  await replaceSource(page, first); await page.click('#save'); await page.waitForFunction(() => window.saveStarted);
+  await replaceSource(page, latest); await page.evaluate(() => window.releaseSave());
+  await page.waitForFunction(() => !document.querySelector('#save').disabled);
+  assert.equal(await value(page, '#source'), latest);
+  assert.equal(await text(page, '#state'), 'Unsaved changes');
+  assert.equal(await fs.readFile(file, 'utf8'), first);
+  const draft = await page.evaluate(() => JSON.parse(localStorage.getItem('handout-editor:draft:handouts/section/example.md')));
+  assert.equal(draft.source, latest); assert.equal(draft.baseSource, first);
+});
+
+test('a delayed save response does not replace a different open handout', { timeout: 60_000 }, async t => {
+  const { page, source } = await openEditor(t);
+  await page.evaluate(() => {
+    const actual = window.fetch.bind(window); let release;
+    window.releaseSave = () => release?.();
+    window.fetch = (url, options) => { if (url === '/api/save') { window.saveStarted = true; const response = actual(url, options); return new Promise(resolve => { release = () => response.then(resolve); }); } return actual(url, options); };
+  });
+  await replaceSource(page, source + '\nSave this handout.'); await page.click('#save'); await page.waitForFunction(() => window.saveStarted);
+  page.once('dialog', dialog => dialog.accept()); await page.select('#handout', 'handouts/section/second.md');
+  await page.waitForFunction(() => document.querySelector('#source').value.includes('code: STH-002'));
+  const current = await value(page, '#source'); await page.evaluate(() => window.releaseSave());
+  await page.waitForFunction(() => !document.querySelector('#save').disabled);
+  assert.equal(await value(page, '#source'), current); assert.equal(await value(page, '#handout'), 'handouts/section/second.md');
+});
+
+test('merging text after a conflict preserves pending image uploads until Save', { timeout: 60_000 }, async t => {
+  const { page, source, file, root } = await openEditor(t, { mode: 'visual' });
+  const canvas = await (await page.$('#visual')).contentFrame();
+  await canvas.waitForSelector('.content > p'); await canvas.click('.content > p');
+  await page.click('#images');
+  await (await page.$('#image-file')).uploadFile(path.join(root, 'assets/handouts/STH-001/route.svg'));
+  for (const [selector, text] of [['#image-alt', 'Pending route.'], ['#image-creator', 'Tester'], ['#image-source', 'Test fixture'], ['#image-license', 'Test license']]) await page.type(selector, text);
+  await page.click('#upload-image'); await page.waitForFunction(() => !document.querySelector('#image-dialog').open);
+  assert.match(await value(page, '#source'), /route-2.svg/);
+  await fs.writeFile(file, source + '\nA change from disk.');
+  await page.click('#save'); await page.waitForFunction(() => !document.querySelector('#conflict-banner').hidden);
+  await page.click('#compare-disk'); await page.waitForFunction(() => !document.querySelector('#changes-apply').disabled);
+  assert.match(await text(page, '#changes-assets'), /1 pending image upload/);
+  await page.click('#changes-apply');
+  assert.match(await value(page, '#source'), /route-2.svg/); assert.match(await value(page, '#source'), /A change from disk/);
+  await page.click('#save'); await page.waitForFunction(() => document.querySelector('#state').textContent === 'Saved');
+  await fs.access(path.join(root, 'assets/handouts/STH-001/route-2.svg.base64'));
+  assert.match(await fs.readFile(file, 'utf8'), /route-2.svg/);
 });
