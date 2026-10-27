@@ -45,7 +45,7 @@ export function validateImages(html, label, manifests) {
 
 export async function validateLocalLinks(html, htmlFile, label) {
   for (const match of html.matchAll(/(?:href|src)="([^"]+)"/g)) {
-    if (/^(https?:|#|mailto:|data:)/.test(match[1])) continue;
+    if (/^(https?:|#|mailto:|tel:|data:)/i.test(match[1])) continue;
     try {
       await fs.access(path.resolve(path.dirname(htmlFile), match[1]));
     } catch {

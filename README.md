@@ -226,6 +226,26 @@ an asset, or discarding pending uploads resets it. History keeps the most recent
 continues to work separately. Pending uploads stay available when their insertion
 is undone, until saved or explicitly discarded.
 
+**Link** inserts or edits a link from the current selection in Visual or Source
+mode. In Visual, select text or place the cursor in a paragraph, then choose
+**Link**; click an existing link to edit it without following its destination.
+In Source, select plain text on one line, or put the cursor inside an HTML link.
+Links use HTML anchors, matching the existing handout renderer. The same tool is
+available through Commands by searching “link” or “hyperlink”.
+
+Enter descriptive text and an address using HTTP/HTTPS, mailto:, tel:, #anchor,
+or an explicit local path beginning with /, ./, or ../. The editor rejects
+unsafe schemes and malformed addresses; it does not fetch destinations or verify
+that they exist. Local paths are still checked by the publishing build. Changing
+only an address preserves the link's formatted contents and unrelated attributes;
+changing its text replaces formatting inside the link. Image links keep their
+image while you change the address. **Remove link** keeps the contents and any
+named anchor needed by cross-references. Each action shares Undo/Redo and requires
+Save to persist. Closing the dialog leaves edits unchanged and clears its fields.
+If the document or Visual render changes while the dialog is open, select the link
+again before applying it. Private link text and addresses stay out of browser
+draft storage, like other private edits.
+
 **Commands** (Ctrl/Cmd+K) opens a searchable palette from Source, Visual, or the
 print preview. Search by action or topic, such as “image”, “PDF”, “outline”,
 “sources”, or “save”. Use Up/Down to choose an available action and Enter to run

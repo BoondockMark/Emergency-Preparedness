@@ -333,6 +333,7 @@ export async function createEditorServer({ root, privateDirectory, publicOnly = 
         });
       }
       if (request.method === 'GET' && (url.pathname === '/' || url.pathname === '/index.html')) return await serve(response, path.join(root, 'editor/index.html'), 'text/html; charset=utf-8');
+      if (request.method === 'GET' && ['/link-controls.js', '/link-model.js'].includes(url.pathname)) return await serve(response, path.join(root, 'editor', url.pathname.slice(1)), 'text/javascript; charset=utf-8');
       if (request.method === 'GET' && url.pathname === '/command-controls.js') return await serve(response, path.join(root, 'editor/command-controls.js'), 'text/javascript; charset=utf-8');
       if (request.method === 'GET' && url.pathname === '/editor.js') return await serve(response, path.join(root, 'editor/editor.js'), 'text/javascript; charset=utf-8');
       if (request.method === 'GET' && ['/navigation-controls.js', '/navigation-model.js'].includes(url.pathname)) return await serve(response, path.join(root, 'editor', url.pathname.slice(1)), 'text/javascript; charset=utf-8');

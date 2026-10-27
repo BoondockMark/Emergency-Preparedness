@@ -1,3 +1,4 @@
+import { createLinkControls } from './link-controls.js';
 import { createCommandControls } from './command-controls.js';
 import { createNavigationControls } from './navigation-controls.js';
 import { createChangeControls } from './change-controls.js';
@@ -32,6 +33,7 @@ const assetList = document.querySelector('#asset-list');
 let opened = { source: '', revision: '' };
 let proofControls;
 let changeControls;
+let linkControls;
 let navigationControls;
 let saving;
 let selectedAsset = '';
@@ -115,6 +117,7 @@ function attachVisualEditor() {
   const document = visual.contentDocument;
   if (!document || attachedVisualDocuments.has(document)) return;
   attachedVisualDocuments.add(document);
+  linkControls?.attach(document);
   const blocks = visualBlocks(document, source.value);
   visualSelection = undefined; updateComponentTools();
   const blockByIdentifier = new Map(blocks.map(block => [block.identifier, block]));
@@ -170,6 +173,7 @@ function attachVisualEditor() {
         following.end += difference;
       }
     }
+    visualRenderedSource = source.value;
     updateStatusControl(); renderSoon(event);
   });
   document.addEventListener('keydown', event => {
@@ -962,7 +966,7 @@ document.querySelector('#cancel-assets').addEventListener('click', async () => {
     }
   }
 });
-document.addEventListener('keydown', event => { if (historyShortcut(event)) return; if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 's') { event.preventDefault(); if (!document.querySelector('#commands-dialog[open], #shortcuts-dialog[open]')) save(); } });
+document.addEventListener('keydown', event => { if (historyShortcut(event)) return; if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 's') { event.preventDefault(); if (!document.querySelector('#commands-dialog[open], #shortcuts-dialog[open], #link-dialog[open]')) save(); } });
 window.addEventListener('beforeunload', event => { if (dirty() || opened.assets?.some(asset => asset.pending)) event.preventDefault(); });
 
 
@@ -987,7 +991,7 @@ document.querySelector('#undo').addEventListener('click', () => restoreHistory()
 document.querySelector('#redo').addEventListener('click', () => restoreHistory(true));
 // Retain the canvas selection while a toolbar button receives the click.
 document.querySelector('#toolbar').addEventListener('mousedown', event => {
-  if (editorMode === 'visual' && event.target.matches('button[data-wrap], button[data-before]')) event.preventDefault();
+  if (editorMode === 'visual' && event.target.matches('#links, button[data-wrap], button[data-before]')) event.preventDefault();
 });
 function insertVisualComponent(button) {
   const anchor = visualSelection;
@@ -1127,6 +1131,18 @@ document.querySelector('#check-approval').addEventListener('click', async () => 
 document.querySelector('.tool-toggle').addEventListener('click', event => {
   const expanded = document.querySelector('.tool-overflow').toggleAttribute('open');
   event.currentTarget.setAttribute('aria-expanded', String(expanded));
+});
+
+linkControls = createLinkControls({
+  source, visual, message,
+  commitVisual: block => {
+    history.lastTyped = 0; block.dispatchEvent(new Event('input', { bubbles: true })); history.lastTyped = 0;
+  },
+  context: () => ({ path: opened.path, source: source.value, private: opened.private, mode: editorMode, renderedSource: visualRenderedSource }),
+  applySource: (text, start, end) => {
+    source.value = text; source.setSelectionRange(start, end);
+    updateStatusControl(); renderSoon(); source.focus();
+  }
 });
 
 createCommandControls({

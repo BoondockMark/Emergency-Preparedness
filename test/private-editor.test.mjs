@@ -294,3 +294,21 @@ test('private command execution preserves library routing and clears palette tex
   assert.deepEqual(await page.evaluate(() => Object.keys(localStorage)), []);
   assert.equal(await page.$$eval('#command-results li', items => items.length), 0);
 });
+
+test('private link edits and saves keep source and dialog values out of public files and browser storage', async t => {
+  const { base, root, privateRoot, publicSource } = await setup(t);
+  const browser = await puppeteer.launch(browserOptions()); t.after(() => browser.close());
+  const page = await browser.newPage(); await page.goto(base, { waitUntil: 'networkidle0' });
+  await page.select('#handout', handoutPath);
+  await page.waitForFunction(() => document.querySelector('#source').value.includes('PRIVATE TEST RECORD'));
+  await page.click('#source-mode');
+  await page.$eval('#source', input => { const at = input.value.indexOf('PRIVATE TEST RECORD'); input.setSelectionRange(at, at + 19); });
+  await page.click('#links'); await page.type('#link-url', 'https://private.example.org/PRIVATE-ADDRESS');
+  await page.click('#link-apply'); await page.click('#save');
+  await page.waitForFunction(() => document.querySelector('#state').textContent === 'Saved');
+  assert.match(await fs.readFile(path.join(privateRoot, handoutPath), 'utf8'), /PRIVATE-ADDRESS/);
+  assert.equal(await fs.readFile(path.join(root, handoutPath), 'utf8'), publicSource);
+  assert.deepEqual(await page.evaluate(() => Object.keys(localStorage)), []);
+  await page.waitForFunction(() => document.querySelector('#link-url').value === '');
+  assert.equal(await page.$eval('#link-text', input => input.value), '');
+});

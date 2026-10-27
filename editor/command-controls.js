@@ -42,6 +42,7 @@ export function createCommandControls({ context, capture, message, showEditor })
     { id: 'find', title: 'Find and replace in handout', group: 'Editing', keywords: 'search text replace all', shortcut: 'Ctrl/Cmd+F', run() { showEditor(); if ($('#find-panel').hidden) $('#find-toggle').click(); else { $('#find-query').focus(); $('#find-query').select(); } } },
     { id: 'outline', title: 'Open document outline', group: 'Navigation', keywords: 'heading section move duplicate', run() { showEditor(); $('#document-outline').open = true; $('#outline-headings').focus(); } },
     { id: 'validation', title: 'Show validation findings', group: 'Navigation', keywords: 'issues errors fix', run() { $('#validation').focus(); $('#validation').scrollIntoView({ block: 'center' }); } },
+    button('#links', 'Insert or edit link', 'Insert', 'url address hyperlink remove', '', true),
     button('#images', 'Insert or edit image', 'Insert', 'photo asset upload picture resize', '', true),
     button('[data-wrap="**|**"]', 'Make selection bold', 'Formatting', 'strong text', '', true),
     button('[data-wrap="*|*"]', 'Emphasize selection', 'Formatting', 'italic text', '', true),

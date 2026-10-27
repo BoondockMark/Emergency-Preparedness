@@ -88,6 +88,7 @@ test('local link fixture accepts existing files and rejects missing files', asyn
   const html = await fixture('local-links.html');
   await fs.writeFile(path.join(root, 'target.txt'), 'target');
   await validateLocalLinks(html, htmlFile, 'STH-001');
+  await validateLocalLinks('<a href="tel:+15555551234">Call</a><a href="HTTPS://example.org">Web</a>', htmlFile, 'STH-001');
   await assert.rejects(validateLocalLinks('<a href="missing.txt">x</a>', htmlFile, 'STH-001'), /broken local link/);
 });
 

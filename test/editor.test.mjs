@@ -24,7 +24,7 @@ async function setup(t) {
   const secondSource = source.replace('code: STH-001', 'code: STH-002').replace('title: Fixture', 'title: Second fixture');
   await fs.writeFile(path.join(root, 'handouts/section/second.md'), secondSource);
   await fs.copyFile(path.join(repository, 'templates/handout.html'), path.join(root, 'templates/handout.html'));
-  for (const name of ['index.html', 'editor.js', 'editor.css', 'editor-model.js', 'preview-controls.js', 'library-controls.js', 'proof-controls.js', 'change-controls.js', 'change-model.js', 'navigation-controls.js', 'navigation-model.js', 'command-controls.js']) await fs.copyFile(path.join(repository, 'editor', name), path.join(root, 'editor', name));
+  for (const name of ['index.html', 'editor.js', 'editor.css', 'editor-model.js', 'preview-controls.js', 'library-controls.js', 'proof-controls.js', 'change-controls.js', 'change-model.js', 'navigation-controls.js', 'navigation-model.js', 'command-controls.js', 'link-controls.js', 'link-model.js']) await fs.copyFile(path.join(repository, 'editor', name), path.join(root, 'editor', name));
   await fs.copyFile(path.join(repository, 'assets/styles/print.css'), path.join(root, 'assets/styles/print.css'));
   await fs.cp(path.join(repository, 'assets/fonts'), path.join(root, 'assets/fonts'), { recursive: true });
   const assetDirectory = path.join(root, 'assets/handouts/STH-001');
@@ -1844,4 +1844,92 @@ test('commands reject a changed buffer rather than restoring an outdated selecti
   await waitForText(page, '#message', 'handout changed');
   assert.equal(await value(page, '#source'), before);
   assert.equal(await page.$eval('#commands-dialog', dialog => dialog.open), false);
+});
+
+async function setLinkField(page, selector, next) {
+  await page.$eval(selector, (input, value) => { input.value = value; input.dispatchEvent(new Event('input', { bubbles: true })); }, next);
+}
+
+test('Source link tools insert literal labels, edit the exact repeated occurrence, preserve attributes and share undo', async t => {
+  const { page, source: original } = await openEditor(t);
+  const at = original.indexOf('First page.');
+  await page.$eval('#source', (input, at) => { input.focus(); input.setSelectionRange(at, at + 5); }, at);
+  await page.click('#links'); await setLinkField(page, '#link-url', 'https://example.org/?a=1&b=2');
+  await page.click('#link-apply');
+  const inserted = original.replace('First page.', '<a href="https://example.org/?a=1&amp;b=2">First</a> page.');
+  assert.equal(await value(page, '#source'), inserted);
+  await page.click('#undo'); assert.equal(await value(page, '#source'), original);
+  await page.click('#redo'); assert.equal(await value(page, '#source'), inserted);
+  const repeated = '<a id="keep" class="reference" href="https://example.org"><strong>Same</strong></a>';
+  const contents = inserted + '\n' + repeated + ' then ' + repeated;
+  await replaceSource(page, contents);
+  const second = contents.lastIndexOf('<strong>Same');
+  await page.$eval('#source', (input, at) => input.setSelectionRange(at, at), second);
+  await page.click('#links'); await setLinkField(page, '#link-url', '#target'); await page.click('#link-apply');
+  const updated = contents.slice(0, contents.lastIndexOf(repeated)) + repeated.replace('https://example.org', '#target');
+  assert.equal(await value(page, '#source'), updated);
+  await page.click('#links'); await page.click('#link-remove');
+  assert.equal(await value(page, '#source'), updated.slice(0, updated.lastIndexOf('<a id="keep"')) + '<a id="keep" class="reference"><strong>Same</strong></a>');
+  await page.click('#undo'); assert.equal(await value(page, '#source'), updated);
+});
+
+test('Visual links preserve selected emphasis, edit on click without navigation, and unwrap without losing content', async t => {
+  const { page, source: original } = await openEditor(t, { mode: 'visual' });
+  const frame = await (await page.$('#visual')).contentFrame();
+  await frame.waitForSelector('[data-visual-block]');
+  await frame.evaluate(() => {
+    const block = [...document.querySelectorAll('[data-visual-block]')].find(element => element.textContent === 'First page.');
+    block.innerHTML = '<em>First</em> page.'; block.dispatchEvent(new Event('input', { bubbles: true })); block.focus();
+    const range = document.createRange(); range.selectNodeContents(block.querySelector('em'));
+    getSelection().removeAllRanges(); getSelection().addRange(range);
+  });
+  const before = await value(page, '#source');
+  await page.click('#links'); await setLinkField(page, '#link-url', 'https://example.org'); await page.click('#link-apply');
+  assert.match(await value(page, '#source'), /<em><a href="https:\/\/example.org">First<\/a><\/em>/);
+  assert.ok((await value(page, '#source')).startsWith(original.slice(0, original.indexOf('First page.'))));
+  await frame.click('a[href="https://example.org"]'); await page.waitForSelector('#link-dialog[open]');
+  assert.equal(await value(page, '#link-text'), 'First');
+  await setLinkField(page, '#link-url', '#local'); await page.click('#link-apply');
+  assert.match(await value(page, '#source'), /<em><a href="#local">First<\/a><\/em>/);
+  await frame.click('a[href="#local"]'); await page.click('#link-remove');
+  assert.equal(await value(page, '#source'), before);
+  await page.click('#undo'); assert.match(await value(page, '#source'), /href="#local"/);
+});
+
+test('link editor rejects unsafe addresses and stale buffers, clears its fields on cancel, and works through Commands', async t => {
+  const { page } = await openEditor(t);
+  await page.$eval('#source', input => { const at = input.value.indexOf('First page.'); input.setSelectionRange(at, at + 5); });
+  await openCommands(page, 'hyperlink'); await page.keyboard.press('Enter');
+  await page.waitForSelector('#link-dialog[open]');
+  for (const address of ['javascript:alert(1)', 'data:text/html,hello', 'file:///tmp/test', 'https://']) {
+    await setLinkField(page, '#link-url', address);
+    assert.equal(await page.$eval('#link-apply', button => button.disabled), true);
+    assert.ok(await text(page, '#link-error'));
+  }
+  await setLinkField(page, '#link-url', 'https://example.org');
+  const before = await value(page, '#source');
+  await appendSource(page, '\nNewer edits.');
+  await page.click('#link-apply'); await waitForText(page, '#link-error', 'editor changed');
+  assert.equal(await value(page, '#source'), before + '\nNewer edits.');
+  await page.keyboard.press('Escape');
+  await page.waitForFunction(() => document.querySelector('#link-url').value === '');
+  assert.equal(await value(page, '#link-text'), '');
+});
+
+test('existing unsafe and image links can be removed without following their destinations or deleting images', async t => {
+  const { page, source } = await openEditor(t, { mode: 'visual' });
+  const body = '<p><a href="javascript:alert(1)">Unsafe example</a></p>\n<p><a href="https://example.org"><img src="../assets/handouts/STH-001/route.svg" alt="A route marker."></a></p>';
+  await replaceSource(page, source + '\n' + body);
+  await page.click('#source-mode'); await page.click('#visual-mode');
+  const frame = await (await page.$('#visual')).contentFrame(); await frame.waitForSelector('a[href^="javascript"]');
+  await frame.click('a[href^="javascript"]');
+  assert.equal(await page.$eval('#link-apply', button => button.disabled), true);
+  await page.click('#link-remove');
+  assert.doesNotMatch(await value(page, '#source'), /javascript:/);
+  await frame.click('a img');
+  assert.equal(await page.$eval('#link-text', input => input.disabled), true);
+  await page.click('#link-remove');
+  const result = await value(page, '#source');
+  assert.match(result, /<img src="\.\.\/assets\/handouts\/STH-001\/route.svg" alt="A route marker.">/);
+  assert.doesNotMatch(result, /<a\b/);
 });
