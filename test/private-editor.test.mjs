@@ -249,3 +249,28 @@ test('a path changing libraries cannot merge or save an old private buffer into 
   await page.waitForFunction(() => document.querySelector('#proof-state').textContent.includes('library changed'));
   assert.equal(await page.$eval('#proof-download', button => button.disabled), true);
 });
+
+test('private navigation and replacement stay in memory and clear when switching handouts', async t => {
+  const { base, root, privateRoot, privateSource, publicSource } = await setup(t);
+  const browser = await puppeteer.launch(browserOptions()); t.after(() => browser.close());
+  const page = await browser.newPage(); await page.goto(base, { waitUntil: 'networkidle0' });
+  await page.select('#handout', handoutPath);
+  await page.waitForFunction(() => document.querySelector('#source').value.includes('PRIVATE TEST RECORD'));
+  await page.click('#source-mode');
+  await page.$eval('#source', element => { element.value += '\n## PRIVATE OUTLINE\nPRIVATE FIND\n'; element.dispatchEvent(new Event('input', { bubbles: true })); });
+  await page.click('#document-outline summary');
+  assert.match(await page.$eval('#outline-headings', element => element.textContent), /PRIVATE OUTLINE/);
+  await page.click('#find-toggle'); await page.type('#find-query', 'PRIVATE FIND'); await page.type('#find-replacement', 'PRIVATE REPLACEMENT');
+  await page.click('#find-next'); await page.click('#find-replace');
+  assert.match(await page.$eval('#source', element => element.value), /PRIVATE REPLACEMENT/);
+  assert.deepEqual(await page.evaluate(() => Object.keys(localStorage)), []);
+  assert.equal(await fs.readFile(path.join(privateRoot, handoutPath), 'utf8'), privateSource);
+  assert.equal(await fs.readFile(path.join(root, handoutPath), 'utf8'), publicSource);
+  page.once('dialog', dialog => dialog.accept());
+  await page.select('#handout', 'handouts/start-here/public.md');
+  await page.waitForFunction(() => document.querySelector('#source').value.includes('STH-002'));
+  assert.equal(await page.$eval('#find-query', element => element.value), '');
+  assert.equal(await page.$eval('#find-replacement', element => element.value), '');
+  assert.doesNotMatch(await page.$eval('#outline-headings', element => element.textContent), /PRIVATE/);
+  assert.deepEqual(await page.evaluate(() => Object.keys(localStorage)), []);
+});
