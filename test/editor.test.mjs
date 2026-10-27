@@ -23,7 +23,7 @@ async function setup(t) {
   const secondSource = source.replace('code: STH-001', 'code: STH-002').replace('title: Fixture', 'title: Second fixture');
   await fs.writeFile(path.join(root, 'handouts/section/second.md'), secondSource);
   await fs.copyFile(path.join(repository, 'templates/handout.html'), path.join(root, 'templates/handout.html'));
-  for (const name of ['index.html', 'editor.js', 'editor.css', 'editor-model.js', 'preview-controls.js']) await fs.copyFile(path.join(repository, 'editor', name), path.join(root, 'editor', name));
+  for (const name of ['index.html', 'editor.js', 'editor.css', 'editor-model.js', 'preview-controls.js', 'library-controls.js']) await fs.copyFile(path.join(repository, 'editor', name), path.join(root, 'editor', name));
   await fs.copyFile(path.join(repository, 'assets/styles/print.css'), path.join(root, 'assets/styles/print.css'));
   await fs.cp(path.join(repository, 'assets/fonts'), path.join(root, 'assets/fonts'), { recursive: true });
   const assetDirectory = path.join(root, 'assets/handouts/STH-001');
@@ -1214,4 +1214,149 @@ test('a delayed preview response cannot replace the current proof or its navigat
   assert.equal(await page.$eval('#preview', frame => frame.contentDocument.body.textContent.includes('New proof response.')), true);
   assert.equal(await value(page, '#preview-page'), '2');
   assert.equal(await text(page, '#preview-scale'), '100%');
+});
+
+const newHandoutRequest = { session: 'library-test-session', title: 'New checklist', sectionNumber: 1, library: 'public', template: 'checklist', reviewDate: '2026-10-26' };
+async function libraryPost(base, endpoint, data) {
+  const response = await fetch(base + endpoint, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(data) });
+  return { status: response.status, data: await response.json() };
+}
+
+test('new handouts use template components and reserve unique sequential section codes', async t => {
+  const { base, root, source, file } = await setup(t);
+  const options = await (await fetch(base + '/api/library-options')).json();
+  assert.equal(options.sections.length, 8);
+  assert.equal(options.sections[0].nextCode, 'STH-003');
+  assert.deepEqual(options.libraries, ['public']);
+  const results = await Promise.all(['checklist', 'procedure'].map(template => libraryPost(base, '/api/handouts/new', { ...newHandoutRequest, template })));
+  assert.deepEqual(results.map(result => result.status), [201, 201]);
+  assert.deepEqual(results.map(result => result.data.code).sort(), ['STH-003', 'STH-004']);
+  const { loadDocument } = await import('../scripts/lib/metadata.mjs');
+  for (const { data } of results) {
+    const raw = await fs.readFile(path.join(root, data.path), 'utf8');
+    const document = loadDocument(raw, data.path);
+    assert.equal(document.data.status, 'draft');
+    assert.equal(document.data.sectionNumber, 1);
+    assert.deepEqual(document.data.reviewers, { editor: 'Unassigned', subjectMatter: 'Unassigned' });
+    assert.equal(document.data.proofRecord, undefined);
+    assert.match(raw, /class="(?:checklist|procedure)"/);
+    const validation = await libraryPost(base, '/api/validate', { path: data.path, source: raw, phase: 'syntax', session: 'new-validation' });
+    assert.equal(validation.data.valid, true, JSON.stringify(validation.data));
+  }
+  assert.equal(await fs.readFile(file, 'utf8'), source);
+});
+
+test('duplication resets approval and copies image bytes and credits into an independent manifest', async t => {
+  const { base, root, source, file } = await setup(t);
+  const opened = await (await fetch(base + '/api/handout?path=handouts/section/example.md')).json();
+  const entry = opened.assets[0];
+  const approved = source.replace('status: draft', 'status: approved\nproofRecord: docs/publishing/proofs/original.md').replace('editor: Unassigned', 'editor: Alice').replace('subjectMatter: Unassigned', 'subjectMatter: Bob') + '\n' + figureMarkup('STH-001', entry);
+  await fs.writeFile(file, approved);
+  const refreshed = await libraryPost(base, '/api/library/refresh', { session: 'duplicate-refresh' });
+  assert.equal(refreshed.status, 200);
+  const original = await (await fetch(base + '/api/handout?path=handouts/section/example.md')).json();
+  const result = await libraryPost(base, '/api/handouts/new', { ...newHandoutRequest, title: 'Copied "route"', sectionNumber: 2, sourcePath: original.path, revision: original.revision });
+  assert.equal(result.status, 201, JSON.stringify(result.data));
+  assert.equal(result.data.code, 'COM-001');
+  const copied = await (await fetch(base + '/api/handout?path=' + encodeURIComponent(result.data.path))).json();
+  const { loadDocument } = await import('../scripts/lib/metadata.mjs');
+  const metadata = loadDocument(copied.source, copied.path).data;
+  assert.equal(metadata.status, 'draft');
+  assert.equal(metadata.title, 'Copied "route"');
+  assert.equal(metadata.proofRecord, undefined);
+  assert.equal(metadata.version, '0.1');
+  assert.deepEqual(metadata.reviewers, { editor: 'Unassigned', subjectMatter: 'Unassigned' });
+  assert.deepEqual(copied.assets, original.assets);
+  assert.match(copied.source, /\.\.\/assets\/handouts\/COM-001\/route.svg/);
+  assert.doesNotMatch(copied.source, /\.\.\/assets\/handouts\/STH-001\//);
+  const encoded = await fs.readFile(path.join(root, 'assets/handouts/COM-001/route.svg.base64'), 'ascii');
+  assert.equal(Buffer.from(encoded.replace(/\s/g, ''), 'base64').toString(), await fs.readFile(path.join(root, 'assets/handouts/STH-001/route.svg'), 'utf8'));
+  assert.equal(await fs.readFile(file, 'utf8'), approved);
+  assert.equal((await fetch(base + '/assets/handouts/COM-001/route.svg')).status, 200);
+});
+
+test('creation rejects stale originals, invalid requests, and symlink destinations without writing files', async t => {
+  const { base, root, file } = await setup(t);
+  const original = await (await fetch(base + '/api/handout?path=handouts/section/example.md')).json();
+  await fs.appendFile(file, '\nChanged on disk.');
+  const stale = await libraryPost(base, '/api/handouts/new', { ...newHandoutRequest, sourcePath: original.path, revision: original.revision });
+  assert.equal(stale.status, 409);
+  for (const changes of [{ sectionNumber: 9 }, { reviewDate: '2026-02-30' }, { title: 'Injected\nstatus: approved' }, { template: 'unknown' }, { session: '' }]) {
+    const invalid = await libraryPost(base, '/api/handouts/new', { ...newHandoutRequest, ...changes });
+    assert.ok(invalid.status >= 400, JSON.stringify(changes));
+  }
+  const traversal = await libraryPost(base, '/api/handouts/new', { ...newHandoutRequest, sourcePath: '../outside.md' });
+  assert.equal(traversal.status, 404);
+  const outside = await fs.mkdtemp(path.join(os.tmpdir(), 'editor-outside-'));
+  t.after(() => fs.rm(outside, { recursive: true, force: true }));
+  await fs.symlink(outside, path.join(root, 'handouts/hands-on-skills'));
+  const fresh = await (await fetch(base + '/api/handout?path=handouts/section/example.md')).json();
+  const symlink = await libraryPost(base, '/api/handouts/new', { ...newHandoutRequest, sectionNumber: 6, sourcePath: fresh.path, revision: fresh.revision });
+  assert.equal(symlink.status, 422);
+  assert.deepEqual(await fs.readdir(outside), []);
+  await assert.rejects(fs.access(path.join(root, 'assets/handouts/SKL-001')), 'Copied assets are rolled back if the source destination is refused');
+  const plainText = await fetch(base + '/api/handouts/new', { method: 'POST', headers: { 'content-type': 'text/plain' }, body: JSON.stringify(newHandoutRequest) });
+  assert.equal(plainText.status, 415);
+  const list = await (await fetch(base + '/api/handouts')).json();
+  assert.equal(list.length, 2);
+});
+
+test('refresh discovers external files and keeps the previous allowlist if a library is invalid', async t => {
+  const { base, root, source } = await setup(t);
+  const added = 'handouts/section/external.md';
+  await fs.writeFile(path.join(root, added), source.replaceAll('STH-001', 'STH-050').replace('title: Fixture', 'title: External file'));
+  assert.equal((await fetch(base + '/api/handout?path=' + added)).status, 404);
+  const refreshed = await libraryPost(base, '/api/library/refresh', { session: 'refresh-test-session' });
+  assert.equal(refreshed.status, 200);
+  assert.equal(refreshed.data.handouts.length, 3);
+  assert.equal((await fetch(base + '/api/handout?path=' + added)).status, 200);
+  await fs.writeFile(path.join(root, 'handouts/section/broken.md'), 'Invalid source');
+  const failed = await libraryPost(base, '/api/library/refresh', { session: 'refresh-test-session' });
+  assert.equal(failed.status, 422);
+  assert.equal((await (await fetch(base + '/api/handouts')).json()).length, 3);
+  assert.equal((await fetch(base + '/api/handout?path=handouts/section/broken.md')).status, 404);
+});
+
+test('browser creates and duplicates template drafts and cancellation creates no files', { timeout: 60_000 }, async t => {
+  const { page, root } = await openEditor(t, { mode: 'visual' });
+  await page.click('#new-handout'); await page.waitForSelector('#create-dialog[open]');
+  await page.keyboard.press('Escape');
+  assert.equal(await page.$$eval('#handout option', options => options.length), 2);
+  await page.click('#preview-only');
+  await page.click('#new-handout'); await page.waitForSelector('#create-dialog[open]');
+  await page.$eval('#create-form [name="title"]', input => { input.value = 'Community checklist'; });
+  await page.select('#create-form [name="sectionNumber"]', '2');
+  await page.select('#create-form [name="template"]', 'checklist');
+  await page.click('#create-submit');
+  await page.waitForFunction(() => document.querySelector('#source').value.includes('code: "COM-001"'));
+  assert.equal(await value(page, '#document-status'), 'draft');
+  assert.equal(await page.$eval('#preview-only', button => button.getAttribute('aria-pressed')), 'false');
+  assert.match(await value(page, '#source'), /class="checklist"/);
+  const originalPath = await value(page, '#handout');
+  const original = await fs.readFile(path.join(root, originalPath), 'utf8');
+  await page.click('#duplicate-handout'); await page.waitForSelector('#create-dialog[open]');
+  assert.equal(await page.$eval('#create-template-label', label => label.hidden), true);
+  await page.$eval('#create-form [name="title"]', input => { input.value = 'Another checklist'; });
+  await page.select('#create-form [name="sectionNumber"]', '3');
+  await page.click('#create-submit');
+  await page.waitForFunction(() => document.querySelector('#source').value.includes('code: "EVS-001"'));
+  assert.equal(await text(page, '#state'), 'Saved');
+  assert.equal(await fs.readFile(path.join(root, originalPath), 'utf8'), original);
+  assert.equal(await page.$$eval('#handout option', options => options.length), 4);
+});
+
+test('browser refresh preserves unsaved text and selections and creation requires saving first', { timeout: 60_000 }, async t => {
+  const { page, root, source } = await openEditor(t);
+  const dirtySource = source + '\nKeep these unsaved edits.';
+  await replaceSource(page, dirtySource);
+  await page.$eval('#source', input => { input.focus(); input.setSelectionRange(10, 20); });
+  await page.click('#new-handout');
+  assert.equal(await page.$eval('#create-dialog', dialog => dialog.open), false);
+  assert.match(await text(page, '#message'), /Save or revert/);
+  await fs.writeFile(path.join(root, 'handouts/section/external.md'), source.replace('STH-001', 'STH-050'));
+  await page.click('#refresh-handouts');
+  await page.waitForFunction(() => document.querySelector('#handout').options.length === 3);
+  assert.equal(await value(page, '#source'), dirtySource);
+  assert.equal(await text(page, '#state'), 'Unsaved changes');
+  assert.deepEqual(await page.$eval('#source', input => [input.selectionStart, input.selectionEnd]), [10, 20]);
 });

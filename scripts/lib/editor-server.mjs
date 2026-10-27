@@ -10,6 +10,7 @@ import { renderHandoutSource } from './content-rendering.mjs';
 import { loadBuildContent } from './private-content.mjs';
 import { loadDocument, parseMetadataYaml } from './metadata.mjs';
 import { commitHandoutWithAssets, deleteAsset, figureMarkup, stageAsset } from './editor-support.mjs';
+import { createHandout, libraryOptions } from './editor-library.mjs';
 import { readHandoutStatus } from '../../editor/editor-model.js';
 
 const json = (response, status, value) => {
@@ -20,7 +21,8 @@ const revision = source => createHash('sha256').update(source).digest('hex');
 
 export async function createEditorServer({ root, privateDirectory, publicOnly = false, requirePrivate = false }) {
   const content = await loadBuildContent(root, { privateDirectory, publicOnly, requirePrivate });
-  const { documents, privateRoot } = content;
+  let documents = content.documents;
+  const { privateRoot } = content;
   let manifests = content.manifests;
   const temporaryRoot = privateRoot ? path.join(privateRoot, 'build/editor') : os.tmpdir();
   if (privateRoot) await fs.mkdir(temporaryRoot, { recursive: true, mode: 0o700 });
@@ -48,14 +50,30 @@ export async function createEditorServer({ root, privateDirectory, publicOnly = 
     for (const item of staged.get(key) ?? []) await fs.rm(item.stagedFile, { force: true });
     staged.delete(key);
   }
-  const discovered = new Map();
-  for (const { sourcePath } of documents) {
-    const contentRoot = documentRoot(sourcePath);
-    const realHandoutsRoot = await fs.realpath(path.join(contentRoot, 'handouts'));
-    const realFile = await fs.realpath(path.resolve(contentRoot, sourcePath));
-    if (realFile.startsWith(`${realHandoutsRoot}${path.sep}`) && path.extname(realFile) === '.md') {
-      discovered.set(sourcePath, realFile);
+  let discovered = await discoveredFiles(documents);
+  async function discoveredFiles(records) {
+    const files = new Map();
+    for (const record of records) {
+      const contentRoot = record.contentRoot || root;
+      const realRoot = await fs.realpath(contentRoot);
+      const realHandoutsRoot = await fs.realpath(path.join(contentRoot, 'handouts'));
+      const realFile = await fs.realpath(path.resolve(contentRoot, record.sourcePath));
+      if (!realHandoutsRoot.startsWith(realRoot + path.sep) || !realFile.startsWith(realHandoutsRoot + path.sep)) throw Error('Handout source escapes its library');
+      if (path.extname(realFile) === '.md') files.set(record.sourcePath, realFile);
     }
+    return files;
+  }
+  async function reloadLibrary() {
+    const next = await loadBuildContent(root, { privateDirectory: privateRoot, publicOnly, requirePrivate });
+    const files = await discoveredFiles(next.documents);
+    documents = next.documents; manifests = next.manifests; discovered = files;
+  }
+  const handoutList = () => documents.map(({ sourcePath, meta, contentRoot }) => ({ path: sourcePath, title: meta.title, code: meta.code, sectionNumber: meta.sectionNumber, status: meta.status, private: Boolean(contentRoot), formatting: 'unchecked' }));
+  let libraryOperation = Promise.resolve();
+  function changeLibrary(operation) {
+    const result = libraryOperation.then(operation);
+    libraryOperation = result.catch(() => {});
+    return result;
   }
   const template = await fs.readFile(path.join(root, 'templates/handout.html'), 'utf8');
   let validationRoot;
@@ -65,14 +83,15 @@ export async function createEditorServer({ root, privateDirectory, publicOnly = 
     resourcesPromise ??= (async () => {
       validationRoot = await fs.mkdtemp(path.join(temporaryRoot, 'handout-validation-'));
       await prepareDirectories(root, validationRoot);
-      await copyAssets(root, validationRoot, manifests);
+      const assetManifests = manifests;
+      await copyAssets(root, validationRoot, assetManifests);
       const options = browserOptions();
       if (privateRoot) {
         options.userDataDir = path.join(validationRoot, 'browser-profile');
         options.env = { ...options.env, TMPDIR: temporaryRoot };
       }
       browser = await puppeteer.launch(options);
-      return { validationRoot, browser };
+      return { validationRoot, browser, assetManifests };
     })();
     return resourcesPromise;
   }
@@ -126,6 +145,13 @@ export async function createEditorServer({ root, privateDirectory, publicOnly = 
     }
     const generation = requestId;
     const resources = await validationResources();
+    while (resources.assetManifests !== manifests) {
+      const current = manifests;
+      resources.assetRefresh ??= copyAssets(root, resources.validationRoot, current)
+        .then(() => { resources.assetManifests = current; })
+        .finally(() => { resources.assetRefresh = undefined; });
+      await resources.assetRefresh;
+    }
     const documentCode = prepared.document.meta.code;
     for (const item of stagedFor(value)) {
       const directory = path.join(resources.validationRoot, 'assets', 'handouts', documentCode);
@@ -150,7 +176,26 @@ export async function createEditorServer({ root, privateDirectory, publicOnly = 
     try {
       const url = new URL(request.url, 'http://127.0.0.1');
       if (request.method === 'GET' && url.pathname === '/api/handouts') {
-        return json(response, 200, documents.map(({ sourcePath, meta }) => ({ path: sourcePath, title: meta.title, code: meta.code, status: meta.status, formatting: 'unchecked' })));
+        return json(response, 200, handoutList());
+      }
+      if (request.method === 'GET' && url.pathname === '/api/library-options') {
+        return json(response, 200, libraryOptions(documents, manifests, privateRoot));
+      }
+      if (request.method === 'POST' && url.pathname === '/api/library/refresh') {
+        const value = await body(request); requireSession(value);
+        return json(response, 200, await changeLibrary(async () => {
+          await reloadLibrary();
+          return { handouts: handoutList(), options: libraryOptions(documents, manifests, privateRoot) };
+        }));
+      }
+      if (request.method === 'POST' && url.pathname === '/api/handouts/new') {
+        if (request.headers['content-type']?.split(';')[0].trim().toLowerCase() !== 'application/json') return json(response, 415, { error: 'Handout creation requires application/json' });
+        const value = await body(request); requireSession(value);
+        return json(response, 201, await changeLibrary(async () => {
+          await reloadLibrary();
+          const created = await createHandout({ root, privateRoot, documents, manifests, request: value, reload: reloadLibrary });
+          return { ...created, handouts: handoutList(), options: libraryOptions(documents, manifests, privateRoot) };
+        }));
       }
       if (request.method === 'GET' && url.pathname === '/api/handout') {
         const relative = url.searchParams.get('path');
@@ -255,6 +300,7 @@ export async function createEditorServer({ root, privateDirectory, publicOnly = 
       }
       if (request.method === 'GET' && (url.pathname === '/' || url.pathname === '/index.html')) return serve(response, path.join(root, 'editor/index.html'), 'text/html; charset=utf-8');
       if (request.method === 'GET' && url.pathname === '/editor.js') return serve(response, path.join(root, 'editor/editor.js'), 'text/javascript; charset=utf-8');
+      if (request.method === 'GET' && url.pathname === '/library-controls.js') return serve(response, path.join(root, 'editor/library-controls.js'), 'text/javascript; charset=utf-8');
       if (request.method === 'GET' && url.pathname === '/preview-controls.js') return serve(response, path.join(root, 'editor/preview-controls.js'), 'text/javascript; charset=utf-8');
       if (request.method === 'GET' && url.pathname === '/editor-model.js') return serve(response, path.join(root, 'editor/editor-model.js'), 'text/javascript; charset=utf-8');
       if (request.method === 'GET' && url.pathname === '/editor.css') return serve(response, path.join(root, 'editor/editor.css'), 'text/css; charset=utf-8');

@@ -115,3 +115,58 @@ test('browser shows private content and save destination without recovering publ
   const draft = await page.evaluate(key => localStorage.getItem(key), `handout-editor:draft:${handoutPath}`);
   assert.doesNotMatch(draft, /PRIVATE UNSAVED EDIT/);
 });
+
+test('private duplication keeps titles, body, images, and credits out of the public checkout', async t => {
+  const { root, privateRoot, get, post, privateSource, svg } = await setup(t);
+  const opened = await get(`/api/handout?path=${handoutPath}`);
+  const rejected = await post('/api/handouts/new', { session: 'private-copy-test', sourcePath: handoutPath, revision: opened.revision, title: 'PRIVATE ADDRESS 123', sectionNumber: 1, library: 'public', reviewDate: '2026-10-26' });
+  assert.equal(rejected.response.status, 403);
+  const copied = await post('/api/handouts/new', { session: 'private-copy-test', sourcePath: handoutPath, revision: opened.revision, title: 'PRIVATE ADDRESS 123', sectionNumber: 1, library: 'private', reviewDate: '2026-10-26' });
+  assert.equal(copied.response.status, 201, JSON.stringify(copied.data));
+  assert.equal(copied.data.code, 'STH-003');
+  assert.equal(copied.data.path, 'handouts/start-here/STH-003-private-handout.md');
+  const placeholder = await fs.readFile(path.join(root, copied.data.path), 'utf8');
+  assert.doesNotMatch(placeholder, /PRIVATE ADDRESS|PRIVATE TEST RECORD|map.svg|Test map/);
+  assert.match(placeholder, /Private handout STH-003/);
+  const actual = await get('/api/handout?path=' + copied.data.path);
+  assert.equal(actual.private, true);
+  assert.match(actual.source, /PRIVATE ADDRESS 123/);
+  assert.match(actual.source, /PRIVATE TEST RECORD/);
+  assert.match(actual.source, /assets\/handouts\/STH-003\/map.svg/);
+  assert.deepEqual(actual.assets, opened.assets);
+  const bytes = await fs.readFile(path.join(privateRoot, 'assets/handouts/STH-003/map.svg.base64'), 'ascii');
+  assert.equal(Buffer.from(bytes.replace(/\s/g, ''), 'base64').toString(), svg);
+  await assert.rejects(fs.access(path.join(root, 'assets/handouts/STH-003')));
+  assert.equal(await fs.readFile(path.join(privateRoot, handoutPath), 'utf8'), privateSource);
+  const publicServer = await createEditorServer({ root, publicOnly: true });
+  await new Promise(resolve => publicServer.listen(0, '127.0.0.1', resolve));
+  t.after(() => new Promise(resolve => { publicServer.closeAllConnections(); publicServer.close(resolve); }));
+  const publicBase = `http://127.0.0.1:${publicServer.address().port}`;
+  const publicCopy = await (await fetch(publicBase + '/api/handout?path=' + copied.data.path)).json();
+  assert.equal(publicCopy.source, placeholder);
+  assert.equal(publicCopy.private, false);
+  const declassified = await fetch(publicBase + '/api/handouts/new', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ session: 'public-copy-test', sourcePath: copied.data.path, revision: publicCopy.revision, title: 'Public copy of slot', sectionNumber: 1, library: 'public', reviewDate: '2026-10-26' }) });
+  assert.equal(declassified.status, 403, 'Public placeholders retain their private classification');
+  const unavailable = await fetch(publicBase + '/api/handouts/new', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ session: 'public-copy-test', title: 'Private unavailable', sectionNumber: 1, library: 'private', template: 'starter', reviewDate: '2026-10-26' }) });
+  assert.equal(unavailable.status, 403);
+});
+
+test('browser private duplication stays private and never stores the new text in browser drafts', { timeout: 60_000 }, async t => {
+  const { base, root } = await setup(t);
+  const browser = await puppeteer.launch(browserOptions()); t.after(() => browser.close());
+  const page = await browser.newPage();
+  await page.goto(base, { waitUntil: 'networkidle0' });
+  await page.select('#handout', handoutPath);
+  await page.waitForFunction(() => document.querySelector('#source').value.includes('PRIVATE TEST RECORD'));
+  await page.click('#duplicate-handout'); await page.waitForSelector('#create-dialog[open]');
+  assert.equal(await page.$eval('#create-form [name="library"]', select => select.value), 'private');
+  assert.equal(await page.$eval('#create-form [name="library"]', select => select.disabled), true);
+  await page.$eval('#create-form [name="title"]', input => { input.value = 'Private copied record'; });
+  await page.click('#create-submit');
+  await page.waitForFunction(() => document.querySelector('#source').value.includes('code: "STH-003"'));
+  assert.match(await page.$eval('#source', input => input.value), /PRIVATE TEST RECORD/);
+  await page.$eval('#source', input => { input.value += '\nPRIVATE UNSAVED COPY'; input.dispatchEvent(new Event('input', { bubbles: true })); });
+  assert.deepEqual(await page.evaluate(() => Object.keys(localStorage)), []);
+  const placeholder = await fs.readFile(path.join(root, 'handouts/start-here/STH-003-private-handout.md'), 'utf8');
+  assert.doesNotMatch(placeholder, /Private copied record|PRIVATE TEST RECORD|PRIVATE UNSAVED COPY/);
+});

@@ -1,3 +1,4 @@
+import { createLibraryControls } from './library-controls.js';
 import { createPreviewControls } from './preview-controls.js';
 import { EditHistory, updateMetadataFields, figureAtOffset, figureRanges, handoutNeedsFixing, handoutOptionLabel, indentSelection, prefixLines, readHandoutStatus, selectionDetails, setHandoutStatus } from './editor-model.js';
 
@@ -45,6 +46,7 @@ let visualRenderController;
 const session = sessionStorage.getItem('handout-editor:session') || crypto.randomUUID();
 sessionStorage.setItem('handout-editor:session', session);
 let handouts = [];
+let scanGeneration = 0;
 let editorMode = 'visual';
 const history = new EditHistory();
 const attachedVisualDocuments = new WeakSet();
@@ -262,18 +264,23 @@ function updateHandout(path, changes) {
 }
 
 async function scanHandouts() {
+  const generation = ++scanGeneration;
+  const scanning = handouts.filter(item => !item.missing);
   let completed = 0;
-  scanState.textContent = `Scanning handouts… 0/${handouts.length}`;
-  for (const item of handouts) {
+  scanState.textContent = `Scanning handouts… 0/${scanning.length}`;
+  for (const item of scanning) {
+    if (generation !== scanGeneration) return;
     updateHandout(item.path, { formatting: 'checking' });
     try {
       const result = await request('/api/scan', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ path: item.path }) });
+      if (generation !== scanGeneration) return;
       if (item.path !== opened.path || !dirty()) updateHandout(item.path, { formatting: result.formatting, issueCount: result.issueCount });
     } catch {
+      if (generation !== scanGeneration) return;
       if (item.path !== opened.path || !dirty()) updateHandout(item.path, { formatting: 'unavailable' });
     }
     completed += 1;
-    scanState.textContent = `Scanning handouts… ${completed}/${handouts.length}`;
+    scanState.textContent = `Scanning handouts… ${completed}/${scanning.length}`;
   }
   const errors = handouts.filter(item => item.formatting === 'error').length;
   const unavailable = handouts.filter(item => item.formatting === 'unavailable').length;
@@ -1070,6 +1077,21 @@ document.querySelector('#check-approval').addEventListener('click', async () => 
 document.querySelector('.tool-toggle').addEventListener('click', event => {
   const expanded = document.querySelector('.tool-overflow').toggleAttribute('open');
   event.currentTarget.setAttribute('aria-expanded', String(expanded));
+});
+
+createLibraryControls({
+  request, message,
+  context: () => ({ ...opened, session, unsaved: dirty() || opened.assets?.some(asset => asset.pending) }),
+  install: async (result, createdPath) => {
+    scanGeneration++;
+    const previous = handouts.find(item => item.path === opened.path);
+    handouts = result.handouts;
+    if (!createdPath && previous && !handouts.some(item => item.path === opened.path)) handouts.push({ ...previous, title: `${previous.title} (removed from disk)`, missing: true, formatting: 'unavailable' });
+    if (createdPath) { handoutSearch.value = ''; needsFixing.checked = false; previewControls.showEditor(); }
+    populateHandouts(createdPath || opened.path);
+    if (createdPath) { select.value = createdPath; await openHandout(); }
+    scanHandouts();
+  }
 });
 
 handouts = await request('/api/handouts');
