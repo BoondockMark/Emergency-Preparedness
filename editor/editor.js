@@ -1,3 +1,4 @@
+import { createGitControls } from './git-controls.js';
 import { createReviewControls } from './review-controls.js';
 import { createLinkControls } from './link-controls.js';
 import { createCommandControls } from './command-controls.js';
@@ -33,6 +34,7 @@ const imageDialog = document.querySelector('#image-dialog');
 const assetList = document.querySelector('#asset-list');
 let opened = { source: '', revision: '' };
 let proofControls;
+let gitControls;
 let changeControls;
 let linkControls;
 let navigationControls;
@@ -344,6 +346,7 @@ function dirty() {
   return changed;
 }
 function renderSoon(event) {
+  gitControls?.changed();
   navigationControls?.changed();
   changeControls?.changed();
   proofControls?.changed();
@@ -967,7 +970,7 @@ document.querySelector('#cancel-assets').addEventListener('click', async () => {
     }
   }
 });
-document.addEventListener('keydown', event => { if (historyShortcut(event)) return; if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 's') { event.preventDefault(); if (!document.querySelector('#commands-dialog[open], #shortcuts-dialog[open], #link-dialog[open], #review-dialog[open]')) save(); } });
+document.addEventListener('keydown', event => { if (historyShortcut(event)) return; if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 's') { event.preventDefault(); if (!document.querySelector('#commands-dialog[open], #shortcuts-dialog[open], #link-dialog[open], #review-dialog[open], #git-dialog[open]')) save(); } });
 window.addEventListener('beforeunload', event => { if (dirty() || opened.assets?.some(asset => asset.pending)) event.preventDefault(); });
 
 
@@ -1132,6 +1135,11 @@ document.querySelector('#check-approval').addEventListener('click', async () => 
 document.querySelector('.tool-toggle').addEventListener('click', event => {
   const expanded = document.querySelector('.tool-overflow').toggleAttribute('open');
   event.currentTarget.setAttribute('aria-expanded', String(expanded));
+});
+
+gitControls = createGitControls({
+  request, save,
+  context: () => ({ path: opened.path, source: source.value, revision: opened.revision, code: opened.code, private: opened.private, session, pending: opened.assets?.some(asset => asset.pending) })
 });
 
 createReviewControls({

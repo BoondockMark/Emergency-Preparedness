@@ -1,3 +1,4 @@
+import { createGitPublisher } from './editor-git.mjs';
 import { reviewMetadata } from './editor-review.mjs';
 import { createHash, randomUUID } from 'node:crypto';
 import fs from 'node:fs/promises';
@@ -21,7 +22,7 @@ const json = (response, status, value) => {
 };
 const revision = source => createHash('sha256').update(source).digest('hex');
 
-export async function createEditorServer({ root, privateDirectory, publicOnly = false, requirePrivate = false }) {
+export async function createEditorServer({ root, privateDirectory, publicOnly = false, requirePrivate = false, gitPublisher = createGitPublisher() }) {
   const content = await loadBuildContent(root, { privateDirectory, publicOnly, requirePrivate });
   let documents = content.documents;
   const { privateRoot } = content;
@@ -235,9 +236,37 @@ export async function createEditorServer({ root, privateDirectory, publicOnly = 
     return { handouts: rows, fetchedAt: new Date().toISOString() };
   }
 
+  async function gitTarget(value) {
+    const file = safeFile(value.path), record = documents.find(item => item.sourcePath === value.path);
+    if (!file || !record || typeof value.private !== 'boolean' || value.private !== Boolean(record.contentRoot)) throw Object.assign(Error('The handout library changed. Reopen the intended handout before preparing Git changes.'), { status: 409 });
+    const source = await fs.readFile(file, 'utf8');
+    if (revision(source) !== value.revision) throw Object.assign(Error('The saved file changed. Save and prepare it again.'), { status: 409 });
+    const { data: meta } = loadDocument(source, value.path);
+    if (meta.code !== record.meta.code) throw Object.assign(Error('Refresh the library list after changing a handout code.'), { status: 409 });
+    return { root: record.contentRoot || root, publicRoot: root, private: value.private, path: value.path, code: meta.code, revision: value.revision };
+  }
+
   const server = http.createServer(async (request, response) => {
     try {
       const url = new URL(request.url, 'http://127.0.0.1');
+      if (url.pathname.startsWith('/api/git/')) {
+        const hosts = ['127.0.0.1', 'localhost', '[::1]'].map(host => `${host}:${server.address().port}`);
+        if (request.method !== 'POST' || !hosts.includes(request.headers.host) || request.headers.origin && request.headers.origin !== `http://${request.headers.host}`) return json(response, 403, { error: 'Git actions require the local editor origin.' });
+        if (request.headers['content-type']?.split(';')[0].trim().toLowerCase() !== 'application/json') return json(response, 415, { error: 'Git actions require application/json.' });
+        const value = await body(request); requireSession(value);
+        if (url.pathname === '/api/git/prepare') {
+          const target = await gitTarget(value);
+          const source = await fs.readFile(safeFile(value.path), 'utf8');
+          const syntax = await validateSource({ ...value, source, phase: 'syntax' });
+          if (!syntax.valid) return json(response, 422, { error: 'Saved locally. Correct syntax and metadata errors before preparing a pull request.' });
+          return json(response, 200, await gitPublisher.prepare(target, value.session));
+        }
+        if (url.pathname === '/api/git/publish') return json(response, 200, await gitPublisher.publish(value.token, value.session, value.title, value.notes || '', async target => {
+          const current = await gitTarget(target);
+          if (path.resolve(current.root) !== path.resolve(target.root)) throw Object.assign(Error('The handout changed libraries. Prepare it again.'), { status: 409 });
+        }));
+        return json(response, 404, { error: 'Unknown Git action.' });
+      }
       if (request.method === 'POST' && ['/api/proofs/start', '/api/proofs/status', '/api/proofs/download', '/api/proofs/cancel'].includes(url.pathname)) {
         if (request.headers['content-type']?.split(';')[0].trim().toLowerCase() !== 'application/json') return json(response, 415, { error: 'PDF proof requests require application/json' });
         const value = await body(request); requireSession(value);
@@ -380,6 +409,7 @@ export async function createEditorServer({ root, privateDirectory, publicOnly = 
         });
       }
       if (request.method === 'GET' && (url.pathname === '/' || url.pathname === '/index.html')) return await serve(response, path.join(root, 'editor/index.html'), 'text/html; charset=utf-8');
+      if (request.method === 'GET' && url.pathname === '/git-controls.js') return await serve(response, path.join(root, 'editor/git-controls.js'), 'text/javascript; charset=utf-8');
       if (request.method === 'GET' && ['/review-controls.js', '/review-model.js'].includes(url.pathname)) return await serve(response, path.join(root, 'editor', url.pathname.slice(1)), 'text/javascript; charset=utf-8');
       if (request.method === 'GET' && ['/link-controls.js', '/link-model.js'].includes(url.pathname)) return await serve(response, path.join(root, 'editor', url.pathname.slice(1)), 'text/javascript; charset=utf-8');
       if (request.method === 'GET' && url.pathname === '/command-controls.js') return await serve(response, path.join(root, 'editor/command-controls.js'), 'text/javascript; charset=utf-8');
