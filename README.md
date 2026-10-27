@@ -94,13 +94,44 @@ to the loopback interface and lists Markdown files discovered under `handouts/`.
 editor beside the live preview. Toggle **Source** when you need direct access to
 the canonical Markdown/HTML and YAML metadata. **Save** (or Ctrl/Cmd+S)
 writes through a temporary file and rename. A save is refused if another program
-changed the file since it was opened; use **Revert** to load the disk version.
+changed the file since it was opened; use **Compare disk changes** to review
+and merge, or **Revert** to load the disk version and discard local edits.
 Unsaved edits are also kept as a per-handout browser draft, so an accidental
 refresh or closed tab offers to restore the newer text without overwriting the
 file on disk. The source status reports the cursor location, selection size,
 word count, and character count. Tab and Shift+Tab indent or outdent every line
 in a selection, and list or heading tools apply their prefix to every selected
 line.
+
+**Review changes** shows added and removed source lines since the last save,
+with line numbers and optional unchanged context. Visual edits appear as their
+canonical Markdown/HTML changes. **Compare with disk** reads the latest file into
+a separate comparison: independent line edits are combined into a proposed text,
+while overlapping edits require **Keep yours** or **Use disk** for each block.
+You can inspect the last saved text for each overlap, then edit the full proposal
+to combine details manually. Large, heavily changed sections are grouped into
+conservative blocks. No merge markers are inserted into the handout.
+
+**Apply merged text** updates the editor and its comparison baseline without
+writing the file. **Save** checks the displayed disk revision again, so a second
+external edit produces another conflict. **Use entire disk text** replaces only
+the editor text and remains undoable; pending uploads are preserved. Closing the
+comparison keeps the editor unchanged. Ordinary approval and validation checks
+still apply when saving.
+
+Public browser drafts now retain their last saved baseline. Restoring a draft
+based on an older disk version offers comparison instead of silently treating the
+current disk file as its baseline. Older drafts that lack baseline text require
+an explicit whole-file choice followed by manual review. Private source, baseline,
+and comparison text stay in memory and are never placed in browser draft storage.
+Comparisons are cleared when their dialog closes, and a path that changes between
+public and private libraries must be reopened before comparison or saving.
+
+Editing can continue while a save finishes. Newer edits retain a browser draft
+against the newly saved baseline, and a delayed save response does not replace a
+different open handout. Simultaneous saves of the same revision are serialized;
+one succeeds and the other must compare. Uploads that arrive during a save remain
+pending for the next save.
 
 **New handout** creates a saved draft from a basic, checklist, or step-by-step
 layout. Enter a title, select a section and library, and confirm the draft's

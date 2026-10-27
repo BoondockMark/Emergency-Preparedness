@@ -45,11 +45,13 @@ export async function createEditorServer({ root, privateDirectory, publicOnly = 
     }
     return combined;
   };
-  async function discardStaged(value) {
+  async function discardStaged(value, subset) {
     requireSession(value);
     const key = stageKey(value.session, value.path);
-    for (const item of staged.get(key) ?? []) await fs.rm(item.stagedFile, { force: true });
-    staged.delete(key);
+    const removing = subset || staged.get(key) || [];
+    for (const item of removing) await fs.rm(item.stagedFile, { force: true });
+    const remaining = (staged.get(key) || []).filter(item => !removing.includes(item));
+    if (remaining.length) staged.set(key, remaining); else staged.delete(key);
   }
   let discovered = await discoveredFiles(documents);
   async function discoveredFiles(records) {
@@ -74,6 +76,14 @@ export async function createEditorServer({ root, privateDirectory, publicOnly = 
   function changeLibrary(operation) {
     const result = libraryOperation.then(operation);
     libraryOperation = result.catch(() => {});
+    return result;
+  }
+  const saves = new Map();
+  function saveHandout(relative, operation) {
+    const result = (saves.get(relative) || Promise.resolve()).catch(() => {}).then(operation);
+    saves.set(relative, result);
+    const clear = () => { if (saves.get(relative) === result) saves.delete(relative); };
+    result.then(clear, clear);
     return result;
   }
   const template = await fs.readFile(path.join(root, 'templates/handout.html'), 'utf8');
@@ -127,8 +137,9 @@ export async function createEditorServer({ root, privateDirectory, publicOnly = 
     return JSON.parse(value || '{}');
   }
   async function serve(response, file, contentType) {
+    const contents = await fs.readFile(file);
     response.writeHead(200, { 'content-type': contentType, 'cache-control': 'no-store' });
-    response.end(await fs.readFile(file));
+    response.end(contents);
   }
 
   async function validateSource(value) {
@@ -182,6 +193,7 @@ export async function createEditorServer({ root, privateDirectory, publicOnly = 
         const value = await body(request); requireSession(value);
         if (url.pathname === '/api/proofs/start') {
           if (!safeFile(value.path) || typeof value.source !== 'string') return json(response, 400, { error: 'Invalid handout snapshot' });
+          if (value.private !== undefined && value.private !== Boolean(documents.find(item => item.sourcePath === value.path)?.contentRoot)) return json(response, 409, { error: 'The handout library changed. Reopen the intended handout before building a proof.' });
           const snapshot = { path: value.path, source: value.source, session: value.session, contentRoot: documentRoot(value.path), manifests: combinedManifests(value), staged: stagedFor(value).map(item => ({ entry: { ...item.entry }, bytes: Buffer.from(item.bytes) })) };
           return json(response, 202, await proofs.start(snapshot));
         }
@@ -240,7 +252,7 @@ export async function createEditorServer({ root, privateDirectory, publicOnly = 
         const key = stageKey(value.session, value.path);
         const items = staged.get(key) ?? [];
         const item = await stageAsset(path.join(stagingRoot, value.session, createHash('sha256').update(value.path).digest('hex')), documentRoot(value.path), document.meta.code, value, items.map(candidate => candidate.entry.file));
-        items.push(item); staged.set(key, items);
+        const active = staged.get(key) || []; active.push(item); staged.set(key, active);
         return json(response, 201, { asset: { ...item.entry, pending: true }, markup: figureMarkup(document.meta.code, item.entry, value.options) });
       }
       if (request.method === 'POST' && url.pathname === '/api/figure') {
@@ -295,33 +307,41 @@ export async function createEditorServer({ root, privateDirectory, publicOnly = 
         const value = await body(request);
         const file = safeFile(value.path);
         if (!file || typeof value.source !== 'string' || typeof value.revision !== 'string') return json(response, 400, { error: 'Invalid save' });
-        const syntax = await validateSource({ ...value, phase: 'syntax' });
-        const status = readHandoutStatus(value.source);
-        if (!syntax.valid && !['draft', 'under-review'].includes(status)) {
-          const error = status === 'approved'
-            ? 'Approved handouts must pass validation. Change the status to draft or under-review, or complete the approval requirements.'
-            : 'Handouts with invalid or missing status metadata must pass validation. Change the status to draft or under-review, then correct the remaining validation errors.';
-          return json(response, 422, { error });
-        }
-        const current = await fs.readFile(file, 'utf8');
-        if (revision(current) !== value.revision) return json(response, 409, { error: 'File changed on disk; revert before saving' });
-        requireSession(value);
-        const pending = stagedFor(value);
-        await commitHandoutWithAssets(documentRoot(value.path), file, value.source, documents.find(item => item.sourcePath === value.path).meta.code, pending);
-        await discardStaged(value);
-        await refreshAssets();
-        const savedStatus = value.source.match(/^status:\s*(draft|under-review|approved)\s*$/m)?.[1]
-          ?? documents.find(item => item.sourcePath === value.path)?.meta.status;
-        return json(response, 200, { revision: revision(value.source), status: savedStatus });
+        return await saveHandout(value.path, async () => {
+          const record = documents.find(item => item.sourcePath === value.path);
+          if (!record || safeFile(value.path) !== file) return json(response, 409, { error: 'The library changed while this save was queued. Compare disk changes before saving.' });
+          const contentRoot = record?.contentRoot || root;
+          if (value.private !== undefined && value.private !== Boolean(record?.contentRoot)) return json(response, 409, { error: 'The handout now belongs to a different library. Reopen the intended handout before saving.' });
+          const syntax = await validateSource({ ...value, phase: 'syntax' });
+          const status = readHandoutStatus(value.source);
+          if (!syntax.valid && !['draft', 'under-review'].includes(status)) {
+            const error = status === 'approved'
+              ? 'Approved handouts must pass validation. Change the status to draft or under-review, or complete the approval requirements.'
+              : 'Handouts with invalid or missing status metadata must pass validation. Change the status to draft or under-review, then correct the remaining validation errors.';
+            return json(response, 422, { error });
+          }
+          const current = await fs.readFile(file, 'utf8');
+          if (revision(current) !== value.revision) return json(response, 409, { error: 'File changed on disk; compare changes before saving' });
+          requireSession(value);
+          const pending = [...stagedFor(value)];
+          await commitHandoutWithAssets(contentRoot, file, value.source, record.meta.code, pending);
+          await discardStaged(value, pending);
+          await refreshAssets();
+          const savedStatus = value.source.match(/^status:\s*(draft|under-review|approved)\s*$/m)?.[1]
+            ?? record.meta.status;
+          return json(response, 200, { revision: revision(value.source), status: savedStatus, committedAssets: pending.map(item => item.entry.file) });
+        });
       }
-      if (request.method === 'GET' && (url.pathname === '/' || url.pathname === '/index.html')) return serve(response, path.join(root, 'editor/index.html'), 'text/html; charset=utf-8');
-      if (request.method === 'GET' && url.pathname === '/editor.js') return serve(response, path.join(root, 'editor/editor.js'), 'text/javascript; charset=utf-8');
-      if (request.method === 'GET' && url.pathname === '/proof-controls.js') return serve(response, path.join(root, 'editor/proof-controls.js'), 'text/javascript; charset=utf-8');
-      if (request.method === 'GET' && url.pathname === '/library-controls.js') return serve(response, path.join(root, 'editor/library-controls.js'), 'text/javascript; charset=utf-8');
-      if (request.method === 'GET' && url.pathname === '/preview-controls.js') return serve(response, path.join(root, 'editor/preview-controls.js'), 'text/javascript; charset=utf-8');
-      if (request.method === 'GET' && url.pathname === '/editor-model.js') return serve(response, path.join(root, 'editor/editor-model.js'), 'text/javascript; charset=utf-8');
-      if (request.method === 'GET' && url.pathname === '/editor.css') return serve(response, path.join(root, 'editor/editor.css'), 'text/css; charset=utf-8');
-      if (request.method === 'GET' && url.pathname === '/assets/styles/print.css') return serve(response, path.join(root, 'assets/styles/print.css'), 'text/css; charset=utf-8');
+      if (request.method === 'GET' && (url.pathname === '/' || url.pathname === '/index.html')) return await serve(response, path.join(root, 'editor/index.html'), 'text/html; charset=utf-8');
+      if (request.method === 'GET' && url.pathname === '/editor.js') return await serve(response, path.join(root, 'editor/editor.js'), 'text/javascript; charset=utf-8');
+      if (request.method === 'GET' && url.pathname === '/change-controls.js') return await serve(response, path.join(root, 'editor/change-controls.js'), 'text/javascript; charset=utf-8');
+      if (request.method === 'GET' && url.pathname === '/change-model.js') return await serve(response, path.join(root, 'editor/change-model.js'), 'text/javascript; charset=utf-8');
+      if (request.method === 'GET' && url.pathname === '/proof-controls.js') return await serve(response, path.join(root, 'editor/proof-controls.js'), 'text/javascript; charset=utf-8');
+      if (request.method === 'GET' && url.pathname === '/library-controls.js') return await serve(response, path.join(root, 'editor/library-controls.js'), 'text/javascript; charset=utf-8');
+      if (request.method === 'GET' && url.pathname === '/preview-controls.js') return await serve(response, path.join(root, 'editor/preview-controls.js'), 'text/javascript; charset=utf-8');
+      if (request.method === 'GET' && url.pathname === '/editor-model.js') return await serve(response, path.join(root, 'editor/editor-model.js'), 'text/javascript; charset=utf-8');
+      if (request.method === 'GET' && url.pathname === '/editor.css') return await serve(response, path.join(root, 'editor/editor.css'), 'text/css; charset=utf-8');
+      if (request.method === 'GET' && url.pathname === '/assets/styles/print.css') return await serve(response, path.join(root, 'assets/styles/print.css'), 'text/css; charset=utf-8');
       if (request.method === 'GET' && url.pathname.startsWith('/assets/handouts/')) {
         const match = decodeURIComponent(url.pathname).match(/^\/assets\/handouts\/([^/]+)\/([^/]+)$/);
         if (!match) return json(response, 404, { error: 'Unknown asset' });
@@ -339,8 +359,9 @@ export async function createEditorServer({ root, privateDirectory, publicOnly = 
         const types = { '.svg': 'image/svg+xml', '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg' };
         const contentType = types[path.extname(file).toLowerCase()];
         if (!contentType) return json(response, 404, { error: 'Unknown asset' });
+        const bytes = await readAssetBytes(directory, match[2], `${match[1]}/${match[2]}`);
         response.writeHead(200, { 'content-type': contentType, 'cache-control': 'no-store' });
-        return response.end(await readAssetBytes(directory, match[2], `${match[1]}/${match[2]}`));
+        return response.end(bytes);
       }
       json(response, 404, { error: 'Not found' });
     } catch (error) {
