@@ -274,3 +274,23 @@ test('private navigation and replacement stay in memory and clear when switching
   assert.doesNotMatch(await page.$eval('#outline-headings', element => element.textContent), /PRIVATE/);
   assert.deepEqual(await page.evaluate(() => Object.keys(localStorage)), []);
 });
+
+test('private command execution preserves library routing and clears palette text without browser storage', async t => {
+  const { base, root, privateRoot, publicSource } = await setup(t);
+  const browser = await puppeteer.launch(browserOptions()); t.after(() => browser.close());
+  const page = await browser.newPage(); await page.goto(base, { waitUntil: 'networkidle0' });
+  await page.select('#handout', handoutPath);
+  await page.waitForFunction(() => document.querySelector('#source').value.includes('PRIVATE TEST RECORD'));
+  await page.click('#source-mode');
+  await page.$eval('#source', element => { const at = element.value.indexOf('PRIVATE TEST RECORD'); element.focus(); element.setSelectionRange(at, at + 7); });
+  await page.click('#commands'); await page.type('#command-query', 'bold'); await page.keyboard.press('Enter');
+  assert.match(await page.$eval('#source', element => element.value), /\*\*PRIVATE\*\* TEST RECORD/);
+  await page.click('#commands'); await page.type('#command-query', 'save handout'); await page.keyboard.press('Enter');
+  await page.waitForFunction(() => document.querySelector('#state').textContent === 'Saved');
+  assert.match(await fs.readFile(path.join(privateRoot, handoutPath), 'utf8'), /\*\*PRIVATE\*\* TEST RECORD/);
+  assert.equal(await fs.readFile(path.join(root, handoutPath), 'utf8'), publicSource);
+  await page.click('#commands'); await page.type('#command-query', 'PRIVATE SEARCH TEXT'); await page.keyboard.press('Escape');
+  await page.waitForFunction(() => !document.querySelector('#commands-dialog').open && !document.querySelector('#command-query').value);
+  assert.deepEqual(await page.evaluate(() => Object.keys(localStorage)), []);
+  assert.equal(await page.$$eval('#command-results li', items => items.length), 0);
+});

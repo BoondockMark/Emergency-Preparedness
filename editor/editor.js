@@ -1,3 +1,4 @@
+import { createCommandControls } from './command-controls.js';
 import { createNavigationControls } from './navigation-controls.js';
 import { createChangeControls } from './change-controls.js';
 import { createProofControls } from './proof-controls.js';
@@ -961,7 +962,7 @@ document.querySelector('#cancel-assets').addEventListener('click', async () => {
     }
   }
 });
-document.addEventListener('keydown', event => { if (historyShortcut(event)) return; if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 's') { event.preventDefault(); save(); } });
+document.addEventListener('keydown', event => { if (historyShortcut(event)) return; if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 's') { event.preventDefault(); if (!document.querySelector('#commands-dialog[open], #shortcuts-dialog[open]')) save(); } });
 window.addEventListener('beforeunload', event => { if (dirty() || opened.assets?.some(asset => asset.pending)) event.preventDefault(); });
 
 
@@ -1126,6 +1127,41 @@ document.querySelector('#check-approval').addEventListener('click', async () => 
 document.querySelector('.tool-toggle').addEventListener('click', event => {
   const expanded = document.querySelector('.tool-overflow').toggleAttribute('open');
   event.currentTarget.setAttribute('aria-expanded', String(expanded));
+});
+
+createCommandControls({
+  message, showEditor: () => previewControls.showEditor(),
+  context: () => ({ path: opened.path, source: source.value, private: opened.private, mode: editorMode }),
+  capture: () => {
+    const start = source.selectionStart, end = source.selectionEnd, direction = source.selectionDirection;
+    const top = source.scrollTop, left = source.scrollLeft;
+    const origin = document.activeElement;
+    const previewDoc = preview.contentDocument, previewElement = previewDoc?.activeElement;
+    const doc = visual.contentDocument;
+    const element = doc?.activeElement;
+    const selected = doc?.getSelection();
+    const range = selected?.rangeCount ? selected.getRangeAt(0).cloneRange() : undefined;
+    const usable = editorMode === 'source' || Boolean(visualSelection?.element.isConnected);
+    return {
+      usable,
+      restore(required, forAction) {
+        if (!forAction && origin === preview && previewDoc === preview.contentDocument) {
+          preview.contentWindow.focus(); previewElement?.focus?.({ preventScroll: true }); return true;
+        }
+        if (!forAction && origin !== source && origin !== visual && origin?.id !== 'commands') {
+          origin?.focus?.({ preventScroll: true }); return true;
+        }
+        if (editorMode === 'source') {
+          source.focus({ preventScroll: true }); source.setSelectionRange(start, end, direction);
+          source.scrollTop = top; source.scrollLeft = left; return true;
+        }
+        if (doc !== visual.contentDocument || (range && !range.startContainer.isConnected)) return !required;
+        visual.contentWindow.focus(); element?.focus?.({ preventScroll: true });
+        if (range) { const selection = doc.getSelection(); selection.removeAllRanges(); selection.addRange(range); }
+        return true;
+      }
+    };
+  }
 });
 
 navigationControls = createNavigationControls({

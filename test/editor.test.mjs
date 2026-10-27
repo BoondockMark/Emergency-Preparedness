@@ -24,7 +24,7 @@ async function setup(t) {
   const secondSource = source.replace('code: STH-001', 'code: STH-002').replace('title: Fixture', 'title: Second fixture');
   await fs.writeFile(path.join(root, 'handouts/section/second.md'), secondSource);
   await fs.copyFile(path.join(repository, 'templates/handout.html'), path.join(root, 'templates/handout.html'));
-  for (const name of ['index.html', 'editor.js', 'editor.css', 'editor-model.js', 'preview-controls.js', 'library-controls.js', 'proof-controls.js', 'change-controls.js', 'change-model.js', 'navigation-controls.js', 'navigation-model.js']) await fs.copyFile(path.join(repository, 'editor', name), path.join(root, 'editor', name));
+  for (const name of ['index.html', 'editor.js', 'editor.css', 'editor-model.js', 'preview-controls.js', 'library-controls.js', 'proof-controls.js', 'change-controls.js', 'change-model.js', 'navigation-controls.js', 'navigation-model.js', 'command-controls.js']) await fs.copyFile(path.join(repository, 'editor', name), path.join(root, 'editor', name));
   await fs.copyFile(path.join(repository, 'assets/styles/print.css'), path.join(root, 'assets/styles/print.css'));
   await fs.cp(path.join(repository, 'assets/fonts'), path.join(root, 'assets/fonts'), { recursive: true });
   const assetDirectory = path.join(root, 'assets/handouts/STH-001');
@@ -1758,4 +1758,90 @@ test('find replaces literal body matches, supports metadata opt-in, and undoes r
   await page.click('#find-replace');
   assert.equal((await value(page, '#source')).split('$&$1').length - 1, 1);
   await page.click('#undo'); assert.equal(await value(page, '#source'), before);
+});
+
+async function openCommands(page, query = '') {
+  await page.click('#commands');
+  await page.waitForSelector('#commands-dialog[open]');
+  if (query) await page.type('#command-query', query);
+}
+
+test('command palette filters actions, skips unavailable commands, and shows shortcuts without editing', async t => {
+  const { page, source } = await openEditor(t);
+  await openCommands(page, 'undo');
+  assert.equal(await page.$eval('#command-results [role="option"]', option => option.getAttribute('aria-disabled')), 'true');
+  assert.match(await text(page, '#command-results'), /No earlier edit/);
+  await page.keyboard.press('Enter'); assert.equal(await page.$eval('#commands-dialog', dialog => dialog.open), true);
+  await page.$eval('#command-query', input => { input.value = 'no such command'; input.dispatchEvent(new Event('input', { bubbles: true })); });
+  await waitForText(page, '#command-count', 'No matching commands');
+  assert.equal(await page.$eval('#command-query', input => input.hasAttribute('aria-activedescendant')), false);
+  await page.keyboard.press('Escape');
+  assert.equal(await value(page, '#command-query'), '');
+  assert.equal(await page.$$eval('#command-results li', items => items.length), 0);
+  assert.equal(await value(page, '#source'), source);
+  await openCommands(page, 'keyboard help'); await page.keyboard.press('Enter');
+  await page.waitForSelector('#shortcuts-dialog[open]');
+  assert.match(await text(page, '#shortcuts-dialog'), /Ctrl\/Cmd\+K/);
+  await page.keyboard.down('Control'); await page.keyboard.press('s'); await page.keyboard.up('Control');
+  assert.equal(await page.$eval('#shortcuts-dialog', dialog => dialog.open), true);
+  await page.keyboard.press('Escape');
+  await openCommands(page, 'switch mode');
+  await page.keyboard.press('ArrowDown');
+  const selected = await page.$eval('#command-query', input => document.getElementById(input.getAttribute('aria-activedescendant')).textContent);
+  assert.match(selected, /Visual/);
+  await page.keyboard.press('ArrowUp'); await page.keyboard.press('Enter');
+  assert.equal(await page.$eval('#source-mode', button => button.getAttribute('aria-pressed')), 'true');
+});
+
+test('command formatting preserves Source selection and uses shared undo, and Escape restores the cursor', async t => {
+  const { page, source } = await openEditor(t);
+  const at = source.indexOf('First page.');
+  await page.$eval('#source', (element, at) => { element.focus(); element.setSelectionRange(at, at + 5); }, at);
+  await page.keyboard.down('Control'); await page.keyboard.press('k'); await page.keyboard.up('Control');
+  await page.type('#command-query', 'bold'); await page.keyboard.press('Enter');
+  assert.equal(await value(page, '#source'), source.replace('First page.', '**First** page.'));
+  await openCommands(page, 'undo'); await page.keyboard.press('Enter');
+  assert.equal(await value(page, '#source'), source);
+  await page.$eval('#source', (element, at) => { element.focus(); element.setSelectionRange(at, at + 5); }, at);
+  await openCommands(page, 'warning'); await page.keyboard.press('Escape');
+  assert.equal(await page.$eval('#source', element => element.selectionStart), at);
+  assert.equal(await page.$eval('#source', element => element.selectionEnd), at + 5);
+  assert.equal(await page.evaluate(() => document.activeElement.id), 'source');
+});
+
+test('command palette works from Visual and preview iframes, preserves Visual formatting and respects open dialogs', async t => {
+  const { page } = await openEditor(t, { mode: 'visual' });
+  const frame = await (await page.$('#visual')).contentFrame();
+  await frame.waitForSelector('[data-visual-block]');
+  await frame.evaluate(() => {
+    const block = [...document.querySelectorAll('[data-visual-block]')].find(element => element.textContent === 'First page.');
+    block.focus(); const range = document.createRange(); range.setStart(block.firstChild, 0); range.setEnd(block.firstChild, 5);
+    getSelection().removeAllRanges(); getSelection().addRange(range);
+  });
+  await page.keyboard.down('Meta'); await page.keyboard.press('k'); await page.keyboard.up('Meta');
+  await page.waitForSelector('#commands-dialog[open]'); await page.type('#command-query', 'bold'); await page.keyboard.press('Enter');
+  assert.match(await value(page, '#source'), /<b>First<\/b>|<strong>First<\/strong>/);
+  await page.click('#undo');
+  await page.click('#preview-only');
+  const previewFrame = await (await page.$('#preview')).contentFrame(); await previewFrame.click('h1');
+  await page.keyboard.down('Control'); await page.keyboard.press('k'); await page.keyboard.up('Control');
+  await page.waitForSelector('#commands-dialog[open]'); await page.type('#command-query', 'switch source'); await page.keyboard.press('Enter');
+  assert.equal(await page.$eval('body', body => body.classList.contains('preview-only')), false);
+  assert.equal(await page.$eval('#source', element => element.hidden), false);
+  await openCommands(page, 'handout details'); await page.keyboard.press('Enter');
+  await page.waitForSelector('#details-dialog[open]');
+  await page.keyboard.down('Control'); await page.keyboard.press('k'); await page.keyboard.up('Control');
+  assert.equal(await page.$eval('#commands-dialog', dialog => dialog.open), false);
+  assert.equal(await page.$eval('#details-dialog', dialog => dialog.open), true);
+});
+
+test('commands reject a changed buffer rather than restoring an outdated selection', async t => {
+  const { page } = await openEditor(t);
+  await openCommands(page, 'bold');
+  await appendSource(page, '\nNewer edit while the palette is open.');
+  const before = await value(page, '#source');
+  await page.keyboard.press('Enter');
+  await waitForText(page, '#message', 'handout changed');
+  assert.equal(await value(page, '#source'), before);
+  assert.equal(await page.$eval('#commands-dialog', dialog => dialog.open), false);
 });

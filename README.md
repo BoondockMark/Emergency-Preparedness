@@ -226,6 +226,18 @@ an asset, or discarding pending uploads resets it. History keeps the most recent
 continues to work separately. Pending uploads stay available when their insertion
 is undone, until saved or explicitly discarded.
 
+**Commands** (Ctrl/Cmd+K) opens a searchable palette from Source, Visual, or the
+print preview. Search by action or topic, such as “image”, “PDF”, “outline”,
+“sources”, or “save”. Use Up/Down to choose an available action and Enter to run
+it, or click a result. Disabled actions explain why they are unavailable. Escape
+or Ctrl/Cmd+K closes the palette and restores the editor selection. Commands use
+the existing controls, including their validation, confirmations, and Undo/Redo.
+Place the cursor or select text in the editor before running a formatting command;
+if the editor refreshes or the buffer changes while the palette is open, reopen
+it before applying the action. Search terms clear when the palette closes and
+are never stored in browser storage. Choose **Keyboard shortcuts and help** in
+the palette for the full shortcut reference.
+
 **Document outline** lists Markdown and standalone HTML headings from the current
 buffer with page and source line numbers. Select a heading to navigate to it in
 the current editor mode; unrendered changes fall back to Source. **Move up** and
