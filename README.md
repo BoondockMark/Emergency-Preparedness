@@ -115,6 +115,20 @@ YAML front matter and serialize the handout body as supported HTML. Preview rend
 `templates/handout.html`, and `assets/styles/print.css` as the build. The editor
 is a local authoring aid; generated PDFs still require `npm run build`.
 
+The **Live print preview** starts at **Fit to width**, so the full page width remains
+visible as the window or pane changes size. Choose **25%–200%** for a fixed zoom,
+use **Previous**, **Next**, or the **Page** field to navigate, and drag the divider
+to resize the editor and preview. The divider also supports Left/Right arrow keys,
+Home/End for its limits, and double-click to reset the split. On smaller screens,
+the panes stack and the divider is hidden.
+
+**Preview only** expands the proof to use the full workspace; **Show editor** or
+Escape returns to editing. The preview keeps the page and relative scroll position
+when edits refresh it or zoom changes. Switching handouts starts at page one;
+removing pages clamps the position to the remaining document. These controls affect
+the on-screen preview only; PDF generation and layout validation use the original
+print geometry. Choosing a source-only validation issue brings the editor back.
+
 **Handout details** opens a form for the title, version, review date, reviewers,
 and structured sources. Choose a source type to see the relevant fields; add or
 remove sources as needed. **Check approval readiness** checks the form against

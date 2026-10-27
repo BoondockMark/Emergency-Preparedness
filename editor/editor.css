@@ -24,7 +24,7 @@ nav button { font-family: ui-monospace, monospace; }
 .image-button { margin-left: auto; background: #dbeafe; border-color: #93c5fd; }
 #state.dirty { color: #ffd166; font-weight: bold; }
 #scan-state { margin-left: auto; color: #dbeafe; white-space: nowrap; }
-main { flex: 1 1 0; min-height: 0; overflow: hidden; display: grid; grid-template-columns: minmax(25rem, 1fr) minmax(30rem, 1.15fr); gap: .75rem; padding: .75rem; }
+main { flex: 1 1 0; min-height: 0; overflow: hidden; display: grid; grid-template-columns: minmax(0, var(--editor-width, 47%)) .6rem minmax(0, 1fr); gap: .4rem; padding: .75rem; }
 .source-heading { display: flex; justify-content: space-between; gap: 1rem; }
 #cursor-status { color: #475569; font-variant-numeric: tabular-nums; }
 #draft-recovery { display: flex; align-items: center; justify-content: center; gap: .65rem; padding: .45rem 1rem; background: #fef3c7; border-bottom: 1px solid #d97706; }
@@ -142,3 +142,23 @@ fieldset label { display: grid; gap: .15rem; }
 #details-form h2 { font-size: 1rem; }
 
 #source-library { position: fixed; left: 1rem; bottom: 0; margin: 0; padding: .2rem .4rem; font-size: .8rem; color: #475569; background: #f8fafc; pointer-events: none; }
+
+.preview-heading, .preview-controls, .preview-pagination { display: flex; align-items: center; gap: .45rem; min-width: 0; flex-wrap: wrap; }
+.preview-heading { justify-content: space-between; }
+.preview-controls { padding: .45rem; background: #f8fafc; border: 1px solid #9ca3af; }
+.preview-controls label { display: inline-flex; align-items: center; gap: .3rem; }
+.preview-controls select, .preview-controls input, .preview-controls button, #preview-only { font: inherit; padding: .25rem .4rem; }
+.preview-pagination { margin-left: auto; }
+#preview-page { width: 4.5rem; }
+#preview-scale { font-size: .85rem; color: #475569; }
+#pane-splitter { cursor: col-resize; touch-action: none; border-radius: .25rem; background: #cbd5e1; }
+#pane-splitter:hover, #pane-splitter:focus-visible { background: #2563eb; outline: 2px solid #2563eb; outline-offset: 1px; }
+body.preview-only #toolbar, body.preview-only .editor-column, body.preview-only #pane-splitter { display: none; }
+body.preview-only main { grid-template-columns: minmax(0, 1fr); }
+@media (max-width: 850px) {
+  #pane-splitter { display: none; }
+  .preview-controls { gap: .5rem; }
+}
+@media (max-width: 520px) {
+  .preview-pagination { margin-left: 0; width: 100%; }
+}

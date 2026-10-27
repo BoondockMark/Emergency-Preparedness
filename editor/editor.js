@@ -1,3 +1,4 @@
+import { createPreviewControls } from './preview-controls.js';
 import { EditHistory, updateMetadataFields, figureAtOffset, figureRanges, handoutNeedsFixing, handoutOptionLabel, indentSelection, prefixLines, readHandoutStatus, selectionDetails, setHandoutStatus } from './editor-model.js';
 
 const select = document.querySelector('#handout');
@@ -11,6 +12,7 @@ const sourceMode = document.querySelector('#source-mode');
 const editorLabel = document.querySelector('#editor-label');
 const visualHelp = document.querySelector('#visual-help');
 const preview = document.querySelector('#preview');
+const previewControls = createPreviewControls(preview);
 const state = document.querySelector('#state');
 const scanState = document.querySelector('#scan-state');
 const message = document.querySelector('#message');
@@ -351,6 +353,10 @@ function selectIssue(issue) {
     previewElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
   }
 
+  if (document.body.classList.contains('preview-only')) {
+    if (previewElement) { message.textContent = `Navigated to ${issue.type} in the preview.`; return; }
+    previewControls.showEditor();
+  }
   const visualElement = editorMode === 'visual' ? matchingElement(visual.contentDocument) : null;
   if (visualElement) {
     if (!visualElement.hasAttribute('tabindex')) visualElement.setAttribute('tabindex', '-1');
@@ -418,12 +424,13 @@ async function validate() {
 }
 async function render() {
   const sequence = ++renderSequence;
+  const snapshot = bufferSnapshot();
   renderController?.abort();
   renderController = new AbortController();
   try {
-    const html = await request('/api/render', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(bufferSnapshot()), signal: renderController.signal });
-    if (sequence !== renderSequence) return;
-    preview.srcdoc = html;
+    const html = await request('/api/render', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(snapshot), signal: renderController.signal });
+    if (sequence !== renderSequence || !isCurrentBuffer(snapshot)) return;
+    previewControls.render(html, snapshot.path);
     message.textContent = '';
   } catch (error) { if (error.name !== 'AbortError' && sequence === renderSequence) message.textContent = `Preview: ${error.message}`; }
 }
