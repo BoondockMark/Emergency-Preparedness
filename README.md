@@ -90,8 +90,7 @@ Open the printed URL. For an immediate visual proof, open `docs/previews/COM-001
 ## Local handout editor
 
 Run `npm run editor`, then open **http://127.0.0.1:4174**. The server binds only
-to the loopback interface and lists only the Markdown files it discovered under
-`handouts/` at startup. Select a handout and edit it in the visual, print-styled
+to the loopback interface and lists Markdown files discovered under `handouts/`. Select a handout and edit it in the visual, print-styled
 editor beside the live preview. Toggle **Source** when you need direct access to
 the canonical Markdown/HTML and YAML metadata. **Save** (or Ctrl/Cmd+S)
 writes through a temporary file and rename. A save is refused if another program
@@ -102,6 +101,34 @@ file on disk. The source status reports the cursor location, selection size,
 word count, and character count. Tab and Shift+Tab indent or outdent every line
 in a selection, and list or heading tools apply their prefix to every selected
 line.
+
+**New handout** creates a saved draft from a basic, checklist, or step-by-step
+layout. Enter a title, select a section and library, and confirm the draft's
+assessment date. Codes are assigned sequentially within the section at creation;
+existing files and asset directories are reserved. Templates use the shared print
+components and contain verification prompts, rather than approved emergency advice.
+
+**Duplicate** copies the saved handout into a new draft. It keeps the body and
+source citations, copies images and their credits into an independent asset
+manifest, and resets the version, reviewers, and proof record. Save or revert open
+edits and pending uploads before creating or duplicating. Canceling the dialog
+creates no files. Copies still require a fresh review and any applicable proof.
+
+In the private editor, choose **Private library** to create a private handout.
+Private copies remain private. The editor creates a matching generic public
+placeholder and uses a generic filename so private titles, body text, image names,
+and credits stay out of the public checkout. Both checkouts must be included in
+the normal private/public review workflow. Public mode cannot duplicate a private
+slot into a public document.
+
+**Refresh list** discovers files added or changed on disk without restarting the
+server. It preserves the open text, selection, unsaved browser draft, and pending
+uploads; use **Revert** separately to replace open text with the disk version.
+If a source or asset on disk is invalid, refresh reports the error and keeps the
+previous library available. Correct that file before refreshing or creating a new
+handout. If an open public file was removed, its buffer remains available in the
+editor and its list entry is marked as removed. Existing revision checks continue
+to prevent overwriting external edits.
 
 The toolbar applies headings, emphasis, and lists directly in Visual mode.
 Component wrappers, tables, and page breaks insert after the

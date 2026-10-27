@@ -162,3 +162,13 @@ body.preview-only main { grid-template-columns: minmax(0, 1fr); }
 @media (max-width: 520px) {
   .preview-pagination { margin-left: 0; width: 100%; }
 }
+
+#create-form { display: grid; gap: .75rem; }
+#create-form label { display: grid; gap: .25rem; }
+#create-form label[hidden] { display: none; }
+#create-form input, #create-form select { width: 100%; padding: .45rem; }
+#create-form p { margin: 0; }
+#create-error { color: #991b1b; }
+
+#create-form .details-fields { grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr)); }
+#create-form .details-fields > label:first-child { grid-column: 1 / -1; }
