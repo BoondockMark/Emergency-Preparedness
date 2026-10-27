@@ -226,6 +226,52 @@ an asset, or discarding pending uploads resets it. History keeps the most recent
 continues to work separately. Pending uploads stay available when their insertion
 is undone, until saved or explicitly discarded.
 
+**Save & PR…** brings the Git workflow into the editor. Ordinary **Save** and
+Ctrl/Cmd+S continue to save locally without committing or using GitHub.
+
+1. Choose **Save & PR…**, enter a commit/PR title and optional notes, then choose
+   **Save and review changes**. This saves through the existing validation and
+   disk-conflict checks, verifies GitHub access, and prepares a saved snapshot.
+2. Review the target repository, file list, summary, and source/manifest diff.
+   Only this handout and its declared asset files are included; unrelated files
+   and commits are excluded. Syntax/metadata errors must be corrected first.
+3. Choose **Commit, push and create draft PR**. The editor creates its own branch,
+   pushes it, and returns a GitHub link. Later uses update the same open PR. After
+   that PR is merged, another change starts a new branch and PR.
+
+The editor keeps your current checkout and staging intact. The saved working
+files can therefore still appear modified relative to your checkout until it is
+synchronized normally. You do not need to stage them separately for this workflow.
+A failed push or PR request keeps completed local commits and remote pushes;
+choose **Save and review changes** again to resume the same branch. The editor
+never force-pushes. If someone changes the same handout/assets on the base branch
+or changes the editor branch externally, sync and review those changes before
+retrying. Git state is stored under `.git/handout-editor/`; an interrupted process
+may leave `publish.lock` there, which can be removed once no publication is running.
+
+One-time setup, if not already configured: install Git and the
+[GitHub CLI](https://cli.github.com/), use a checkout with an `origin` on github.com,
+and configure your author and GitHub access from that checkout:
+
+```bash
+git config user.name "Your Name"
+git config user.email "you@example.org"
+gh auth login --hostname github.com
+gh auth setup-git --hostname github.com
+```
+
+The origin's fetch and push URLs must identify the same repository. Your account
+needs write access. Private handouts use their separate private checkout and
+require GitHub to confirm the target repository is private, including on retries.
+A new private handout's public placeholder needs its own public-repository PR;
+this action publishes only the selected library. Editor-created PRs start as
+drafts; build artifacts, proof records, approval and publication remain part of
+the normal review process. Git commit hooks are not run by this isolated-index
+workflow; `commit.gpgsign` is honored when enabled. The editor does not store
+GitHub credentials or browser copies of the publication diff. Prepared reviews
+expire after ten minutes, and large changes above 30 MB / 150 files or a 150 KB
+text diff require the normal Git workflow.
+
 **Review dashboard** summarizes the saved files in the current library. Search by
 code, title, section, or reviewer, and combine status, library, and section filters.
 The summary buttons filter validation errors, missing or duplicate reviewers,

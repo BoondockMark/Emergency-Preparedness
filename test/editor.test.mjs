@@ -14,7 +14,7 @@ import { figureAtOffset, figureRanges, HANDOUT_STATUSES, handoutNeedsFixing, han
 const repository = path.resolve(import.meta.dirname, '..');
 const fixture = () => fs.readFile(path.join(repository, 'test/unit-fixtures/front-matter.md'), 'utf8');
 
-async function setup(t) {
+async function setup(t, { gitPublisher } = {}) {
   const root = await fs.mkdtemp(path.join(os.tmpdir(), 'handout-editor-'));
   let server;
   t.after(async () => { if (server) await new Promise(resolve => { server.closeAllConnections(); server.close(resolve); }); await fs.rm(root, { recursive: true, force: true }); });
@@ -24,7 +24,7 @@ async function setup(t) {
   const secondSource = source.replace('code: STH-001', 'code: STH-002').replace('title: Fixture', 'title: Second fixture');
   await fs.writeFile(path.join(root, 'handouts/section/second.md'), secondSource);
   await fs.copyFile(path.join(repository, 'templates/handout.html'), path.join(root, 'templates/handout.html'));
-  for (const name of ['index.html', 'editor.js', 'editor.css', 'editor-model.js', 'preview-controls.js', 'library-controls.js', 'proof-controls.js', 'change-controls.js', 'change-model.js', 'navigation-controls.js', 'navigation-model.js', 'command-controls.js', 'link-controls.js', 'link-model.js', 'review-controls.js', 'review-model.js']) await fs.copyFile(path.join(repository, 'editor', name), path.join(root, 'editor', name));
+  for (const name of ['index.html', 'editor.js', 'editor.css', 'editor-model.js', 'preview-controls.js', 'library-controls.js', 'proof-controls.js', 'change-controls.js', 'change-model.js', 'navigation-controls.js', 'navigation-model.js', 'command-controls.js', 'link-controls.js', 'link-model.js', 'review-controls.js', 'review-model.js', 'git-controls.js']) await fs.copyFile(path.join(repository, 'editor', name), path.join(root, 'editor', name));
   await fs.copyFile(path.join(repository, 'assets/styles/print.css'), path.join(root, 'assets/styles/print.css'));
   await fs.cp(path.join(repository, 'assets/fonts'), path.join(root, 'assets/fonts'), { recursive: true });
   const assetDirectory = path.join(root, 'assets/handouts/STH-001');
@@ -34,13 +34,13 @@ async function setup(t) {
     file: 'route.svg', type: 'diagram', creator: 'Test', source: 'Test fixture', license: 'Test license',
     alt: 'A route marker.', caption: 'Route marker.', decorative: false
   }] }));
-  server = await createEditorServer({ root });
+  server = await createEditorServer({ root, gitPublisher });
   await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
   return { root, source, server, base: `http://127.0.0.1:${server.address().port}`, file: path.join(root, 'handouts/section/example.md') };
 }
 
-async function openEditor(t, { mode = 'source' } = {}) {
-  const context = await setup(t);
+async function openEditor(t, { mode = 'source', gitPublisher } = {}) {
+  const context = await setup(t, { gitPublisher });
   const browser = await puppeteer.launch(browserOptions());
   t.after(() => browser.close());
   const page = await browser.newPage();
@@ -1808,6 +1808,7 @@ test('command formatting preserves Source selection and uses shared undo, and Es
   assert.equal(await value(page, '#source'), source);
   await page.$eval('#source', (element, at) => { element.focus(); element.setSelectionRange(at, at + 5); }, at);
   await openCommands(page, 'warning'); await page.keyboard.press('Escape');
+  await page.waitForFunction(() => !document.querySelector('#commands-dialog').open && document.activeElement.id === 'source');
   assert.equal(await page.$eval('#source', element => element.selectionStart), at);
   assert.equal(await page.$eval('#source', element => element.selectionEnd), at + 5);
   assert.equal(await page.evaluate(() => document.activeElement.id), 'source');
@@ -2044,4 +2045,70 @@ test('review checks close a validation browser that finishes launching after ser
     process.once('exit', () => { clearTimeout(timer); resolve(); });
   });
   assert.equal(browser.connected, false); await request;
+});
+
+function fakeGitPublisher() {
+  const calls = { prepare: [], publish: [] };
+  const publisher = {
+    async prepare(target, session) { calls.prepare.push({ target, session }); return { token: 'test-plan', repository: 'test/repo', private: target.private, branch: 'editor/handout-STH-001-abcdef123456', base: 'main', files: [target.path], summary: '1 file changed', patch: '+ Saved Git edit', updating: false }; },
+    async publish(token, session, title, notes, verify) { calls.publish.push({ token, session, title, notes }); const target = calls.prepare.at(-1).target; await verify(target); return { url: 'https://github.com/test/repo/pull/7', number: 7, commit: 'a'.repeat(40), branch: 'editor/handout-STH-001-abcdef123456', revision: target.revision }; }
+  };
+  return { publisher, calls };
+}
+
+test('Git editor workflow saves, reviews and publishes only after the explicit PR action', async t => {
+  const { publisher, calls } = fakeGitPublisher();
+  const { page, file } = await openEditor(t, { gitPublisher: publisher });
+  await appendSource(page, '\nSaved Git edit.'); await page.click('#save'); await waitForText(page, '#state', 'Saved');
+  assert.equal(calls.prepare.length, 0); assert.equal(calls.publish.length, 0);
+  await page.click('#save-pr'); await page.type('#git-notes', 'Please review the handout.');
+  await page.click('#git-prepare'); await waitForText(page, '#git-state', 'Ready to publish');
+  assert.match(await fs.readFile(file, 'utf8'), /Saved Git edit/);
+  assert.match(await text(page, '#git-target'), /test\/repo/); assert.match(await text(page, '#git-patch'), /Saved Git edit/);
+  assert.equal(calls.publish.length, 0);
+  await page.click('#git-publish'); await waitForText(page, '#git-state', 'Published commit');
+  assert.equal(calls.publish.length, 1); assert.equal(calls.publish[0].notes, 'Please review the handout.');
+  assert.equal(await page.$eval('#git-result a', link => link.href), 'https://github.com/test/repo/pull/7');
+  await page.keyboard.press('Escape'); await page.waitForFunction(() => !document.querySelector('#git-notes').value);
+  assert.equal(await text(page, '#git-patch'), '');
+});
+
+test('Git editor preparation rejects stale state and keeps local saves when Git is not configured', async t => {
+  const { page, file } = await openEditor(t);
+  await appendSource(page, '\nLocal edit without a Git checkout.'); await page.click('#save-pr'); await page.click('#git-prepare');
+  await waitForText(page, '#git-state', 'failed');
+  assert.match(await fs.readFile(file, 'utf8'), /Local edit without/);
+  assert.equal(await page.$eval('#git-publish', button => button.disabled), true);
+});
+
+test('Git editor disables a prepared snapshot after newer edits and protects API origin and saved revisions', async t => {
+  const { publisher, calls } = fakeGitPublisher(); const { page, base, source } = await openEditor(t, { gitPublisher: publisher });
+  await page.click('#save-pr'); await page.click('#git-prepare'); await waitForText(page, '#git-state', 'Ready to publish');
+  await appendSource(page, '\nNewer unsaved edit.');
+  assert.equal(await page.$eval('#git-publish', button => button.disabled), true); assert.equal(calls.publish.length, 0);
+  const body = { path: 'handouts/section/example.md', private: false, revision: 'stale', session: 'git-test-session' };
+  const post = headers => fetch(`${base}/api/git/prepare`, { method: 'POST', headers, body: JSON.stringify(body) });
+  assert.equal((await post({ 'content-type': 'text/plain' })).status, 415);
+  assert.equal((await post({ 'content-type': 'application/json', origin: 'https://other.example' })).status, 403);
+  const { request: httpRequest } = await import('node:http');
+  const rebound = await new Promise((resolve, reject) => {
+    const request = httpRequest(base + '/api/git/prepare', { method: 'POST', headers: { 'content-type': 'application/json', host: 'rebound.example' } }, response => { response.resume(); resolve(response.statusCode); });
+    request.on('error', reject); request.end(JSON.stringify(body));
+  });
+  assert.equal(rebound, 403);
+  assert.equal((await post({ 'content-type': 'application/json' })).status, 409);
+  assert.equal(calls.prepare.length, 1); assert.ok(source.includes('code: STH-001'));
+});
+
+test('Git-enabled editor blocks authored scripts in Visual and preview frames while keeping editing active', async t => {
+  const { page, source } = await openEditor(t);
+  await replaceSource(page, source + '\n<script>parent.__authoredEditorScript = true;</script>\n<p onclick="parent.__authoredEditorClick = true">Safe editable text.</p>\n');
+  await page.click('#visual-mode');
+  await page.waitForFunction(() => document.querySelector('#visual').contentDocument.querySelector('script'));
+  await page.waitForFunction(() => document.querySelector('#preview').contentDocument.querySelector('script'));
+  assert.equal(await page.evaluate(() => window.__authoredEditorScript), undefined);
+  const frame = await (await page.$('#visual')).contentFrame();
+  await frame.click('p[onclick]'); assert.equal(await page.evaluate(() => window.__authoredEditorClick), undefined);
+  await frame.$eval('p[onclick]', element => { element.textContent = 'Edited with parent controls.'; element.dispatchEvent(new Event('input', { bubbles: true })); });
+  assert.match(await value(page, '#source'), /Edited with parent controls/);
 });

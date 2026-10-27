@@ -261,3 +261,10 @@ body.preview-only main { grid-template-columns: minmax(0, 1fr); }
   #review-table td::before { content: attr(data-label); display: block; font-weight: 600; color: #475569; margin-bottom: .2rem; }
   .review-reminder label { flex: 1 1 10rem; }
 }
+
+.git-fields { display: grid; gap: .6rem; margin-top: .7rem; }
+.git-fields label { display: grid; gap: .3rem; }
+.git-fields input { width: 100%; min-width: 0; padding: .5rem; font: inherit; }
+#git-notes { flex: none; min-height: 5rem; height: 6rem; padding: .5rem; }
+#git-target, #git-files { overflow-wrap: anywhere; }
+#git-summary, #git-patch { max-height: 14rem; overflow: auto; white-space: pre-wrap; overflow-wrap: anywhere; background: #f1f5f9; padding: .6rem; }

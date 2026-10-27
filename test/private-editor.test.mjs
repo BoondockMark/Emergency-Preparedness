@@ -9,7 +9,7 @@ import { browserOptions } from '../scripts/lib/artifact-generation.mjs';
 
 const repository = path.resolve(import.meta.dirname, '..');
 const handoutPath = 'handouts/start-here/record.md';
-async function setup(t, { publicOnly = false } = {}) {
+async function setup(t, { publicOnly = false, gitPublisher } = {}) {
   const directory = await fs.mkdtemp(path.join(os.tmpdir(), 'private-editor-'));
   let server;
   t.after(async () => { if (server) await new Promise(resolve => { server.closeAllConnections(); server.close(resolve); }); await fs.rm(directory, { recursive: true, force: true }); });
@@ -31,7 +31,7 @@ async function setup(t, { publicOnly = false } = {}) {
   const entry = { file: 'map.svg', type: 'diagram', creator: 'Test', source: 'Test', license: 'Test', alt: 'Test map', decorative: false };
   await fs.writeFile(path.join(assets, 'map.svg'), svg);
   await fs.writeFile(path.join(assets, 'manifest.json'), JSON.stringify({ assets: [entry] }));
-  server = await createEditorServer({ root, privateDirectory: privateRoot, publicOnly });
+  server = await createEditorServer({ root, privateDirectory: privateRoot, publicOnly, gitPublisher });
   await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
   const base = `http://127.0.0.1:${server.address().port}`;
   const get = async url => (await fetch(base + url)).json();
@@ -350,4 +350,24 @@ test('private review dashboard clears its DOM and search on close and public-onl
   assert.equal(snapshot.handouts.some(row => row.private), false);
   assert.equal(snapshot.handouts.find(row => row.path === handoutPath).placeholder, true);
   assert.doesNotMatch(JSON.stringify(snapshot), /PRIVATE TEST RECORD|PRIVATE REVIEW QUEUE|Private Reviewer/);
+});
+
+test('Git editor routes private handouts to their private checkout and rejects stale public-library requests', async t => {
+  const calls = [];
+  const gitPublisher = {
+    async prepare(target) { calls.push(target); return { token: 'private-token', repository: 'test/private', private: true, branch: 'editor/private', base: 'main', files: [target.path], summary: '1 file', patch: '+ PRIVATE CONTACT' }; }
+  };
+  const { base, root, privateRoot, get, post } = await setup(t, { gitPublisher });
+  const browser = await puppeteer.launch(browserOptions()); t.after(() => browser.close());
+  const page = await browser.newPage(); await page.goto(base, { waitUntil: 'networkidle0' });
+  await page.select('#handout', handoutPath); await page.waitForFunction(() => document.querySelector('#source').value.includes('PRIVATE TEST RECORD'));
+  await page.click('#save-pr'); await page.click('#git-prepare');
+  await page.waitForFunction(() => document.querySelector('#git-state').textContent.includes('Ready to publish'));
+  assert.equal(calls[0].root, privateRoot); assert.equal(calls[0].publicRoot, root); assert.equal(calls[0].private, true);
+  assert.match(await page.$eval('#git-target', element => element.textContent), /Private repository/);
+  await page.keyboard.press('Escape'); await page.waitForFunction(() => document.querySelector('#git-patch').textContent === '');
+  assert.deepEqual(await page.evaluate(() => Object.keys(localStorage)), []);
+  const opened = await get(`/api/handout?path=${handoutPath}`);
+  const rejected = await post('/api/git/prepare', { path: handoutPath, private: false, revision: opened.revision, session: 'private-git-session' });
+  assert.equal(rejected.response.status, 409); assert.equal(calls.length, 1);
 });

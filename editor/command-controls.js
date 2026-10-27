@@ -28,6 +28,7 @@ export function createCommandControls({ context, capture, message, showEditor })
   });
   const commands = [
     button('#save', 'Save handout', 'Handout', 'write disk keep', 'Ctrl/Cmd+S'),
+    button('#save-pr', 'Save and create or update PR', 'Handout', 'git github commit push publish'),
     button('#undo', 'Undo last edit', 'Editing', 'history restore', 'Ctrl/Cmd+Z'),
     button('#redo', 'Redo edit', 'Editing', 'history', 'Ctrl/Cmd+Shift+Z'),
     button('#details', 'Edit handout details', 'Handout', 'title version reviewers sources metadata'),
