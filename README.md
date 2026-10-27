@@ -226,6 +226,27 @@ an asset, or discarding pending uploads resets it. History keeps the most recent
 continues to work separately. Pending uploads stay available when their insertion
 is undone, until saved or explicitly discarded.
 
+**Document outline** lists Markdown and standalone HTML headings from the current
+buffer with page and source line numbers. Select a heading to navigate to it in
+the current editor mode; unrendered changes fall back to Source. **Move up** and
+**Move down** swap neighboring sibling sections on the same page. A section
+includes its subheadings, text, components, and image references. **Duplicate
+section** copies that section while reusing its existing assets. Nested HTML or
+uncertain boundaries require structural edits in Source; sections with HTML IDs
+must be copied there with unique IDs. Page breaks and front matter stay in place.
+These changes share Undo/Redo and still need layout review and validation.
+
+**Find / replace** (Ctrl/Cmd+F, including in Visual mode) searches literal source
+text. It searches the handout body by default; **Include front matter** explicitly
+includes metadata. Match case and Unicode whole-word options narrow results.
+**Next match** / **Previous match** wrap and select the exact range in Source;
+Enter / Shift+Enter in the Find field also navigate. **Replace match** replaces
+the selected result, or selects a result first. **Replace all** confirms the count
+and records one undoable change. Replacement text is literal, including dollar
+signs. Searches are limited to 10,000 results, with bulk replacement disabled if
+there are more. Search terms and replacement text stay in memory and clear when
+switching handouts or libraries. Escape in the search panel closes it.
+
 The header's **Status** menu updates the front matter to one of the three workflow
 states: **Draft**, **Under review**, or **Approved**. Approval is not a validation
 bypass: the handout must still name both reviewers, provide complete sources and

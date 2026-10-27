@@ -1,3 +1,4 @@
+import { createNavigationControls } from './navigation-controls.js';
 import { createChangeControls } from './change-controls.js';
 import { createProofControls } from './proof-controls.js';
 import { createLibraryControls } from './library-controls.js';
@@ -30,6 +31,7 @@ const assetList = document.querySelector('#asset-list');
 let opened = { source: '', revision: '' };
 let proofControls;
 let changeControls;
+let navigationControls;
 let saving;
 let selectedAsset = '';
 let imageContext;
@@ -47,6 +49,7 @@ let completedSyntaxValidation;
 let renderSequence = 0;
 let renderController;
 let visualRenderSequence = 0;
+let visualRenderedSource;
 let visualRenderController;
 const session = sessionStorage.getItem('handout-editor:session') || crypto.randomUUID();
 sessionStorage.setItem('handout-editor:session', session);
@@ -169,6 +172,7 @@ function attachVisualEditor() {
     updateStatusControl(); renderSoon(event);
   });
   document.addEventListener('keydown', event => {
+    if (navigationControls?.shortcut(event)) return;
     if (historyShortcut(event)) return;
     const figure = event.target.closest?.('figure[data-image-editable]');
     if (figure && ['Enter', ' '].includes(event.key)) {
@@ -217,6 +221,7 @@ async function renderVisual() {
     const scrollY = visual.contentWindow?.scrollY || 0;
     visual.addEventListener('load', () => {
       visual.contentWindow.scrollTo(0, scrollY);
+      visualRenderedSource = snapshot.source;
       attachVisualEditor();
     }, { once: true });
     visual.srcdoc = html;
@@ -333,6 +338,7 @@ function dirty() {
   return changed;
 }
 function renderSoon(event) {
+  navigationControls?.changed();
   changeControls?.changed();
   proofControls?.changed();
   history.record(source.value, event?.type === 'input');
@@ -364,7 +370,7 @@ function selectIssue(issue) {
   previewDocument?.querySelectorAll('[data-validation-outline]').forEach(element => { element.style.outline = ''; element.removeAttribute('data-validation-outline'); });
   const previewElement = matchingElement(previewDocument);
   if (previewElement) {
-    previewElement.dataset.validationOutline = 'true'; previewElement.style.outline = '3px solid #dc2626'; previewElement.style.outlineOffset = '2px';
+    previewElement.dataset.validationOutline = 'true'; previewElement.style.outline = issue.type === 'heading' ? '3px solid #2563eb' : '3px solid #dc2626'; previewElement.style.outlineOffset = '2px';
     previewElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
   }
 
@@ -1120,6 +1126,35 @@ document.querySelector('#check-approval').addEventListener('click', async () => 
 document.querySelector('.tool-toggle').addEventListener('click', event => {
   const expanded = document.querySelector('.tool-overflow').toggleAttribute('open');
   event.currentTarget.setAttribute('aria-expanded', String(expanded));
+});
+
+navigationControls = createNavigationControls({
+  source, message, context: () => opened,
+  apply: (text, start, end) => {
+    source.value = text; source.setSelectionRange(start, end);
+    imageContext = undefined; pendingVisualFocus = undefined;
+    updateStatusControl(); renderSoon();
+    if (editorMode === 'visual') renderVisual();
+  },
+  navigate: (start, end, forceSource) => {
+    previewControls.showEditor();
+    if (!forceSource && editorMode === 'visual' && visualRenderedSource === source.value) {
+      selectIssue({ sourcePath: opened.path, sourceLine: source.value.slice(0, start).split('\n').length, type: 'heading' });
+      return;
+    }
+    showEditorMode('source'); source.setSelectionRange(start, end);
+    // Measure wrapped source lines so a match stays visible on narrow screens
+    // and after long authored HTML lines. Remove the temporary text immediately.
+    const mirror = document.createElement('div');
+    const style = getComputedStyle(source);
+    for (const property of ['font', 'letterSpacing', 'wordSpacing', 'tabSize', 'padding', 'textIndent']) mirror.style[property] = style[property];
+    Object.assign(mirror.style, { position: 'fixed', top: '0', left: '-10000px', visibility: 'hidden', width: `${source.clientWidth}px`, boxSizing: 'border-box', whiteSpace: 'pre-wrap', overflowWrap: 'break-word' });
+    const marker = document.createElement('span'); marker.textContent = source.value.slice(start, end) || '\u200b';
+    mirror.append(document.createTextNode(source.value.slice(0, start)), marker);
+    document.body.append(mirror);
+    source.scrollTop = Math.max(0, marker.offsetTop - source.clientHeight / 2); source.scrollLeft = 0;
+    mirror.remove(); updateCursorStatus();
+  }
 });
 
 changeControls = createChangeControls({

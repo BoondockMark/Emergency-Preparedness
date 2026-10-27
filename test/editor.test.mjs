@@ -24,7 +24,7 @@ async function setup(t) {
   const secondSource = source.replace('code: STH-001', 'code: STH-002').replace('title: Fixture', 'title: Second fixture');
   await fs.writeFile(path.join(root, 'handouts/section/second.md'), secondSource);
   await fs.copyFile(path.join(repository, 'templates/handout.html'), path.join(root, 'templates/handout.html'));
-  for (const name of ['index.html', 'editor.js', 'editor.css', 'editor-model.js', 'preview-controls.js', 'library-controls.js', 'proof-controls.js', 'change-controls.js', 'change-model.js']) await fs.copyFile(path.join(repository, 'editor', name), path.join(root, 'editor', name));
+  for (const name of ['index.html', 'editor.js', 'editor.css', 'editor-model.js', 'preview-controls.js', 'library-controls.js', 'proof-controls.js', 'change-controls.js', 'change-model.js', 'navigation-controls.js', 'navigation-model.js']) await fs.copyFile(path.join(repository, 'editor', name), path.join(root, 'editor', name));
   await fs.copyFile(path.join(repository, 'assets/styles/print.css'), path.join(root, 'assets/styles/print.css'));
   await fs.cp(path.join(repository, 'assets/fonts'), path.join(root, 'assets/fonts'), { recursive: true });
   const assetDirectory = path.join(root, 'assets/handouts/STH-001');
@@ -1704,4 +1704,58 @@ test('merging text after a conflict preserves pending image uploads until Save',
   await page.click('#save'); await page.waitForFunction(() => document.querySelector('#state').textContent === 'Saved');
   await fs.access(path.join(root, 'assets/handouts/STH-001/route-2.svg.base64'));
   assert.match(await fs.readFile(file, 'utf8'), /route-2.svg/);
+});
+
+test('document navigation moves and duplicates complete sections with shared undo and preserves page breaks', async t => {
+  const { page, source: original, file } = await openEditor(t);
+  const body = 'Intro.\n\n## Alpha\nAlpha text.\n### Child\nChild text.\n\n## Beta\nBeta text.\n\n<!-- pagebreak -->\n## Gamma\nGamma text.\n';
+  const contents = original.slice(0, original.indexOf('<div class="custom">')) + body;
+  await replaceSource(page, contents);
+  await page.click('#document-outline summary');
+  assert.equal(await page.$$eval('#outline-headings option', items => items.length), 4);
+  await page.click('#section-down');
+  const moved = await value(page, '#source');
+  assert.ok(moved.indexOf('## Beta') < moved.indexOf('## Alpha'));
+  assert.ok(moved.indexOf('### Child') > moved.indexOf('## Alpha'));
+  assert.equal(moved.split('<!-- pagebreak -->')[1], contents.split('<!-- pagebreak -->')[1]);
+  assert.equal(await fs.readFile(file, 'utf8'), original);
+  await page.click('#undo'); assert.equal(await value(page, '#source'), contents);
+  await page.click('#redo'); assert.equal(await value(page, '#source'), moved);
+  await page.select('#outline-headings', String(moved.indexOf('## Alpha')));
+  await page.click('#section-duplicate');
+  assert.equal((await value(page, '#source')).match(/## Alpha/g).length, 2);
+  await page.click('#undo'); assert.equal(await value(page, '#source'), moved);
+  const gamma = await page.$$eval('#outline-headings option', items => items.find(item => item.textContent.includes('Gamma')).value);
+  await page.select('#outline-headings', gamma);
+  assert.equal(await page.$eval('#section-up', button => button.disabled), true);
+  assert.equal(await page.$eval('#section-down', button => button.disabled), true);
+  assert.equal(await page.$eval('#source', element => element.value.slice(element.selectionStart, element.selectionEnd)), '## Gamma');
+});
+
+test('find replaces literal body matches, supports metadata opt-in, and undoes replace-all together', async t => {
+  const { page, source: original, file } = await openEditor(t, { mode: 'visual' });
+  await appendSource(page, '\n## Find fixture\nFixture fixture fixtures [$] fixtureé\n');
+  const before = await value(page, '#source');
+  await page.click('#find-toggle');
+  await page.type('#find-query', 'fixture');
+  await waitForText(page, '#find-count', '5 matches');
+  await page.click('#find-word'); await waitForText(page, '#find-count', '3 matches');
+  await page.click('#find-next');
+  assert.equal(await page.$eval('#source', element => element.hidden), false);
+  assert.equal(await page.$eval('#source', element => element.value.slice(element.selectionStart, element.selectionEnd)), 'fixture');
+  await page.type('#find-replacement', '$&$1');
+  page.once('dialog', dialog => dialog.accept());
+  await page.click('#find-replace-all');
+  const replaced = await value(page, '#source');
+  assert.equal(replaced, before.replace('Find fixture\nFixture fixture', () => 'Find $&$1\n$&$1 $&$1'));
+  assert.equal(await fs.readFile(file, 'utf8'), original);
+  await page.click('#undo'); assert.equal(await value(page, '#source'), before);
+  await page.click('#find-metadata');
+  await waitForText(page, '#find-count', '5 matches');
+  await page.click('#find-case');
+  await waitForText(page, '#find-count', '2 matches');
+  await page.click('#find-next');
+  await page.click('#find-replace');
+  assert.equal((await value(page, '#source')).split('$&$1').length - 1, 1);
+  await page.click('#undo'); assert.equal(await value(page, '#source'), before);
 });

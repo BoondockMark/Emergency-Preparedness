@@ -197,3 +197,17 @@ body.preview-only main { grid-template-columns: minmax(0, 1fr); }
 .merge-conflict button[aria-pressed="true"] { background: #dbeafe; border: 2px solid #2563eb; }
 #changes-proposed { flex: none; height: 20rem; min-height: 12rem; margin-top: .4rem; }
 @media (max-width: 600px) { .merge-columns { grid-template-columns: minmax(0, 1fr); } }
+
+#document-outline, #find-panel { flex: none; padding: .5rem .65rem; background: #f8fafc; border: 1px solid #94a3b8; }
+#document-outline summary { cursor: pointer; font-weight: 600; }
+#outline-count { color: #475569; font-weight: normal; margin-left: .5rem; }
+.outline-controls, .find-options, .find-actions { display: flex; flex-wrap: wrap; gap: .35rem; margin-top: .4rem; }
+#outline-headings { flex: 1 1 100%; width: 100%; min-width: 0; padding: .4rem; }
+#outline-help { margin: .4rem 0 0; color: #475569; font-size: .85rem; }
+#find-panel[hidden] { display: none; }
+.find-fields { display: flex; gap: .5rem; flex-wrap: wrap; }
+.find-fields label { display: grid; flex: 1 1 10rem; min-width: 0; }
+.find-fields input { width: 100%; min-width: 0; padding: .3rem; }
+#find-count { margin-top: .3rem; font-weight: 600; }
+#find-panel small { color: #475569; }
+#find-panel { max-height: 45vh; overflow: auto; }

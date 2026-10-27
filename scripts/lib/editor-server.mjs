@@ -334,6 +334,7 @@ export async function createEditorServer({ root, privateDirectory, publicOnly = 
       }
       if (request.method === 'GET' && (url.pathname === '/' || url.pathname === '/index.html')) return await serve(response, path.join(root, 'editor/index.html'), 'text/html; charset=utf-8');
       if (request.method === 'GET' && url.pathname === '/editor.js') return await serve(response, path.join(root, 'editor/editor.js'), 'text/javascript; charset=utf-8');
+      if (request.method === 'GET' && ['/navigation-controls.js', '/navigation-model.js'].includes(url.pathname)) return await serve(response, path.join(root, 'editor', url.pathname.slice(1)), 'text/javascript; charset=utf-8');
       if (request.method === 'GET' && url.pathname === '/change-controls.js') return await serve(response, path.join(root, 'editor/change-controls.js'), 'text/javascript; charset=utf-8');
       if (request.method === 'GET' && url.pathname === '/change-model.js') return await serve(response, path.join(root, 'editor/change-model.js'), 'text/javascript; charset=utf-8');
       if (request.method === 'GET' && url.pathname === '/proof-controls.js') return await serve(response, path.join(root, 'editor/proof-controls.js'), 'text/javascript; charset=utf-8');
