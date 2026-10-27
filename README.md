@@ -226,6 +226,35 @@ an asset, or discarding pending uploads resets it. History keeps the most recent
 continues to work separately. Pending uploads stay available when their insertion
 is undone, until saved or explicitly discarded.
 
+**Review dashboard** summarizes the saved files in the current library. Search by
+code, title, section, or reviewer, and combine status, library, and section filters.
+The summary buttons filter validation errors, missing or duplicate reviewers,
+review reminders, and files needing checks. Needs attention also includes drafts,
+under-review handouts, unreadable files, and invalid or future review dates.
+
+Review reminders default to **12 calendar months** after `lastReviewed`; choose
+3, 6, 12, or 24 months and an **As of** date to plan another review window. Month
+ends clamp to the last real date (for example, February 29 becomes February 28
+in the following year). A reminder becomes due on that date. This is a planning
+rule, not an approval or publication policy, and does not modify metadata.
+
+**Refresh saved data** rereads known files, including edits made outside the
+editor. **Check all saved handouts** runs the existing saved-file syntax/layout
+checks and shows findings with the check time. **Stop checks** stops after the
+current handout; closing the dashboard also stops further checks. Concurrent
+background checks of the same saved version share their result. Source changes
+invalidate older results; recheck after external asset changes. **Refresh list**
+is still needed to discover added or removed files. A passing check does not
+certify approval or replace proof review.
+
+The dashboard excludes unsaved text and pending uploads. **Open handout** uses
+the editor's existing discard confirmation when switching documents; opening the
+current handout returns to its buffer without discarding edits. Private metadata
+is shown only when that private library is loaded. Dashboard rows, searches, and
+check details stay in memory and clear when the dialog closes; public-only mode
+shows public placeholders. The dashboard never saves files or changes workflow
+status. It is also available through Commands by searching “review dashboard”.
+
 **Link** inserts or edits a link from the current selection in Visual or Source
 mode. In Visual, select text or place the cursor in a paragraph, then choose
 **Link**; click an existing link to edit it without following its destination.

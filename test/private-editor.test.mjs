@@ -312,3 +312,42 @@ test('private link edits and saves keep source and dialog values out of public f
   await page.waitForFunction(() => document.querySelector('#link-url').value === '');
   assert.equal(await page.$eval('#link-text', input => input.value), '');
 });
+
+test('review dashboard isolates private metadata and clears old checks after a path changes libraries', async t => {
+  const { root, privateRoot, get, post, publicSource, privateSource } = await setup(t);
+  const file = path.join(privateRoot, handoutPath);
+  await fs.writeFile(file, privateSource.replace('title: Fixture', 'title: PRIVATE REVIEW TITLE').replace('version: 1.0', 'version: invalid'));
+  await post('/api/scan', { path: handoutPath });
+  let snapshot = await get('/api/review');
+  const privateRow = snapshot.handouts.find(row => row.path === handoutPath);
+  assert.equal(privateRow.private, true); assert.equal(privateRow.title, 'PRIVATE REVIEW TITLE'); assert.equal(privateRow.validation.formatting, 'error');
+  assert.equal('source' in privateRow, false);
+  await fs.writeFile(path.join(root, handoutPath), publicSource.replace('private: true', 'private: false').replace('title: Fixture', 'title: Public replacement'));
+  await fs.rm(file); await fs.rm(path.join(privateRoot, 'assets/handouts/STH-001'), { recursive: true });
+  const refreshed = await post('/api/library/refresh', { session: 'review-test-session' }); assert.equal(refreshed.response.status, 200);
+  snapshot = await get('/api/review');
+  const publicRow = snapshot.handouts.find(row => row.path === handoutPath);
+  assert.equal(publicRow.private, false); assert.equal(publicRow.validation.formatting, 'unchecked');
+  assert.doesNotMatch(JSON.stringify(snapshot), /PRIVATE REVIEW TITLE|version: invalid/);
+});
+
+test('private review dashboard clears its DOM and search on close and public-only servers expose placeholders', async t => {
+  const { base, privateRoot, privateSource } = await setup(t);
+  await fs.writeFile(path.join(privateRoot, handoutPath), privateSource.replace('title: Fixture', 'title: PRIVATE REVIEW QUEUE').replace('editor: Unassigned', 'editor: Private Reviewer'));
+  const browser = await puppeteer.launch(browserOptions()); t.after(() => browser.close());
+  const page = await browser.newPage(); await page.goto(base, { waitUntil: 'networkidle0' });
+  await page.click('#review-dashboard');
+  await page.waitForFunction(() => document.querySelector('#review-state').textContent === 'Saved data loaded.');
+  assert.match(await page.$eval('#review-rows', rows => rows.textContent), /PRIVATE REVIEW QUEUE/);
+  await page.select('#review-library', 'private'); await page.type('#review-search', 'Private Reviewer');
+  assert.equal(await page.$$eval('#review-rows tr', rows => rows.length), 1);
+  await page.keyboard.press('Escape');
+  await page.waitForFunction(() => !document.querySelector('#review-dialog').open && !document.querySelector('#review-rows').textContent);
+  assert.equal(await page.$eval('#review-search', input => input.value), '');
+  assert.deepEqual(await page.evaluate(() => Object.keys(localStorage)), []);
+  const publicOnly = await setup(t, { publicOnly: true });
+  const snapshot = await publicOnly.get('/api/review');
+  assert.equal(snapshot.handouts.some(row => row.private), false);
+  assert.equal(snapshot.handouts.find(row => row.path === handoutPath).placeholder, true);
+  assert.doesNotMatch(JSON.stringify(snapshot), /PRIVATE TEST RECORD|PRIVATE REVIEW QUEUE|Private Reviewer/);
+});

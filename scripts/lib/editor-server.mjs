@@ -1,3 +1,4 @@
+import { reviewMetadata } from './editor-review.mjs';
 import { createHash, randomUUID } from 'node:crypto';
 import fs from 'node:fs/promises';
 import http from 'node:http';
@@ -53,6 +54,8 @@ export async function createEditorServer({ root, privateDirectory, publicOnly = 
     const remaining = (staged.get(key) || []).filter(item => !removing.includes(item));
     if (remaining.length) staged.set(key, remaining); else staged.delete(key);
   }
+  let reviewGeneration = 0;
+  const reviewChecks = new Map(), runningScans = new Map();
   let discovered = await discoveredFiles(documents);
   async function discoveredFiles(records) {
     const files = new Map();
@@ -70,6 +73,7 @@ export async function createEditorServer({ root, privateDirectory, publicOnly = 
     const next = await loadBuildContent(root, { privateDirectory: privateRoot, publicOnly, requirePrivate });
     const files = await discoveredFiles(next.documents);
     documents = next.documents; manifests = next.manifests; discovered = files;
+    reviewGeneration++; reviewChecks.clear();
   }
   const handoutList = () => documents.map(({ sourcePath, meta, contentRoot }) => ({ path: sourcePath, title: meta.title, code: meta.code, sectionNumber: meta.sectionNumber, status: meta.status, private: Boolean(contentRoot), formatting: 'unchecked' }));
   let libraryOperation = Promise.resolve();
@@ -91,7 +95,9 @@ export async function createEditorServer({ root, privateDirectory, publicOnly = 
   let validationRoot;
   let browser;
   let resourcesPromise;
+  let closing = false;
   async function validationResources() {
+    if (closing) throw Object.assign(Error('Editor server is closing'), { status: 503 });
     resourcesPromise ??= (async () => {
       validationRoot = await fs.mkdtemp(path.join(temporaryRoot, 'handout-validation-'));
       await prepareDirectories(root, validationRoot);
@@ -108,6 +114,7 @@ export async function createEditorServer({ root, privateDirectory, publicOnly = 
     return resourcesPromise;
   }
   async function refreshAssets() {
+    reviewGeneration++; reviewChecks.clear();
     manifests = await loadAssetManifests(root);
     manifests.roots = new Map();
     if (privateRoot) {
@@ -116,6 +123,7 @@ export async function createEditorServer({ root, privateDirectory, publicOnly = 
         manifests.roots.set(code, privateRoot);
       }
     }
+    await resourcesPromise?.catch(() => {});
     await browser?.close();
     if (validationRoot) await fs.rm(validationRoot, { recursive: true, force: true });
     browser = undefined;
@@ -185,6 +193,48 @@ export async function createEditorServer({ root, privateDirectory, publicOnly = 
     }
   }
 
+  async function scanSaved(relative) {
+    const file = safeFile(relative), generation = reviewGeneration, assetSnapshot = manifests;
+    if (!file) throw Object.assign(Error('Unknown handout path'), { status: 404 });
+    const record = documents.find(item => item.sourcePath === relative);
+    const source = await fs.readFile(file, 'utf8'), sourceRevision = revision(source);
+    if (generation !== reviewGeneration) throw Object.assign(Error('Library changed. Retry the check.'), { status: 409 });
+    const key = `${file}\0${sourceRevision}\0${generation}`;
+    if (runningScans.has(key)) return runningScans.get(key);
+    const scan = (async () => {
+      const result = await validateSource({ path: relative, source, phase: 'layout', session: `scan:${relative}` });
+      if (generation !== reviewGeneration || safeFile(relative) !== file) throw Object.assign(Error('Library changed during the check. Refresh the dashboard.'), { status: 409 });
+      const check = { path: relative, revision: sourceRevision, private: Boolean(record.contentRoot), formatting: result.valid ? 'valid' : 'error', issueCount: result.issues.length, issues: result.issues, checkedAt: new Date().toISOString() };
+      reviewChecks.set(relative, { ...check, file, manifests: assetSnapshot });
+      return check;
+    })();
+    runningScans.set(key, scan);
+    try { return await scan; }
+    catch (error) {
+      if (generation === reviewGeneration && error.status !== 409) reviewChecks.set(relative, { file, manifests: assetSnapshot, revision: sourceRevision, formatting: 'unavailable', issues: [], checkedAt: new Date().toISOString() });
+      throw error;
+    } finally { if (runningScans.get(key) === scan) runningScans.delete(key); }
+  }
+
+  async function reviewSnapshot() {
+    const generation = reviewGeneration, records = [...documents];
+    const rows = [];
+    for (const record of records) {
+      const file = safeFile(record.sourcePath);
+      try {
+        const source = await fs.readFile(file, 'utf8'), sourceRevision = revision(source);
+        const cached = reviewChecks.get(record.sourcePath);
+        const usable = cached?.file === file && cached?.revision === sourceRevision && cached.manifests === manifests;
+        const validation = usable ? { formatting: cached.formatting, issueCount: cached.issueCount, issues: cached.issues, checkedAt: cached.checkedAt } : { formatting: 'unchecked', issues: [] };
+        rows.push({ ...reviewMetadata(source, record), revision: sourceRevision, validation });
+      } catch (error) {
+        rows.push({ path: record.sourcePath, code: record.meta.code, title: record.meta.title, section: record.meta.section, status: record.meta.status, private: Boolean(record.contentRoot), readError: error.code === 'ENOENT' ? 'File is missing on disk. Refresh the library list.' : 'Could not read the saved file.', reviewers: {}, lastReviewed: '', validation: { formatting: 'unavailable', issues: [] } });
+      }
+    }
+    if (generation !== reviewGeneration) throw Object.assign(Error('Library changed. Refresh the dashboard.'), { status: 409 });
+    return { handouts: rows, fetchedAt: new Date().toISOString() };
+  }
+
   const server = http.createServer(async (request, response) => {
     try {
       const url = new URL(request.url, 'http://127.0.0.1');
@@ -203,6 +253,7 @@ export async function createEditorServer({ root, privateDirectory, publicOnly = 
         response.writeHead(200, { 'content-type': 'application/pdf', 'content-disposition': `attachment; filename="${filename}"`, 'content-length': pdf.length, 'cache-control': 'no-store', 'x-content-type-options': 'nosniff' });
         return response.end(pdf);
       }
+      if (request.method === 'GET' && url.pathname === '/api/review') return json(response, 200, await reviewSnapshot());
       if (request.method === 'GET' && url.pathname === '/api/handouts') {
         return json(response, 200, handoutList());
       }
@@ -297,11 +348,7 @@ export async function createEditorServer({ root, privateDirectory, publicOnly = 
       }
       if (request.method === 'POST' && url.pathname === '/api/scan') {
         const value = await body(request);
-        const file = safeFile(value.path);
-        if (!file) return json(response, 404, { error: 'Unknown handout path' });
-        const source = await fs.readFile(file, 'utf8');
-        const result = await validateSource({ path: value.path, source, phase: 'layout', session: `scan:${value.path}` });
-        return json(response, 200, { path: value.path, formatting: result.valid ? 'valid' : 'error', issueCount: result.issues.length });
+        return json(response, 200, await scanSaved(value.path));
       }
       if (request.method === 'POST' && url.pathname === '/api/save') {
         const value = await body(request);
@@ -333,6 +380,7 @@ export async function createEditorServer({ root, privateDirectory, publicOnly = 
         });
       }
       if (request.method === 'GET' && (url.pathname === '/' || url.pathname === '/index.html')) return await serve(response, path.join(root, 'editor/index.html'), 'text/html; charset=utf-8');
+      if (request.method === 'GET' && ['/review-controls.js', '/review-model.js'].includes(url.pathname)) return await serve(response, path.join(root, 'editor', url.pathname.slice(1)), 'text/javascript; charset=utf-8');
       if (request.method === 'GET' && ['/link-controls.js', '/link-model.js'].includes(url.pathname)) return await serve(response, path.join(root, 'editor', url.pathname.slice(1)), 'text/javascript; charset=utf-8');
       if (request.method === 'GET' && url.pathname === '/command-controls.js') return await serve(response, path.join(root, 'editor/command-controls.js'), 'text/javascript; charset=utf-8');
       if (request.method === 'GET' && url.pathname === '/editor.js') return await serve(response, path.join(root, 'editor/editor.js'), 'text/javascript; charset=utf-8');
@@ -372,10 +420,15 @@ export async function createEditorServer({ root, privateDirectory, publicOnly = 
     }
   });
   server.on('close', () => {
+    closing = true; reviewGeneration++;
     proofs.close().catch(() => {});
-    browser?.close().catch(() => {});
-    if (validationRoot) fs.rm(validationRoot, { recursive: true, force: true }).catch(() => {});
-    fs.rm(stagingRoot, { recursive: true, force: true }).catch(() => {});
+    // A browser launch may still be in flight when the HTTP connections close.
+    // Wait for it before closing the browser and deleting its private work area.
+    Promise.resolve(resourcesPromise).catch(() => {}).then(async () => {
+      await browser?.close().catch(() => {});
+      if (validationRoot) await fs.rm(validationRoot, { recursive: true, force: true }).catch(() => {});
+      await fs.rm(stagingRoot, { recursive: true, force: true }).catch(() => {});
+    }).catch(() => {});
   });
   return server;
 }
