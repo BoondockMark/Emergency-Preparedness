@@ -166,7 +166,38 @@ test('browser private duplication stays private and never stores the new text in
   await page.waitForFunction(() => document.querySelector('#source').value.includes('code: "STH-003"'));
   assert.match(await page.$eval('#source', input => input.value), /PRIVATE TEST RECORD/);
   await page.$eval('#source', input => { input.value += '\nPRIVATE UNSAVED COPY'; input.dispatchEvent(new Event('input', { bubbles: true })); });
+  await page.click('#build-proof');
+  await page.waitForFunction(() => !document.querySelector('#proof-download').disabled);
+  assert.match(await page.$eval('#proof-summary', element => element.textContent), /Private library.*Built from unsaved edits/);
   assert.deepEqual(await page.evaluate(() => Object.keys(localStorage)), []);
   const placeholder = await fs.readFile(path.join(root, 'handouts/start-here/STH-003-private-handout.md'), 'utf8');
   assert.doesNotMatch(placeholder, /Private copied record|PRIVATE TEST RECORD|PRIVATE UNSAVED COPY/);
+});
+
+test('private PDF proof downloads are session scoped and leave no public artifacts or private temporary files', { timeout: 60_000 }, async t => {
+  const { base, root, privateRoot, post, privateSource } = await setup(t);
+  const session = 'private-proof-session';
+  const start = await post('/api/proofs/start', { path: handoutPath, source: privateSource, session });
+  assert.equal(start.response.status, 202);
+  let job;
+  for (let attempt = 0; attempt < 600; attempt++) {
+    const result = await post('/api/proofs/status', { id: start.data.id, session }); job = result.data;
+    if (['ready', 'failed'].includes(job.state)) break;
+    await new Promise(resolve => setTimeout(resolve, 50));
+  }
+  assert.equal(job.state, 'ready', JSON.stringify(job));
+  assert.equal(job.private, true);
+  const response = await fetch(base + '/api/proofs/download', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ id: job.id, session }) });
+  assert.equal(response.status, 200);
+  assert.equal(response.headers.get('cache-control'), 'no-store');
+  const { getPdfPageCount } = await import('../scripts/lib/pdf-validation.mjs');
+  assert.equal(await getPdfPageCount(Buffer.from(await response.arrayBuffer())), 1);
+  await assert.rejects(fs.access(path.join(root, 'docs/pdfs/STH-001.pdf')));
+  await assert.rejects(fs.access(path.join(root, 'build')));
+  assert.equal((await fs.readdir(path.join(privateRoot, 'build/editor'))).some(name => name.startsWith('handout-proof-')), false);
+  const publicServer = await createEditorServer({ root, publicOnly: true });
+  await new Promise(resolve => publicServer.listen(0, '127.0.0.1', resolve));
+  t.after(() => new Promise(resolve => { publicServer.closeAllConnections(); publicServer.close(resolve); }));
+  const denied = await fetch(`http://127.0.0.1:${publicServer.address().port}/api/proofs/download`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ id: job.id, session }) });
+  assert.equal(denied.status, 404);
 });

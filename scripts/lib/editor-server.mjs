@@ -10,6 +10,7 @@ import { renderHandoutSource } from './content-rendering.mjs';
 import { loadBuildContent } from './private-content.mjs';
 import { loadDocument, parseMetadataYaml } from './metadata.mjs';
 import { commitHandoutWithAssets, deleteAsset, figureMarkup, stageAsset } from './editor-support.mjs';
+import { createProofJobs } from './editor-proofs.mjs';
 import { createHandout, libraryOptions } from './editor-library.mjs';
 import { readHandoutStatus } from '../../editor/editor-model.js';
 
@@ -76,6 +77,7 @@ export async function createEditorServer({ root, privateDirectory, publicOnly = 
     return result;
   }
   const template = await fs.readFile(path.join(root, 'templates/handout.html'), 'utf8');
+  const proofs = createProofJobs({ root, temporaryRoot, privateRoot, template });
   let validationRoot;
   let browser;
   let resourcesPromise;
@@ -175,6 +177,20 @@ export async function createEditorServer({ root, privateDirectory, publicOnly = 
   const server = http.createServer(async (request, response) => {
     try {
       const url = new URL(request.url, 'http://127.0.0.1');
+      if (request.method === 'POST' && ['/api/proofs/start', '/api/proofs/status', '/api/proofs/download', '/api/proofs/cancel'].includes(url.pathname)) {
+        if (request.headers['content-type']?.split(';')[0].trim().toLowerCase() !== 'application/json') return json(response, 415, { error: 'PDF proof requests require application/json' });
+        const value = await body(request); requireSession(value);
+        if (url.pathname === '/api/proofs/start') {
+          if (!safeFile(value.path) || typeof value.source !== 'string') return json(response, 400, { error: 'Invalid handout snapshot' });
+          const snapshot = { path: value.path, source: value.source, session: value.session, contentRoot: documentRoot(value.path), manifests: combinedManifests(value), staged: stagedFor(value).map(item => ({ entry: { ...item.entry }, bytes: Buffer.from(item.bytes) })) };
+          return json(response, 202, await proofs.start(snapshot));
+        }
+        if (url.pathname === '/api/proofs/status') return json(response, 200, proofs.status(value));
+        if (url.pathname === '/api/proofs/cancel') return json(response, 200, await proofs.cancel(value));
+        const { pdf, filename } = proofs.download(value);
+        response.writeHead(200, { 'content-type': 'application/pdf', 'content-disposition': `attachment; filename="${filename}"`, 'content-length': pdf.length, 'cache-control': 'no-store', 'x-content-type-options': 'nosniff' });
+        return response.end(pdf);
+      }
       if (request.method === 'GET' && url.pathname === '/api/handouts') {
         return json(response, 200, handoutList());
       }
@@ -300,6 +316,7 @@ export async function createEditorServer({ root, privateDirectory, publicOnly = 
       }
       if (request.method === 'GET' && (url.pathname === '/' || url.pathname === '/index.html')) return serve(response, path.join(root, 'editor/index.html'), 'text/html; charset=utf-8');
       if (request.method === 'GET' && url.pathname === '/editor.js') return serve(response, path.join(root, 'editor/editor.js'), 'text/javascript; charset=utf-8');
+      if (request.method === 'GET' && url.pathname === '/proof-controls.js') return serve(response, path.join(root, 'editor/proof-controls.js'), 'text/javascript; charset=utf-8');
       if (request.method === 'GET' && url.pathname === '/library-controls.js') return serve(response, path.join(root, 'editor/library-controls.js'), 'text/javascript; charset=utf-8');
       if (request.method === 'GET' && url.pathname === '/preview-controls.js') return serve(response, path.join(root, 'editor/preview-controls.js'), 'text/javascript; charset=utf-8');
       if (request.method === 'GET' && url.pathname === '/editor-model.js') return serve(response, path.join(root, 'editor/editor-model.js'), 'text/javascript; charset=utf-8');
@@ -331,6 +348,7 @@ export async function createEditorServer({ root, privateDirectory, publicOnly = 
     }
   });
   server.on('close', () => {
+    proofs.close().catch(() => {});
     browser?.close().catch(() => {});
     if (validationRoot) fs.rm(validationRoot, { recursive: true, force: true }).catch(() => {});
     fs.rm(stagingRoot, { recursive: true, force: true }).catch(() => {});

@@ -206,7 +206,7 @@ export async function reportAccessibilityWarnings(accessibilityIssues, code, dia
   warn(`Accessibility validation warning:\n${accessibilityIssues.map(formatAccessibilityIssue).join('\n')}`);
 }
 
-async function validateRenderedPage(page, code, pageCount, diagnostics) {
+export async function validateRenderedPage(page, code, pageCount, diagnostics, warn = console.warn) {
   const fontReady = await page.evaluate(() => document.fonts.check('12px "Binder Sans"'));
   if (!fontReady) throw Error(`${code}: pinned Binder Sans font did not load`);
   const lowResolution = await page.$$eval('img', (images, minimum) => images.flatMap(image => {
@@ -229,10 +229,10 @@ async function validateRenderedPage(page, code, pageCount, diagnostics) {
     throw Error(`Layout validation failed:\n${layoutIssues.map(formatLayoutIssue).join('\n')}`);
   }
   const accessibilityIssues = await inspectAccessibility(page, code);
-  await reportAccessibilityWarnings(accessibilityIssues, code, diagnostics);
+  await reportAccessibilityWarnings(accessibilityIssues, code, diagnostics, warn);
 }
 
-async function createPdfAndPreviews(page, outputRoot, meta, derivedPageCount) {
+export async function renderPrintPdf(page, code, expectedPageCount) {
   const pdf = normalizePdfDates(await page.pdf({
     width: '8.5in',
     height: '11in',
@@ -242,16 +242,21 @@ async function createPdfAndPreviews(page, outputRoot, meta, derivedPageCount) {
     tagged: false,
     outline: false
   }));
-  await fs.writeFile(path.join(outputRoot, 'pdfs', `${meta.code}.pdf`), pdf);
   const count = await getPdfPageCount(pdf);
-  if (count !== derivedPageCount) throw Error(`${meta.code}: PDF page count ${count}, expected ${derivedPageCount}`);
+  if (count !== expectedPageCount) throw Error(`${code}: PDF page count ${count}, expected ${expectedPageCount}`);
   const fonts = inspectEmbeddedFonts(pdf);
   if (!fonts.embeddedPrograms) {
-    throw Error(`${meta.code}: generated PDF has no embedded font program (${fonts.fontNames.join(', ') || 'no fonts found'})`);
+    throw Error(`${code}: generated PDF has no embedded font program (${fonts.fontNames.join(', ') || 'no fonts found'})`);
   }
   if (!fonts.fontNames.some(name => name.includes('DejaVuSans'))) {
-    throw Error(`${meta.code}: generated PDF does not identify the bundled DejaVu Sans family`);
+    throw Error(`${code}: generated PDF does not identify the bundled DejaVu Sans family`);
   }
+  return pdf;
+}
+
+async function createPdfAndPreviews(page, outputRoot, meta, derivedPageCount) {
+  const pdf = await renderPrintPdf(page, meta.code, derivedPageCount);
+  await fs.writeFile(path.join(outputRoot, 'pdfs', `${meta.code}.pdf`), pdf);
   const sheets = await page.$$('.sheet');
   for (let index = 0; index < sheets.length; index++) {
     await sheets[index].screenshot({
@@ -263,18 +268,8 @@ async function createPdfAndPreviews(page, outputRoot, meta, derivedPageCount) {
 }
 
 async function createPdf(page, outputRoot, code, expectedPageCount) {
-  const pdf = normalizePdfDates(await page.pdf({
-    width: '8.5in', height: '11in',
-    margin: { top: 0, right: 0, bottom: 0, left: 0 },
-    printBackground: true, preferCSSPageSize: true, tagged: false, outline: false
-  }));
+  const pdf = await renderPrintPdf(page, code, expectedPageCount);
   await fs.writeFile(path.join(outputRoot, 'pdfs', `${code}.pdf`), pdf);
-  const count = await getPdfPageCount(pdf);
-  if (count !== expectedPageCount) throw Error(`${code}: PDF page count ${count}, expected ${expectedPageCount}`);
-  const fonts = inspectEmbeddedFonts(pdf);
-  if (!fonts.embeddedPrograms || !fonts.fontNames.some(name => name.includes('DejaVuSans'))) {
-    throw Error(`${code}: generated PDF does not contain the bundled DejaVu Sans font`);
-  }
 }
 
 async function renderArtifacts(root, outputRoot, documents) {
@@ -374,7 +369,7 @@ export async function lintLayouts({ root, outputRoot, documents, manifests }) {
   }
 }
 
-async function validateApprovals(root, outputRoot, documents) {
+export async function validateApprovals(root, outputRoot, documents) {
   for (const { meta, contentRoot = root } of documents) {
     if (meta.status !== 'approved') continue;
     if (!meta.proofRecord) throw Error(`${meta.code}: approved handouts require proofRecord metadata`);
