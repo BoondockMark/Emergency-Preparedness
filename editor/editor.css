@@ -211,3 +211,17 @@ body.preview-only main { grid-template-columns: minmax(0, 1fr); }
 #find-count { margin-top: .3rem; font-weight: 600; }
 #find-panel small { color: #475569; }
 #find-panel { max-height: 45vh; overflow: auto; }
+
+#commands-dialog { width: min(660px, calc(100vw - 1rem)); }
+#command-query { width: 100%; min-width: 0; margin-top: .75rem; padding: .65rem; font: inherit; }
+#commands-help { color: #475569; font-size: .9rem; }
+#command-count { display: block; margin-bottom: .4rem; color: #475569; }
+#command-results { list-style: none; margin: 0; padding: 0; max-height: min(26rem, 50dvh); overflow: auto; border-top: 1px solid #cbd5e1; }
+#command-results [role="option"] { padding: .6rem .7rem; border-left: 3px solid transparent; cursor: pointer; overflow-wrap: anywhere; }
+#command-results strong, #command-results small { display: block; }
+#command-results small { color: #475569; margin-top: .2rem; }
+#command-results [aria-selected="true"] { border-color: #1d4ed8; background: #dbeafe; }
+#command-results [aria-disabled="true"] { color: #64748b; background: #f1f5f9; cursor: default; }
+.shortcut-table { width: 100%; border-collapse: collapse; font-size: .9rem; }
+.shortcut-table th, .shortcut-table td { padding: .55rem .4rem; border-bottom: 1px solid #cbd5e1; text-align: left; vertical-align: top; overflow-wrap: anywhere; }
+.shortcut-table kbd { white-space: normal; font-family: ui-monospace, monospace; }
