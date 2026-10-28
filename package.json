@@ -4,6 +4,8 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
+    "postinstall": "node scripts/setup.mjs",
+    "setup:private": "node scripts/setup.mjs",
     "build": "node scripts/build.mjs",
     "build:public": "node scripts/build.mjs --public",
     "build:private": "node scripts/build.mjs --private",

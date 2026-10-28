@@ -3,3 +3,4 @@ build/
 .DS_Store
 private-content/
 work/
+.binder-local.json
