@@ -2,6 +2,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { loadAssetManifests } from './asset-validation.mjs';
 import { discoverDocuments } from './filesystem-discovery.mjs';
+import { resolvePrivateDirectory } from './local-setup.mjs';
 
 async function rejectSymlinks(directory) {
   let entries;
@@ -17,9 +18,10 @@ async function rejectSymlinks(directory) {
 // No network access here: a private checkout is the access boundary.
 export async function loadBuildContent(root, { publicOnly = false, requirePrivate = false, privateDirectory = process.env.BINDER_PRIVATE_DIR } = {}) {
   if (publicOnly && requirePrivate) throw Error('--public and --private cannot be combined');
+  if (!publicOnly) privateDirectory = await resolvePrivateDirectory(root, privateDirectory);
   let privateRoot;
   if (!publicOnly && (requirePrivate || privateDirectory)) {
-    if (!privateDirectory) throw Error('Private builds require BINDER_PRIVATE_DIR pointing to a private checkout');
+    if (!privateDirectory) throw Error('Private mode requires BINDER_PRIVATE_DIR or a local link; run npm run setup:private after cloning the sibling private repository');
     privateRoot = await fs.realpath(path.resolve(root, privateDirectory));
     const publicRoot = await fs.realpath(root);
     if (privateRoot === publicRoot || privateRoot.startsWith(publicRoot + path.sep)) {

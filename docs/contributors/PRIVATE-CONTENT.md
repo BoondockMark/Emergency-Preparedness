@@ -17,6 +17,35 @@ a private build; they are never silently replaced with placeholders. Unmarked
 public handouts cannot be overridden. Private-only handouts need public slots
 before they will appear in a binder.
 
+## Automatic installation setup
+
+Keep the two clones beside each other:
+
+```text
+Projects/
+  Emergency-Preparedness/
+  Emergency-Preparedness-Private/
+```
+
+Run `npm ci` (or `npm install`) in the public checkout. Its install hook detects
+the sibling private directory when it contains `handouts/` and saves the absolute
+path in `.binder-local.json`. That file is ignored by Git and works on Windows,
+macOS, and Linux. No Windows environment-variable change or new terminal is
+needed. After installation, `npm run editor:private` and `npm run build:private`
+work directly; plain editor/build commands also include the linked private pages.
+
+If the private repository is cloned later, run `npm run setup:private` to link it
+without reinstalling dependencies, then restart the editor. Installation never
+clones a private repository or requests credentials. If no private sibling exists,
+installation succeeds and ordinary builds/editing continue using placeholders.
+
+An existing `BINDER_PRIVATE_DIR` setting takes priority; installation preserves it
+and any existing local link. For a different directory, keep using that variable.
+To remove the automatic link, delete `.binder-local.json` in the public checkout.
+The `:public` commands always show placeholders regardless of either setting.
+A missing or invalid linked checkout fails clearly instead of silently producing
+an incomplete private binder.
+
 ## Local builds
 
 From the public repository:
@@ -24,11 +53,12 @@ From the public repository:
 ```bash
 git clone https://github.com/BoondockMark/Emergency-Preparedness-Private.git ../Emergency-Preparedness-Private
 npm ci
-BINDER_PRIVATE_DIR=../Emergency-Preparedness-Private npm run build:private
+npm run build:private
 ```
 
-Private builds require `BINDER_PRIVATE_DIR` to explicitly select a checkout outside
-the public worktree. Without this selection, `npm run build` uses placeholders.
+Private builds use the local link created during installation or an explicit
+`BINDER_PRIVATE_DIR` selecting a checkout outside the public worktree. Without
+either selection, `npm run build` uses placeholders.
 Cloning uses your existing GitHub access; the renderer does not download content
 or store tokens. `--public` ignores the private-directory setting.
 
@@ -56,7 +86,7 @@ code in private builds. Private proof records live under
 Clone both repositories as siblings, then from the public checkout run:
 
 ```bash
-BINDER_PRIVATE_DIR=../Emergency-Preparedness-Private npm run editor:private
+npm run editor:private
 ```
 
 Open http://127.0.0.1:4174. Marked placeholders now show their matching private
@@ -68,13 +98,13 @@ before closing the editor. Private validation and upload temporary files stay
 under the private checkout's ignored `build/editor/` directory.
 
 Stop the existing editor before changing modes. `npm run editor:public` always
-shows public placeholders. Plain `npm run editor` uses private content only when
-`BINDER_PRIVATE_DIR` is set. GitHub access alone does not select a local clone.
+shows public placeholders. Plain `npm run editor` uses the local link or
+`BINDER_PRIVATE_DIR`. GitHub access alone does not clone the private repository.
 
 To print the entire binder with these private pages, run:
 
 ```bash
-BINDER_PRIVATE_DIR=../Emergency-Preparedness-Private npm run build:private
+npm run build:private
 ```
 
 Then print `<private-checkout>/build/binder/pdfs/EMERGENCY_PREPAREDNESS_BINDER.pdf`.
