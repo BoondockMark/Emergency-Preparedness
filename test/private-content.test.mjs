@@ -42,6 +42,17 @@ test('authorized checkout replaces slots and keeps table of contents page positi
   assert.equal(generateTableOfContentsPages(before.documents), generateTableOfContentsPages(after.documents));
 });
 
+test('empty asset directories in either checkout do not prevent private startup', async t => {
+  const { root, privateRoot, addPrivate, options } = await setup(t);
+  await addPrivate();
+  for (const checkout of [root, privateRoot]) {
+    await fs.mkdir(path.join(checkout, 'assets/handouts/STH-001'), { recursive: true });
+  }
+  const { documents, manifests } = await loadBuildContent(root, { ...options, requirePrivate: true });
+  assert.match(documents[0].chunks[0], /SECRET TEST CONTENT/);
+  assert.equal(manifests.size, 0);
+});
+
 test('public mode never reads even a broken private checkout', async t => {
   const { root, addPrivate, options } = await setup(t);
   await addPrivate('invalid private source');
