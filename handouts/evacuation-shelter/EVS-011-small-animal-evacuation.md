@@ -280,5 +280,3 @@ ________________________________________________________________________</p>
 <p><strong>Update only if safe.</strong> Never delay escape or return to danger to change this notice. Report animals left behind through official channels from safety. This notice is not a rescue request and does not guarantee rescue.</p>
 
 <p>Keep keys, access codes, and private travel details off this public notice. Print this page single-sided; leave its reverse blank.</p>
-
-
