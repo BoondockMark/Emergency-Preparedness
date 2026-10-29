@@ -48,7 +48,7 @@ export async function getPdfPageCount(bytes) {
 
 export function inspectEmbeddedFonts(bytes) {
   const source = Buffer.from(bytes).toString('latin1');
-  const fontNames = [...source.matchAll(/\/BaseFont\s*\/([^\s/<>{}\[\]()]+)/g)].map(match => match[1]);
+  const fontNames = [...source.matchAll(/\/(?:BaseFont|FontName)\s*\/([^\s/<>{}\[\]()]+)/g)].map(match => match[1]);
   const embeddedPrograms = (source.match(/\/FontFile(?:2|3)?\b/g) || []).length;
   return { fontNames: [...new Set(fontNames)], embeddedPrograms };
 }

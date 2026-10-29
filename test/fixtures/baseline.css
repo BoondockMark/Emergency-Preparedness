@@ -133,7 +133,7 @@ a { color: inherit; text-decoration-thickness: 1px; text-underline-offset: .08em
 .warning--danger { --notice-ink: var(--danger-ink); --notice-fill: var(--danger-fill); border-style: double; border-width: 4px 2px 2px 7px; }
 .warning--danger::before { content: "✕  DANGER — STOP NOW"; }
 .local-info { border: 2px solid var(--rule-strong); background: var(--shade-soft); }
-.local-info::before { content: "⌖  LOCAL INFORMATION — VERIFY BEFORE APPROVAL"; display: block; font-size: var(--type-caption); font-weight: 800; color: var(--ink); margin-bottom: var(--space-2); }
+.local-info::before { content: "◎  LOCAL INFORMATION — VERIFY BEFORE APPROVAL"; display: block; font-size: var(--type-caption); font-weight: 800; color: var(--ink); margin-bottom: var(--space-2); }
 .sources { border-top: 1px solid var(--rule); color: var(--ink-secondary); font-size: var(--type-small); overflow-wrap: anywhere; }
 .sources::before { content: "SOURCES"; display: block; font-weight: 800; color: var(--ink); margin-bottom: .04in; }
 .checklist { border: 1px solid var(--rule-strong); }
