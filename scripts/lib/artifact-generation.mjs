@@ -251,6 +251,10 @@ export async function renderPrintPdf(page, code, expectedPageCount) {
   if (!fonts.fontNames.some(name => name.includes('DejaVuSans'))) {
     throw Error(`${code}: generated PDF does not identify the bundled DejaVu Sans family`);
   }
+  const unexpectedFonts = fonts.fontNames.filter(name => !/^(?:[A-Z]{6}\+)?DejaVuSans(?:-Bold)?$/.test(name));
+  if (unexpectedFonts.length) {
+    throw Error(`${code}: generated PDF uses unbundled fonts (${unexpectedFonts.join(', ')}); use characters supported by the bundled Binder Sans font`);
+  }
   return pdf;
 }
 
