@@ -116,6 +116,9 @@ export async function loadAssetManifests(root) {
     try {
       manifest = JSON.parse(await fs.readFile(manifestFile, 'utf8'));
     } catch (error) {
+      // Git does not track empty directories; a checkout or interrupted save can
+      // leave one behind. Files still require a manifest, including hidden files.
+      if (error.code === 'ENOENT' && (await fs.readdir(location)).length === 0) continue;
       throw Error(`${path.relative(root, manifestFile)}: missing or invalid manifest (${error.message})`);
     }
     if (!Array.isArray(manifest.assets)) throw Error(`${code}: manifest must contain an assets array`);

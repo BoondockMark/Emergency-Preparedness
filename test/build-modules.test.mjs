@@ -3,7 +3,7 @@ import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import test from 'node:test';
-import { sanitizeSvg, validateAssetEntry } from '../scripts/lib/asset-validation.mjs';
+import { loadAssetManifests, sanitizeSvg, validateAssetEntry } from '../scripts/lib/asset-validation.mjs';
 import { generateTableOfContentsPages } from '../scripts/lib/binder-generation.mjs';
 import { formatAccessibilityIssue } from '../scripts/lib/accessibility-validation.mjs';
 import { reportAccessibilityWarnings } from '../scripts/lib/artifact-generation.mjs';
@@ -15,6 +15,26 @@ import { formatLayoutIssue } from '../scripts/lib/layout-validation.mjs';
 import { imageReferences, validateLocalLinks } from '../scripts/lib/page-validation.mjs';
 
 const fixture = name => fs.readFile(new URL(`./unit-fixtures/${name}`, import.meta.url), 'utf8');
+
+test('asset loading ignores empty leftover folders but rejects missing or invalid manifests with files', async t => {
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), 'empty-asset-folder-'));
+  t.after(() => fs.rm(root, { recursive: true, force: true }));
+  const directory = path.join(root, 'assets/handouts/PRP-001');
+  await fs.mkdir(directory, { recursive: true });
+  assert.equal((await loadAssetManifests(root)).size, 0);
+
+  for (const file of ['image.svg', '.hidden', 'nested-directory']) {
+    const location = path.join(directory, file);
+    if (file === 'nested-directory') await fs.mkdir(location);
+    else await fs.writeFile(location, 'unlisted asset');
+    await assert.rejects(loadAssetManifests(root), /missing or invalid manifest/);
+    await fs.rm(location, { recursive: true });
+  }
+  await fs.writeFile(path.join(directory, 'manifest.json'), 'invalid JSON');
+  await assert.rejects(loadAssetManifests(root), /missing or invalid manifest/);
+  await fs.writeFile(path.join(directory, 'manifest.json'), '{"assets":[]}');
+  assert.equal((await loadAssetManifests(root)).get('PRP-001').size, 0);
+});
 
 test('front matter fixture is loaded separately from content', async () => {
   const document = loadDocument(await fixture('front-matter.md'), 'front-matter.md');
