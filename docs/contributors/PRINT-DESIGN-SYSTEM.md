@@ -13,7 +13,7 @@ coordinates.
 
 | Token group | Approved decision |
 |---|---|
-| Typography | Bundled **DejaVu Sans** is named `Binder Sans`. Body text is 9.5 pt, headings are 10.5–25 pt, captions are 8 pt, and only credits/folios may use the 7.5 pt floor. Body leading is 1.34. |
+| Typography | Standard system fonts: **Arial, Helvetica, sans-serif**. Body text is 9.5 pt, headings are 10.5–25 pt, captions are 8 pt, and only credits/folios may use the 7.5 pt floor. Body leading is 1.34. |
 | Spacing | A 0.025 in base step provides the named `--space-1` through `--space-6` scale. Prefer these intervals inside new components. |
 | Rules | `--rule` separates content; `--rule-strong` defines controls, tables, and verified-information boundaries. A rule must support—not replace—a label. |
 | Grayscale | Primary and secondary ink remain readable on white. Soft and medium shades establish grouping. Meaningful diagrams use labels plus line style, pattern, or shape. |
@@ -80,28 +80,13 @@ baselines, incorrect page counts, and PDFs without an embedded font program.
 Review a screen proof, a grayscale print, and a physical duplex copy before
 approval because automation cannot judge comprehension or printer mechanics.
 
-## Bundled font evaluation
+## System fonts
 
-DejaVu Sans was selected over host Arial because it is legible at the approved
-small print sizes, includes the symbols used by the components, has regular and
-bold weights, and permits redistribution and PDF embedding under the Bitstream
-Vera terms. Its wider metrics consume slightly more horizontal space than
-Arial, so the dense fixture and every handout are overflow-tested. This tradeoff
-is preferable to platform-dependent pagination.
+Handouts use `Arial, Helvetica, sans-serif` from the operating system. No custom font files are bundled or downloaded. Diagram labels may use their specified installed font or the platform fallback. Chrome embeds the fonts it uses in PDFs; validation still requires an embedded font program and the expected page count, but accepts standard font families and symbol fallbacks.
 
-The exact upstream font bytes are stored as reproducible gzip/base64 text
-artifacts and decoded during the build:
+System fonts can differ in glyph coverage, text wrapping, and font metadata. Run the layout checks and inspect proofs on the intended platform. GitHub Actions' Linux build is the release-artifact environment; a local Windows PDF is not expected to match its bytes. The separate Windows build validates local-build compatibility without comparing its output to Linux artifacts.
 
-| File produced | SHA-256 of decoded TTF |
-|---|---|
-| `DejaVuSans.ttf` | `ae7b7855e115a5966d8b1b3f80f254ccc117ec86f9965e202ee2940453837280` |
-| `DejaVuSans-Bold.ttf` | `5c1247acef7f2b8522a31742c76d6adcb5569bacc0be7ceaa4dc39dd252ce895` |
-
-Copyright, source, and redistribution terms are recorded in
-`assets/fonts/LICENSE.txt`. The build waits for `Binder Sans`, produces PDFs,
-and then requires at least one embedded font program. Do not replace, subset, or
-add font files without recording provenance, license terms, hashes, metric
-review, and a new fixture baseline.
+A typography change still requires review of the fixture baseline, every affected proof, and the physical-print requirements in `docs/publishing/PRINTING.md`. Removing bundled fonts does not waive font-size, legibility, clipping, or embedding checks.
 
 ## Changing the system
 

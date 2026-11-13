@@ -3,7 +3,6 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import process from 'node:process';
 import { pathToFileURL } from 'node:url';
-import { gunzipSync } from 'node:zlib';
 import puppeteer from 'puppeteer';
 import { inspectAccessibility, formatAccessibilityIssue } from './accessibility-validation.mjs';
 import {
@@ -23,16 +22,11 @@ import { getPdfPageCount, inspectEmbeddedFonts, normalizePdfDates } from './pdf-
 import { compareFixture, VISUAL_TOLERANCE } from './visual-regression.mjs';
 
 const PRINT_PPI = 200;
-const FONT_HASHES = {
-  'DejaVuSans.ttf': 'ae7b7855e115a5966d8b1b3f80f254ccc117ec86f9965e202ee2940453837280',
-  'DejaVuSans-Bold.ttf': '5c1247acef7f2b8522a31742c76d6adcb5569bacc0be7ceaa4dc39dd252ce895'
-};
 
 export async function prepareDirectories(root, outputRoot) {
   await fs.rm(outputRoot, { recursive: true, force: true });
   for (const directory of [
     'html',
-    'assets/fonts',
     'assets/handouts',
     'diagnostics',
     'calibration',
@@ -60,15 +54,6 @@ export async function copyAssets(root, outputRoot, manifests) {
         await fs.writeFile(target, bytes);
       }
     }
-  }
-  for (const [font, expectedHash] of Object.entries(FONT_HASHES)) {
-    const encoded = await fs.readFile(path.join(root, 'assets/fonts', `${font}.gz.base64`), 'ascii');
-    const decoded = gunzipSync(Buffer.from(encoded.replace(/\s/g, ''), 'base64'));
-    const actualHash = createHash('sha256').update(decoded).digest('hex');
-    if (actualHash !== expectedHash) {
-      throw Error(`${font}: decoded font hash ${actualHash} does not match the reviewed font ${expectedHash}`);
-    }
-    await fs.writeFile(path.join(outputRoot, 'assets/fonts', font), decoded);
   }
 }
 
@@ -184,7 +169,6 @@ export async function validateDocument({ page, document, html, htmlFile }) {
     catch (error) { addError('local-link', error.message); }
   }
   try {
-    if (!await page.evaluate(() => document.fonts.check('12px "Binder Sans"'))) addError('font', 'pinned Binder Sans font did not load');
     const sheetCount = await page.$$eval('.sheet', sheets => sheets.length);
     if (sheetCount !== meta.pageCount) addError('page-count', `HTML page count ${sheetCount}, expected ${meta.pageCount}`);
     for (const issue of await inspectSheetGeometry(page, meta.code)) {
@@ -207,8 +191,6 @@ export async function reportAccessibilityWarnings(accessibilityIssues, code, dia
 }
 
 export async function validateRenderedPage(page, code, pageCount, diagnostics, warn = console.warn) {
-  const fontReady = await page.evaluate(() => document.fonts.check('12px "Binder Sans"'));
-  if (!fontReady) throw Error(`${code}: pinned Binder Sans font did not load`);
   const lowResolution = await page.$$eval('img', (images, minimum) => images.flatMap(image => {
     if (image.currentSrc.toLowerCase().endsWith('.svg')) return [];
     const widthInches = image.getBoundingClientRect().width / 96;
@@ -247,13 +229,6 @@ export async function renderPrintPdf(page, code, expectedPageCount) {
   const fonts = inspectEmbeddedFonts(pdf);
   if (!fonts.embeddedPrograms) {
     throw Error(`${code}: generated PDF has no embedded font program (${fonts.fontNames.join(', ') || 'no fonts found'})`);
-  }
-  if (!fonts.fontNames.some(name => name.includes('DejaVuSans'))) {
-    throw Error(`${code}: generated PDF does not identify the bundled DejaVu Sans family`);
-  }
-  const unexpectedFonts = fonts.fontNames.filter(name => !/^(?:[A-Z]{6}\+)?DejaVuSans(?:-Bold)?$/.test(name));
-  if (unexpectedFonts.length) {
-    throw Error(`${code}: generated PDF uses unbundled fonts (${unexpectedFonts.join(', ')}); use characters supported by the bundled Binder Sans font`);
   }
   return pdf;
 }
