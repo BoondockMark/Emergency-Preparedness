@@ -92,3 +92,9 @@ Recheck contacts and alert enrollment after changes; check supplies at least eve
 ## Validation of this batch
 
 The seven edited handouts passed the pinned-browser layout lint. The public binder build passed for all 36 handouts / 156 pages, including local links, image/font checks, printable geometry, and the visual fixture comparison at its existing 0.1% tolerance. The final `npm run check` passed after the Quick Start wording/formatting cleanup, confirming that the generated artifacts match the final sources. Screen proofs for all 18 edited handout pages were inspected. Physical grayscale, duplex, printer qualification, and punch-clearance outcomes remain unverified; no physical proof record was created.
+
+### CI artifact refresh
+
+The initial PR check on Ubuntu reported stale `SKL-001.pdf` and the combined binder despite byte-identical repeated local builds. Both PDFs were regenerated on the CI runner and committed. Decoded-object comparison found changes only in two embedded font programs: `head` creation/modification timestamps and associated checksums differed between the local and CI font builds. Glyph data, metrics, and page-content objects were unchanged. Builds on systems with different font metadata can reproduce this byte mismatch; the refreshed PDFs use CI output.
+
+When the public freshness check fails, CI now keeps the failure but regenerates candidate artifacts for the proof upload and logs their binary deltas. A maintainer must review and commit them; CI does not auto-approve or auto-commit. Physical review requirements remain in force.
