@@ -48,7 +48,9 @@ npm run test:visual:update
 
 Commit the updated baseline stylesheet in the same pull request so its CSS diff makes the accepted visual change explicit.
 
-For reproducibility, the renderer blocks HTTP(S) requests, decodes the repository's text-encoded fixed Binder Sans font assets, forces UTC and `en-US`, fixes the viewport and device scale, enables background graphics, and supplies explicit 8.5 × 11 inch PDF dimensions. Do not substitute a system browser or run `npm update` when producing committed artifacts; dependency and browser upgrades must update the package manifest and lockfile and regenerate all CI proof artifacts for review. Font binaries are stored as gzip-compressed Base64 text because this repository's pull-request path does not accept binary additions; the build decodes them only into the ignored `build/` directory.
+The renderer uses the standard system font stack **Arial, Helvetica, sans-serif**; it does not download or bundle fonts. Chrome embeds the fonts it uses in each PDF, and the build still rejects PDFs without an embedded font program. SVG diagrams may use other installed fonts or the system fallback.
+
+The renderer blocks HTTP(S) requests, forces UTC and `en-US`, fixes the viewport and device scale, enables background graphics, and supplies explicit 8.5 × 11 inch PDF dimensions. Keep the dependency-pinned Chrome: do not substitute a system browser or run `npm update` when producing release artifacts. Font availability, metrics, and metadata vary by operating system, so Windows and Linux PDFs need not be byte-identical. GitHub Actions' Linux build produces the release copies; generate and commit artifacts using that environment before expecting the byte-for-byte `npm run check` to pass there. Local builds still validate layout and PDF page counts on their own system.
 
 To validate sources and confirm every tracked index and PDF is current without modifying the working tree:
 
@@ -58,8 +60,8 @@ npm run check
 
 ### Fast layout lint while editing
 
-Use the browser-backed layout lint before the full build. It uses the same pinned
-font, print media mode, and element geometry checks as `npm run build`, but skips
+Use the browser-backed layout lint before the full build. It uses the same system
+font stack, print media mode, and element geometry checks as `npm run build`, but skips
 PDFs, preview images, approval records, and visual-regression comparison. It also
 checks every handout before exiting, so one overflow does not hide problems in
 later handouts:
@@ -92,7 +94,7 @@ Build first, then run:
 npm run preview -- COM-001
 ```
 
-Open the printed URL. For an immediate visual proof, open `docs/previews/COM-001-page-1.png`. Use the browser print dialog only for spot checks; committed PDFs are produced by the reproducible build.
+Open the printed URL. For an immediate visual proof, open `docs/previews/COM-001-page-1.png`. Use the browser print dialog only for spot checks; release PDFs are produced by the CI build.
 
 ## Local handout editor
 
@@ -203,7 +205,7 @@ accessibility warnings remain visible. Click a source-mapped finding to return t
 the affected line. **Cancel build** stops an active job. Closing the dialog keeps
 the build running so you can continue editing.
 
-Proofs use the same pinned browser, fonts, PDF settings, timestamp normalization,
+Proofs use the same pinned browser, system font stack, PDF settings, timestamp normalization,
 and single-handout print checks as the command-line renderer. Approved handouts must also pass the
 existing proof-record and exact-checksum checks. Ready PDFs are kept in memory
 for up to 15 minutes and are accessible only to the editor session that built them.
