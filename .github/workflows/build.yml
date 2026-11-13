@@ -32,7 +32,9 @@ jobs:
       # maintainer can review and commit stale artifacts from the CI renderer.
       - name: Regenerate stale artifacts for review
         if: failure() && steps.artifact-check.outcome == 'failure'
-        run: npm run build:public
+        run: |
+          npm run build:public
+          git diff --binary -- docs/pdfs
         env:
           PUPPETEER_CACHE_DIR: ${{ runner.temp }}/puppeteer
       - name: Upload proofs and failure diagnostics
