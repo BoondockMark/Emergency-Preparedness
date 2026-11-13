@@ -62,6 +62,9 @@ jobs:
         env:
           PUPPETEER_CACHE_DIR: ${{ runner.temp }}/puppeteer
       - run: node --test test/pdf-dates.test.mjs
+      - run: npm run lint:layout
+        env:
+          PUPPETEER_CACHE_DIR: ${{ runner.temp }}/puppeteer
       # Windows uses its installed fonts; Linux remains the release-artifact
       # environment. Validate the build without comparing PDF bytes across OSes.
       - run: npm run build:public
