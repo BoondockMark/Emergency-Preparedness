@@ -391,6 +391,8 @@ Handout prose uses **Markdown with YAML front matter** because it is readable in
 
 ## Review and publication
 
+See the [content release plan](docs/publishing/CONTENT-RELEASE-PLAN.md) for the first release batch, source-verification tasks, missing sections, and review checklist.
+
 1. Edit one Markdown source and keep its status `draft`.
 2. Open a pull request; CI builds proof artifacts but never publishes them.
 3. An editor reviews clarity, accessibility, citations, and layout.
