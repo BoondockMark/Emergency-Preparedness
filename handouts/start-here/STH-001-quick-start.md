@@ -4,8 +4,8 @@ title: Emergency Preparedness Quick Start
 section: Start Here
 sectionNumber: 1
 status: under-review
-version: 0.2
-lastReviewed: 2026-09-25
+version: 0.3
+lastReviewed: 2026-11-13
 reviewers:
   editor: unassigned
   subjectMatter: unassigned
@@ -64,7 +64,9 @@ sources:
 <li>Write the plan on paper; place a copy in each go-bag.</li>
 </ul></div>
 
-**Go deeper:** Use **STH-003 — Know Your Local Hazards** to choose local alerts and **STH-005 — Child & Caregiver Planning** to make contacts, reunification plans, and responsibilities work for children and anyone who depends on care.
+**Go deeper:** Use **COM-003** to set up alerts, **COM-004** to save official sources, and **STH-005** to plan caregiver contacts, pickup, and reunification.
+
+**If you spot a suspected wildfire:** use **COM-001 — Report a Wildfire Sighting**.
 
 ## Next: plan how you will leave
 
@@ -81,11 +83,16 @@ sources:
 
 <div class="checklist"><ul>
 <li>Ask your local emergency-management authority which hazards affect your address and what actions it recommends.</li>
-<li>Use **STH-003 — Know Your Local Hazards** to record the official alerts and protective actions for your location.</li>
+<li>Use <strong>STH-003 — Know Your Local Hazards</strong> to record the official alerts and protective actions for your location.</li>
 <li>Practice one part of the plan, then update names, routes, and needs.</li>
 </ul></div>
 
 <!-- pagebreak -->
+
+## Complete your household plan
+
+Use **EVS-001 — Evacuation Readiness Checklist** to track readiness, **EVS-002** for portable go-bags, **EVS-003** for departure decisions, **EVS-004** for routes, and **EVS-005** for transportation. Use **COM-005** to record contacts and meeting places.
+
 
 <p><strong>Build supplies next:</strong> use <strong>STH-002 — Build a Two-Week Preparedness Kit</strong>. Store what your household can safely carry and use.</p>
 

@@ -4,59 +4,67 @@ title: Find Official Emergency Information
 section: Alerts & Communication
 sectionNumber: 2
 status: draft
-version: 0.1
-lastReviewed: 2026-09-25
+version: 0.2
+lastReviewed: 2026-11-13
 reviewers:
   editor: unassigned
   subjectMatter: unassigned
 sources:
   - type: web
-    title: "PLACEHOLDER: Official local emergency-information sources"
-    organization: unassigned
-    url: https://example.invalid/
-    accessDate: 2026-09-25
+    title: Be Informed
+    organization: City of La Habra Heights
+    url: https://www.lhhcity.org/478/Be-Informed
+    accessDate: 2026-11-13
+  - type: web
+    title: Emergency Notifications
+    organization: Los Angeles County Office of Emergency Management
+    url: https://ready.lacounty.gov/emergency-notifications/
+    accessDate: 2026-11-13
 ---
-<p class="lede"><strong>SAMPLE TEXT — NOT APPROVED ADVICE.</strong> Prepare a short, verified list of official sources before smoke, fire, earthquake, or utility failure disrupts communications.</p>
+<p class="lede">Keep these official starting points on paper and on your devices. Look for the issuing agency, affected location, action, and issue time.</p>
 
-<div class="warning"><strong>Follow the responsible public agency.</strong> Evacuation, shelter, road-closure, and re-entry instructions come from public authorities—not a neighborhood radio net, group chat, social-media account, or this binder.</div>
+<div class="warning"><strong>Act on urgent instructions.</strong> Do not delay evacuation or another protective action while searching for a second source. A neighborhood radio net or group chat does not issue official evacuation orders.</div>
 
-## Verify before publication
+## Save these starting points
 
-<p>For every entry, a reviewer must locate the source through the agency's official website, confirm that the agency owns or endorses it, and record the check date. Confirm phone numbers by matching two official agency sources. Confirm radio frequencies, channel names, call signs, and coverage with the station or licensing authority. Remove any field that cannot be verified.</p>
+<table>
+<thead><tr><th scope="col">Official source</th><th scope="col">Use before an emergency</th></tr></thead>
+<tbody>
+<tr><th scope="row">City of La Habra Heights<br><a href="https://www.lhhcity.org/478/Be-Informed">lhhcity.org/478/Be-Informed</a></th><td>Find the City's emergency-notification information and embedded signup form. See COM-003 for enrollment planning.</td></tr>
+<tr><th scope="row">Ready LA County<br><a href="https://ready.lacounty.gov/emergency-notifications/">ready.lacounty.gov/emergency-notifications/</a></th><td>Find County alert enrollment, city-specific systems, and information on broadcast and weather-radio alerts.</td></tr>
+</tbody>
+</table>
 
-<div class="local-info">
-<p><strong>OFFICIAL SOURCES — VERIFY AND COMPLETE</strong></p>
-<p><strong>Local emergency authority:</strong> ______________________________<br>
-<strong>Official incident webpage:</strong> _________________________________<br>
-<strong>Official phone / recorded line:</strong> _____________________________<br>
-<strong>Verified by / date:</strong> ____________________ / ______________</p>
-<p><strong>Broadcast station:</strong> ______________________________________<br>
-<strong>AM/FM frequency or channel:</strong> _______________________________<br>
-<strong>Station call sign:</strong> ________________________________________<br>
-<strong>Responsible broadcaster/agency:</strong> ___________________________<br>
-<strong>Verified by / date:</strong> ____________________ / ______________</p>
-</div>
+<p>These are preparedness starting points, not a guarantee of a live incident feed. Follow the current issuing agency's incident instructions and updates. The City page lists emergency apps as supplemental tools.</p>
+
+## Prepare an offline backup
+
+<div class="checklist"><ul>
+<li>Save or print the official addresses and the household contact plan in COM-005.</li>
+<li>Choose a battery-powered broadcast or weather-radio backup using the County's guidance; confirm reception at home.</li>
+<li>Record a person who can relay official messages when your usual device or connection fails.</li>
+</ul></div>
 
 <!-- pagebreak -->
 
 ## During an incident
 
 <ol class="procedure">
-<li><strong>Check</strong> the official alert sent to your device and note its time.</li>
-<li><strong>Confirm</strong> details through a second official source when time and safety allow.</li>
-<li><strong>Act</strong> on current instructions. Do not wait for neighborhood confirmation.</li>
-<li><strong>Share</strong> the official message with its issuing agency and time; do not edit it.</li>
-<li><strong>Recheck</strong> because evacuation zones, road status, and protective actions can change.</li>
+<li><strong>Read the whole official message.</strong> Note who issued it, when, the affected location, and the action required.</li>
+<li><strong>Take the protective action.</strong> Follow current instructions for your location. Do not wait for a neighborhood vote or forwarded confirmation.</li>
+<li><strong>Check for later official updates when safe.</strong> Do not assume an old screenshot, map, or saved page shows current conditions.</li>
+<li><strong>Share the original official message.</strong> Keep its agency, location, time, and link attached. Clearly distinguish your own observations.</li>
 </ol>
 
-## Evaluate a message
+## My information backup
 
-<div class="checklist"><ul>
-<li>Issuing agency is named and matches a verified official account</li>
-<li>Location, action, and issue time are clear</li>
-<li>Links use the verified agency domain</li>
-<li>Later official updates have not replaced the message</li>
-<li>Unconfirmed information is labeled and not forwarded as fact</li>
-</ul></div>
+| Item | Household entry |
+|---|---|
+| Official incident source selected before an emergency | _________________________________ |
+| Broadcast / weather-radio source and reception check date | _________________________________ |
+| Backup contact and method | _________________________________ |
+| Where paper copies are kept | _________________________________ |
 
-<div class="sources">PLACEHOLDER: Cite each official agency, station, frequency/channel listing, call sign, phone number, and webpage used on the approved handout.</div>
+<p>Use <strong>COM-007</strong> for checking uncertain claims. Never interpret an empty webpage or missing alert as proof that conditions are safe.</p>
+
+<div class="sources">Sources checked 2026-11-13: City of La Habra Heights, <a href="https://www.lhhcity.org/478/Be-Informed">Be Informed</a>; Los Angeles County Office of Emergency Management, <a href="https://ready.lacounty.gov/emergency-notifications/">Emergency Notifications</a>. Local choices and the finished proof require review before publication.</div>

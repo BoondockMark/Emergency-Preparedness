@@ -4,8 +4,8 @@ title: Annual Binder & Kit Review
 section: Start Here
 sectionNumber: 1
 status: under-review
-version: 0.1
-lastReviewed: 2026-09-25
+version: 0.2
+lastReviewed: 2026-11-13
 reviewers:
   editor: unassigned
   subjectMatter: unassigned
@@ -52,5 +52,7 @@ sources:
 <p><strong>Assigned to:</strong> ______________________________ <strong>Due:</strong> _____________________________</p>
 
 <!-- pagebreak -->
+
+<p><strong>Use two schedules:</strong> check stored supplies at least every six months using <strong>STH-002</strong>; review the whole binder annually. Check sooner after use or a change in contacts, care needs, routes, equipment, or official guidance. Product and professional instructions may require more frequent checks.</p>
 
 <div class="sources">Source: Ready.gov, “Build A Kit.” Accessed 2026-09-25.</div>
