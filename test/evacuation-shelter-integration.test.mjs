@@ -15,7 +15,8 @@ const catalog = new Map([
   ['EVS-007', ['EVS-007-shelter-in-place-basics.md', 'Shelter-in-Place Basics']],
   ['EVS-008', ['EVS-008-cleaner-air-room.md', 'Set Up a Cleaner-Air Room for Wildfire Smoke']],
   ['EVS-009', ['EVS-009-returning-home.md', 'Returning Home After an Evacuation']],
-  ['EVS-010', ['EVS-010-accessible-evacuation-planning.md', 'Accessible Evacuation Planning']]
+  ['EVS-010', ['EVS-010-accessible-evacuation-planning.md', 'Accessible Evacuation Planning']],
+  ['EVS-011', ['EVS-011-small-animal-evacuation.md', 'Small Animal Emergency Evacuation', 6]]
 ]);
 
 async function loadCatalog() {
@@ -26,7 +27,7 @@ async function loadCatalog() {
   }));
 }
 
-test('EVS-001 through EVS-010 have one canonical file, title, section, and source block', async () => {
+test('EVS-001 through EVS-011 have canonical files, titles, sections, and source blocks', async () => {
   const documents = await loadCatalog();
   assert.equal(documents.length, catalog.size);
   assert.deepEqual([...new Set(documents.map(document => document.data.code))].sort(), [...catalog.keys()]);
@@ -39,7 +40,7 @@ test('EVS-001 through EVS-010 have one canonical file, title, section, and sourc
     assert.equal(document.data.section, 'Evacuation & Shelter');
     assert.equal(document.data.sectionNumber, 3);
     assert.ok(document.data.sources.length > 0, `${document.data.code} structured sources`);
-    assert.equal((document.content.match(/class="sources"/g) ?? []).length, 1, `${document.data.code} visible sources block`);
+    assert.equal((document.content.match(/class="sources"/g) ?? []).length, expected[2] ?? 1, `${document.data.code} visible sources blocks`);
   }
 });
 

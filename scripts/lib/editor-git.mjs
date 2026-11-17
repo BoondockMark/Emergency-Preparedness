@@ -47,7 +47,7 @@ export function gitFailure(error, args, stderr = '', environment = {}, label = '
   return `${step} failed${code}. ${help}${detail ? ` Git reported: ${detail}` : ''} Your saved files are preserved.`;
 }
 
-function githubFailure(error, stderr = '', environment) {
+export function githubFailure(error, stderr = '', environment = {}) {
   // Classify known failures without returning CLI output, which may contain credentials.
   let message;
   if (error.killed) message = 'The GitHub request timed out. Check your connection and retry.';
@@ -80,7 +80,7 @@ export function createGitPublisher({ run = runGitCommand } = {}) {
     if (await fs.realpath(top.trim()) !== root) throw fail('The handout library must be its own Git checkout.');
     if ((await git(root, ['ls-files', '--unmerged'])).trim()) throw fail('Resolve the current Git merge before publishing from the editor.');
     const remote = (await git(root, ['remote', 'get-url', 'origin'])).trim(), name = githubRemote(remote);
-    const pushUrls = (await git(root, ['remote', 'get-url', '--push', '--all', 'origin'])).trim().split('\n');
+    const pushUrls = (await git(root, ['remote', 'get-url', '--push', '--all', 'origin'])).trim().split(/\r?\n/);
     if (pushUrls.length !== 1 || githubRemote(pushUrls[0]) !== name) throw fail('Origin fetch and push must point to the same GitHub repository.');
     const pushRemote = pushUrls[0];
     if (githubRemote((await git(root, ['ls-remote', '--get-url', pushRemote])).trim()) !== name) throw fail('Git URL rewriting changes the push repository. Resolve that configuration before publishing.');
@@ -93,11 +93,19 @@ export function createGitPublisher({ run = runGitCommand } = {}) {
     const common = await fs.realpath(path.resolve(root, (await git(root, ['rev-parse', '--git-common-dir'])).trim()));
     if (target.private && target.publicRoot && (common === path.resolve(target.publicRoot) || common.startsWith(path.resolve(target.publicRoot) + path.sep))) throw fail('The private library must use a separate Git repository outside the public checkout.');
     const stateDir = path.join(common, 'handout-editor'); await fs.mkdir(stateDir, { recursive: true, mode: 0o700 });
-    const stateFile = path.join(stateDir, hash(target.path) + '.json');
-    const stateText = await fs.readFile(stateFile, 'utf8').catch(error => { if (error.code === 'ENOENT') return ''; throw error; });
+    let stateFile = path.join(stateDir, hash(target.path) + '.json');
+    const readState = file => fs.readFile(file, 'utf8').catch(error => { if (error.code === 'ENOENT') return ''; throw error; });
+    let stateText = await readState(stateFile);
+    // Older Windows versions keyed state by the native source path. Retain
+    // that file and branch when discovery starts returning portable paths.
+    if (!stateText && target.path.includes('/')) {
+      const legacyFile = path.join(stateDir, hash(target.path.replaceAll('/', '\\')) + '.json');
+      const legacyText = await readState(legacyFile);
+      if (legacyText) { stateFile = legacyFile; stateText = legacyText; }
+    }
     const state = stateText ? JSON.parse(stateText) : null;
     if (state && (![state.commit, state.baseCommit, ...(state.pushed ? [state.pushed] : [])].every(value => /^(?:[a-f0-9]{40}|[a-f0-9]{64})$/.test(value)) || state.number !== undefined && (!Number.isSafeInteger(state.number) || state.number < 1))) throw fail('Stored editor Git state is invalid. Restore it before publishing.');
-    if (state && (state.repository !== name || state.path !== target.path || !/^editor\/handout-[A-Z]{3}-\d{3}-[a-f0-9]{12}$/.test(state.branch))) throw fail('Stored editor branch information does not match this repository.');
+    if (state && (state.repository !== name || typeof state.path !== 'string' || state.path.replaceAll('\\', '/') !== target.path.replaceAll('\\', '/') || !/^editor\/handout-[A-Z]{3}-\d{3}-[a-f0-9]{12}$/.test(state.branch))) throw fail('Stored editor branch information does not match this repository.');
     return { root, remote, pushRemote, name, repo, stateDir, stateFile, state, stateHash: hash(stateText), head: (await git(root, ['rev-parse', 'HEAD'])).trim() };
   }
   async function readFile(root, relative) {
@@ -151,7 +159,7 @@ export function createGitPublisher({ run = runGitCommand } = {}) {
       if (local !== info.state.commit) throw fail('The local editor branch changed outside this workflow. Review it before retrying.');
     }
     const worktrees = await git(info.root, ['worktree', 'list', '--porcelain']);
-    if (worktrees.split('\n').includes(`branch refs/heads/${branch}`)) throw fail('This editor branch is checked out in a worktree. Switch that worktree before publishing.');
+    if (worktrees.split(/\r?\n/).includes(`branch refs/heads/${branch}`)) throw fail('This editor branch is checked out in a worktree. Switch that worktree before publishing.');
     const files = new Set([sourcePath, `${assetDir}/manifest.json`]);
     for (const manifest of [await readFile(info.root, `${assetDir}/manifest.json`), await storedFile(info.root, parent, `${assetDir}/manifest.json`)]) {
       if (!manifest) continue;
@@ -176,7 +184,7 @@ export function createGitPublisher({ run = runGitCommand } = {}) {
           const ignored = await git(info.root, ['ls-files', '--others', '--ignored', '--exclude-standard', '--', file]);
           if (ignored.trim()) throw fail('A required handout or asset file is ignored by Git. Resolve that ignore rule before publishing.');
         }
-        const blob = (await git(info.root, ['hash-object', '-w', '--stdin'], { input: bytes })).trim();
+        const blob = (await git(info.root, ['hash-object', '-w', `--path=${file}`, '--stdin'], { input: bytes })).trim();
         await git(info.root, ['update-index', '--add', '--cacheinfo', tracked.startsWith('100755') ? '100755' : '100644', blob, file], { env });
       }
       tree = (await git(info.root, ['write-tree'], { env })).trim();
@@ -206,7 +214,7 @@ export function createGitPublisher({ run = runGitCommand } = {}) {
     try {
       // Recheck the durable state after acquiring the cross-process lock.
       if (hash(await fs.readFile(info.stateFile, 'utf8').catch(error => { if (error.code === 'ENOENT') return ''; throw error; })) !== info.stateHash) throw fail('Another publication finished. Prepare the handout again.');
-      if ((await git(info.root, ['rev-parse', 'HEAD'])).trim() !== info.head || (await git(info.root, ['worktree', 'list', '--porcelain'])).split('\n').includes(`branch refs/heads/${plan.branch}`)) throw fail('A checkout changed after the review. Prepare the handout again.');
+      if ((await git(info.root, ['rev-parse', 'HEAD'])).trim() !== info.head || (await git(info.root, ['worktree', 'list', '--porcelain'])).split(/\r?\n/).includes(`branch refs/heads/${plan.branch}`)) throw fail('A checkout changed after the review. Prepare the handout again.');
       let commit = plan.parent;
       if (plan.changed) {
         const sign = (await git(info.root, ['config', '--type=bool', '--default=false', '--get', 'commit.gpgsign'])).trim() === 'true';

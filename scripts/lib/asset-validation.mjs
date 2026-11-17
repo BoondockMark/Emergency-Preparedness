@@ -3,6 +3,11 @@ import path from 'node:path';
 
 export const encodedAssetName = file => `${file}.base64`;
 
+// Manifest names must identify the same single file on Windows and Linux.
+export const isPortableAssetName = file => typeof file === 'string' && file.length > 0
+  && !/[<>:"/\\|?*\x00-\x1f]/.test(file) && !/[. ]$/.test(file)
+  && !/^(?:con|prn|aux|nul|com[1-9¹²³]|lpt[1-9¹²³])(?:\.|$)/i.test(file);
+
 export async function readAssetBytes(directory, file, label = file) {
   try {
     return await fs.readFile(path.join(directory, file));
@@ -82,8 +87,8 @@ export function validateAssetEntry(entry, code) {
   if (!['photograph', 'illustration', 'diagram'].includes(entry.type)) {
     throw Error(`${code}/${entry.file}: invalid asset type`);
   }
-  if (path.basename(entry.file) !== entry.file) {
-    throw Error(`${code}: asset file names cannot contain directories`);
+  if (!isPortableAssetName(entry.file)) {
+    throw Error(`${code}: asset file names must be portable Windows/Linux names without directories or reserved characters`);
   }
   const extension = path.extname(entry.file).toLowerCase();
   if (!['.svg', '.png', '.jpg', '.jpeg'].includes(extension)) {
@@ -123,9 +128,12 @@ export async function loadAssetManifests(root) {
     }
     if (!Array.isArray(manifest.assets)) throw Error(`${code}: manifest must contain an assets array`);
     const entries = new Map();
+    const names = new Set();
     for (const entry of manifest.assets) {
       validateAssetEntry(entry, code);
-      if (entries.has(entry.file)) throw Error(`${code}: asset file names must be unique`);
+      const key = entry.file.toLowerCase();
+      if (names.has(key)) throw Error(`${code}: asset file names must be unique ignoring case: ${entry.file}`);
+      names.add(key);
       const extension = path.extname(entry.file).toLowerCase();
       const bytes = await readAssetBytes(location, entry.file, `${code}/${entry.file}`);
       if (extension === '.svg') {

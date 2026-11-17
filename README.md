@@ -24,7 +24,13 @@ The eight section folders are kept even when empty: Start Here; Alerts & Communi
 
 ## Exact setup and build
 
-Requirements: Node.js 20 or newer, npm, and the ability for Puppeteer to install its pinned Chrome for Testing revision during `npm ci`.
+Requirements: Node.js 22.12.0 or newer (matching Puppeteer's requirement), npm, and the ability for Puppeteer to install its pinned Chrome for Testing revision during `npm ci`.
+
+Windows and Linux run the same npm commands. Tracked text uses LF line endings;
+existing CRLF handouts remain readable and editable. Handout identifiers and Git
+paths use forward slashes on both platforms. Asset filenames must work on both
+systems: avoid Windows device names such as `CON`, reserved characters, and names
+that differ only by letter case. Uploaded filenames are normalized automatically.
 
 ```bash
 npm ci

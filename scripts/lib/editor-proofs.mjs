@@ -68,8 +68,7 @@ export function createProofJobs({ root, temporaryRoot, privateRoot, template }) 
       const htmlFile = path.join(workspace, 'html', `${meta.code}.html`);
       await fs.writeFile(htmlFile, html);
       check(job);
-      const options = browserOptions();
-      if (privateRoot) { options.userDataDir = path.join(workspace, 'browser-profile'); options.env = { ...options.env, TMPDIR: temporaryRoot }; }
+      const options = browserOptions(privateRoot ? { userDataDir: path.join(workspace, 'browser-profile'), temporaryRoot } : {});
       job.browser = await puppeteer.launch(options);
       check(job);
       stage(job, 'rendering', 3);

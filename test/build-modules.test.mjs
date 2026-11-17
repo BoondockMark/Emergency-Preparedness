@@ -6,11 +6,13 @@ import test from 'node:test';
 import { loadAssetManifests, sanitizeSvg, validateAssetEntry } from '../scripts/lib/asset-validation.mjs';
 import { generateTableOfContentsPages } from '../scripts/lib/binder-generation.mjs';
 import { formatAccessibilityIssue } from '../scripts/lib/accessibility-validation.mjs';
-import { reportAccessibilityWarnings } from '../scripts/lib/artifact-generation.mjs';
+import { browserOptions, reportAccessibilityWarnings } from '../scripts/lib/artifact-generation.mjs';
 import { escapeHtml, renderHandout, renderMarkdown } from '../scripts/lib/content-rendering.mjs';
 import { discoverDocuments } from '../scripts/lib/filesystem-discovery.mjs';
 import { generateBinderIndex } from '../scripts/lib/index-generation.mjs';
-import { loadDocument, MetadataError } from '../scripts/lib/metadata.mjs';
+import { loadDocument, MetadataError, parseMetadataYaml } from '../scripts/lib/metadata.mjs';
+import { reviewMetadata } from '../scripts/lib/editor-review.mjs';
+import { safeAssetName, stageAsset } from '../scripts/lib/editor-support.mjs';
 import { formatLayoutIssue } from '../scripts/lib/layout-validation.mjs';
 import { imageReferences, validateLocalLinks } from '../scripts/lib/page-validation.mjs';
 
@@ -42,6 +44,47 @@ test('front matter fixture is loaded separately from content', async () => {
   assert.equal(document.content.trim(), 'Fixture body.');
 });
 
+test('CRLF metadata works in direct parsing, handout details, and saved review records', async () => {
+  const source = (await fixture('front-matter.md')).replace(/\r?\n/g, '\r\n');
+  const header = source.match(/^---\r\n([\s\S]*?)\r\n---\r\n/)[1];
+  assert.deepEqual(parseMetadataYaml(header, 'record.md'), loadDocument(source, 'record.md').data);
+  const reviewed = reviewMetadata(source, { sourcePath: 'handouts/record.md', meta: { code: 'STH-001' } });
+  assert.equal(reviewed.metadataError, undefined);
+  assert.equal(reviewed.status, 'draft');
+  assert.equal(reviewed.reviewers.editor, 'Unassigned');
+});
+
+test('private browser options redirect Windows and Linux temporary directories', () => {
+  const temporaryRoot = path.join(os.tmpdir(), 'private work');
+  const userDataDir = path.join(temporaryRoot, 'profile');
+  const original = process.env.TEMP;
+  const options = browserOptions({ temporaryRoot, userDataDir });
+  for (const name of ['TMPDIR', 'TMP', 'TEMP']) assert.equal(options.env[name], temporaryRoot);
+  assert.equal(options.userDataDir, userDataDir);
+  assert.equal(process.env.TEMP, original);
+});
+
+test('asset names are portable and uploads avoid case-insensitive name collisions', async t => {
+  const entry = JSON.parse(await fixture('image-metadata.json'));
+  for (const file of ['nested\\route.svg', 'nested/route.svg', 'CON.svg', 'nul.svg', 'LPT1.svg', 'bad:name.svg', 'name?.svg', 'image.svg ', 'image.svg.']) {
+    assert.throws(() => validateAssetEntry({ ...entry, file }, 'STH-001'), /portable Windows\/Linux/);
+  }
+  assert.equal(safeAssetName('C:\\fakepath\\Route Map.svg', 'image/svg+xml'), 'route-map.svg');
+  assert.equal(safeAssetName('CON.svg', 'image/svg+xml'), 'image-con.svg');
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), 'portable-assets-'));
+  t.after(() => fs.rm(root, { recursive: true, force: true }));
+  const directory = path.join(root, 'assets/handouts/STH-001');
+  await fs.mkdir(directory, { recursive: true });
+  const existing = { ...entry, file: 'Route.svg' };
+  const svg = '<svg xmlns="http://www.w3.org/2000/svg"><title>Route</title></svg>';
+  await fs.writeFile(path.join(directory, existing.file), svg);
+  await fs.writeFile(path.join(directory, 'manifest.json'), JSON.stringify({ assets: [existing] }));
+  const staged = await stageAsset(path.join(root, 'staging'), root, 'STH-001', { ...entry, name: 'route.svg', mimeType: 'image/svg+xml', dataUrl: `data:image/svg+xml;base64,${Buffer.from(svg).toString('base64')}` });
+  assert.equal(staged.entry.file, 'route-2.svg');
+  await fs.writeFile(path.join(directory, 'manifest.json'), JSON.stringify({ assets: [existing, { ...entry, file: 'route.svg' }] }));
+  await assert.rejects(loadAssetManifests(root), /unique ignoring case/);
+});
+
 test('handout code prefix must identify its binder section', async () => {
   const source = (await fixture('front-matter.md')).replace('code: STH-001', 'code: COM-001');
   assert.throws(
@@ -64,6 +107,7 @@ test('discovery derives canonical metadata for one-, two-, and three-page source
   }
   const documents = await discoverDocuments(root, new Map());
   assert.deepEqual(documents.map(({ meta }) => meta.pageCount), [1, 2, 3]);
+  assert.deepEqual(documents.map(document => document.sourcePath), ['handouts/1-pages.md', 'handouts/2-pages.md', 'handouts/3-pages.md']);
   assert.deepEqual(documents[2].chunks.map(chunk => chunk.trim()), ['Page 1.', 'Page 2.', 'Page 3.']);
   assert.deepEqual(documents[2].chunkStartLines, [19, 21, 23]);
 });

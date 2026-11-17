@@ -19,7 +19,7 @@ export async function discoverDocuments(root, manifests, { privateRoot } = {}) {
   const codes = new Set();
 
   for (const file of files) {
-    const sourcePath = path.relative(root, file);
+    const sourcePath = path.relative(root, file).split(path.sep).join('/');
     const document = parseHandoutSource(await fs.readFile(file, 'utf8'), sourcePath, manifests);
     let selected = document;
     if (document.meta.private && privateRoot) {

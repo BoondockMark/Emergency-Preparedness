@@ -44,7 +44,7 @@ function scalar(value, sourcePath, lineNumber) {
 // This intentionally implements only the block-style YAML subset used by handout metadata.
 // Rejecting aliases, tags, flow collections, and multi-line scalars keeps loading deterministic.
 export function parseMetadataYaml(source, sourcePath) {
-  const lines = source.split('\n').map((raw, index) => {
+  const lines = source.split(/\r?\n/).map((raw, index) => {
     if (/\t/.test(raw)) fail(sourcePath, `line ${index + 1}`, 'tabs are not allowed in metadata');
     const match = raw.match(/^( *)(.*)$/);
     return { indent: match[1].length, text: match[2], number: index + 1 };

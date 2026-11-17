@@ -1,3 +1,7 @@
+// Textareas normalize CRLF and lone CR on every platform. Keep browser
+// baselines in that same form while retaining the server's raw-byte revision.
+export const editorSource = source => source.replace(/\r\n?/g, '\n');
+
 export function selectionDetails(value, start, end = start) {
   const before = value.slice(0, start);
   const selected = value.slice(start, end);

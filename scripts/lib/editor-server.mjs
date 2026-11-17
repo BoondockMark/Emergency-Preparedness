@@ -104,11 +104,7 @@ export async function createEditorServer({ root, privateDirectory, publicOnly = 
       await prepareDirectories(root, validationRoot);
       const assetManifests = manifests;
       await copyAssets(root, validationRoot, assetManifests);
-      const options = browserOptions();
-      if (privateRoot) {
-        options.userDataDir = path.join(validationRoot, 'browser-profile');
-        options.env = { ...options.env, TMPDIR: temporaryRoot };
-      }
+      const options = browserOptions(privateRoot ? { userDataDir: path.join(validationRoot, 'browser-profile'), temporaryRoot } : {});
       browser = await puppeteer.launch(options);
       return { validationRoot, browser, assetManifests };
     })();

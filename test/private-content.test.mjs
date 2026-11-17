@@ -90,6 +90,10 @@ test('private checkout inside public sources is refused', async t => {
 test('escaping private source and asset symlinks are refused', async t => {
   const { root, privateRoot, options, addPrivate } = await setup(t);
   await addPrivate();
-  await fs.symlink(path.join(root, 'handouts/record.md'), path.join(privateRoot, 'handouts/escape.md'));
+  try { await fs.symlink(path.join(root, 'handouts/record.md'), path.join(privateRoot, 'handouts/escape.md'), 'file'); }
+  catch (error) {
+    if (process.platform === 'win32' && error.code === 'EPERM') { t.skip('File symlink creation requires Windows Developer Mode or administrator privileges'); return; }
+    throw error;
+  }
   await assert.rejects(loadBuildContent(root, options), /symlinks/);
 });
