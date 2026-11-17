@@ -4,10 +4,53 @@ import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { createHash } from 'node:crypto';
-import { createGitPublisher, githubRemote, runGitCommand } from '../scripts/lib/editor-git.mjs';
+import { createGitPublisher, githubRemote, gitFailure, runGitCommand } from '../scripts/lib/editor-git.mjs';
 const digest = value => createHash('sha256').update(value).digest('hex');
 const pagePath = 'handouts/section/STH-001.md';
 const session = 'test-git-session';
+
+test('Git failures identify the step and reason without echoing credential arguments', () => {
+  const error = { code: 128 };
+  const reason = 'fatal: Unable to create index.lock: File exists.';
+  const message = gitFailure(error, ['read-tree', 'secret-argument'], reason);
+  assert.match(message, /git read-tree failed \(exit 128\)/);
+  assert.match(message, /index.lock: File exists/);
+  assert.match(message, /saved files are preserved/);
+  assert.doesNotMatch(message, /secret-argument/);
+  const cases = [
+    ['fatal: not a git repository', /Git checkout/],
+    ['fatal: detected dubious ownership in repository', /safe.directory/],
+    ['fatal: unable to auto-detect email address', /git config user.email/],
+    ['fatal: could not read Username: terminal prompts disabled', /gh auth setup-git/],
+    ['unknown option: cacheinfo', /update Git/]
+  ];
+  for (const [stderr, expected] of cases) assert.match(gitFailure(error, ['fetch'], stderr), expected);
+  assert.match(gitFailure({ code: 1 }, ['merge-base'], ''), /no common commit/);
+  assert.match(gitFailure({ killed: true }, ['fetch'], ''), /timed out/);
+  assert.match(gitFailure({ code: 'EACCES' }, ['status'], ''), /git status failed \(EACCES\)/);
+  assert.match(gitFailure(error, ['fetch'], '', {}, 'Fetching the GitHub base branch'), /Fetching the GitHub base branch \(git fetch\)/);
+});
+
+test('Git diagnostic details redact credentials and bound output', () => {
+  const stderr = 'fatal: https://user:remote-password@github.com/repo?token=query-secret\nAuthorization: Basic encoded-credential\nAuthorization: Bearer header-secret\nghp_tokenvalue github_pat_tokenvalue custom-secret';
+  const message = gitFailure({ code: 128 }, ['push'], stderr, { GH_TOKEN: 'custom-secret' });
+  assert.doesNotMatch(message, /remote-password|query-secret|encoded-credential|header-secret|ghp_tokenvalue|github_pat_tokenvalue|custom-secret/);
+  assert.doesNotMatch(message, /[\r\n]/);
+  assert.match(message, /\[redacted\]/);
+  assert.ok(gitFailure({ code: 128 }, ['fetch'], 'x'.repeat(5000)).length < 1500);
+});
+
+test('Git subprocess errors surface the failed subcommand and stderr', async t => {
+  const directory = await fs.mkdtemp(path.join(os.tmpdir(), 'editor-git-errors-'));
+  t.after(() => fs.rm(directory, { recursive: true, force: true }));
+  await assert.rejects(runGitCommand('git', ['editor-nonexistent-command'], { cwd: directory }), error => {
+    assert.equal(error.status, 409);
+    assert.match(error.message, /git editor-nonexistent-command failed/);
+    assert.match(error.message, /Git reported:/);
+    assert.match(error.message, /not a git command/);
+    return true;
+  });
+});
 
 test('GitHub command failures give recovery steps without exposing CLI output or tokens', async t => {
   const directory = await fs.mkdtemp(path.join(os.tmpdir(), 'editor-gh-errors-'));
@@ -156,7 +199,7 @@ test('Git excludes unrelated local commits and rejects a non-fast-forward push w
   const tree = (await f.git(['rev-parse', `${first.commit}^{tree}`])).trim();
   const external = (await f.git(['commit-tree', tree, '-p', first.commit], 'Someone else updated the PR\n')).trim();
   await f.git(['push', f.remote, `${external}:refs/heads/${first.branch}`]);
-  await assert.rejects(f.publish(next), /Pushing the editor branch failed/);
+  await assert.rejects(f.publish(next), /Pushing the editor branch \(git push\) failed/);
   assert.equal((await f.git(['ls-remote', f.remote, `refs/heads/${first.branch}`])).split('\t')[0], external);
 });
 
