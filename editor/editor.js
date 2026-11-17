@@ -7,7 +7,7 @@ import { createChangeControls } from './change-controls.js';
 import { createProofControls } from './proof-controls.js';
 import { createLibraryControls } from './library-controls.js';
 import { createPreviewControls } from './preview-controls.js';
-import { EditHistory, updateMetadataFields, figureAtOffset, figureRanges, handoutNeedsFixing, handoutOptionLabel, indentSelection, prefixLines, readHandoutStatus, selectionDetails, setHandoutStatus } from './editor-model.js';
+import { EditHistory, editorSource, updateMetadataFields, figureAtOffset, figureRanges, handoutNeedsFixing, handoutOptionLabel, indentSelection, prefixLines, readHandoutStatus, selectionDetails, setHandoutStatus } from './editor-model.js';
 
 const select = document.querySelector('#handout');
 const handoutSearch = document.querySelector('#handout-search');
@@ -310,14 +310,24 @@ async function scanHandouts() {
 const draftKey = path => `handout-editor:draft:${path}`;
 function readDraft(path) {
   if (opened.private) return null;
-  try { return JSON.parse(localStorage.getItem(draftKey(path))); } catch { return null; }
+  try {
+    const draft = JSON.parse(localStorage.getItem(draftKey(path)) || localStorage.getItem(draftKey(path.replaceAll('/', '\\'))));
+    if (typeof draft?.source === 'string') draft.source = editorSource(draft.source);
+    if (typeof draft?.baseSource === 'string') draft.baseSource = editorSource(draft.baseSource);
+    return draft;
+  } catch { return null; }
 }
 function writeDraft() {
   if (opened.private || !opened.path || !dirty()) return;
   try { localStorage.setItem(draftKey(opened.path), JSON.stringify({ source: source.value, revision: opened.revision, baseSource: opened.baseAvailable === false ? undefined : opened.source, updatedAt: Date.now() })); } catch { /* Editing must continue if storage is unavailable. */ }
 }
 function clearDraft(path = opened.path) {
-  try { if (!opened.private) localStorage.removeItem(draftKey(path)); } catch { /* Storage may be disabled. */ }
+  try {
+    if (!opened.private) {
+      localStorage.removeItem(draftKey(path));
+      localStorage.removeItem(draftKey(path.replaceAll('/', '\\')));
+    }
+  } catch { /* Storage may be disabled. */ }
   draftRecovery.hidden = true;
 }
 function updateCursorStatus() {
@@ -336,6 +346,7 @@ async function request(url, options) {
   const type = response.headers.get('content-type') || '';
   const value = type.includes('application/json') ? await response.json() : await response.text();
   if (!response.ok) throw Object.assign(Error(value.error || value), { status: response.status });
+  if (typeof value?.source === 'string') value.source = editorSource(value.source);
   return value;
 }
 function dirty() {

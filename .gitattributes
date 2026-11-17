@@ -1,0 +1,6 @@
+# Keep text checkouts and generated text comparisons consistent across OSes.
+* text=auto eol=lf
+*.pdf binary
+*.png binary
+*.jpg binary
+*.jpeg binary

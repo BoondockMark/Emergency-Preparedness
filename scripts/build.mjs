@@ -31,7 +31,7 @@ const outputRoot = privateRoot
     : path.join(root, 'build');
 if (privateRoot) {
   await fs.mkdir(path.join(privateRoot, 'build/browser'), { recursive: true, mode: 0o700 });
-  process.env.TMPDIR = path.join(privateRoot, 'build/browser');
+  for (const variable of ['TMPDIR', 'TMP', 'TEMP']) process.env[variable] = path.join(privateRoot, 'build/browser');
 }
 
 try {

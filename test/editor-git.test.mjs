@@ -4,7 +4,7 @@ import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { createHash } from 'node:crypto';
-import { createGitPublisher, githubRemote, gitFailure, runGitCommand } from '../scripts/lib/editor-git.mjs';
+import { createGitPublisher, githubRemote, githubFailure, gitFailure, runGitCommand } from '../scripts/lib/editor-git.mjs';
 const digest = value => createHash('sha256').update(value).digest('hex');
 const pagePath = 'handouts/section/STH-001.md';
 const session = 'test-git-session';
@@ -52,10 +52,7 @@ test('Git subprocess errors surface the failed subcommand and stderr', async t =
   });
 });
 
-test('GitHub command failures give recovery steps without exposing CLI output or tokens', async t => {
-  const directory = await fs.mkdtemp(path.join(os.tmpdir(), 'editor-gh-errors-'));
-  t.after(() => fs.rm(directory, { recursive: true, force: true }));
-  await fs.writeFile(path.join(directory, 'gh'), `#!${process.execPath}\nprocess.stderr.write(process.env.TEST_GH_ERROR); process.exit(1);\n`, { mode: 0o700 });
+test('GitHub command failures give recovery steps without exposing CLI output or tokens', () => {
   const cases = [
     ['gh: Bad credentials (HTTP 401)', { GH_TOKEN: 'secret-value' }, /GH_TOKEN, which overrides/],
     ['gh: Bad credentials (HTTP 401)', { GITHUB_TOKEN: 'secret-value' }, /GITHUB_TOKEN, which overrides/],
@@ -70,32 +67,26 @@ test('GitHub command failures give recovery steps without exposing CLI output or
     ['An unknown failure', {}, /gh api repos\/OWNER\/REPO/]
   ];
   for (const [stderr, credentials, expected] of cases) {
-    await assert.rejects(runGitCommand('gh', ['api', 'repos/test/repo'], {
-      cwd: directory,
-      env: { PATH: directory, GH_TOKEN: '', GITHUB_TOKEN: '', ...credentials, TEST_GH_ERROR: `${stderr}\nsecret-value` }
-    }), error => {
-      assert.equal(error.status, 409);
-      assert.match(error.message, expected);
-      assert.match(error.message, /saved files are preserved/);
-      assert.doesNotMatch(error.message, /secret-value/);
-      return true;
-    });
+    const message = githubFailure({ code: 1 }, `${stderr}\nsecret-value`, credentials);
+    assert.match(message, expected);
+    assert.match(message, /saved files are preserved/);
+    assert.doesNotMatch(message, /secret-value/);
   }
 });
 
 async function fixture(t, { privateRepo = false, privatePage = false, windowsPath = false } = {}) {
   const directory = await fs.mkdtemp(path.join(os.tmpdir(), 'editor-git-')); t.after(() => fs.rm(directory, { recursive: true, force: true }));
-  const root = path.join(directory, 'checkout'), remote = path.join(directory, 'remote.git');
+  const root = path.join(directory, 'checkout with spaces'), remote = path.join(directory, 'remote.git');
   await fs.mkdir(root); const git = (args, input) => runGitCommand('git', args, { cwd: root, input });
   await runGitCommand('git', ['init', '--bare', remote], { cwd: directory });
-  await git(['init', '-b', 'main']); await git(['config', 'commit.gpgsign', 'false']); await git(['config', 'user.name', 'Editor Test']); await git(['config', 'user.email', 'editor@example.org']);
+  await git(['init', '-b', 'main']); await git(['config', 'core.autocrlf', 'false']); await git(['config', 'commit.gpgsign', 'false']); await git(['config', 'user.name', 'Editor Test']); await git(['config', 'user.email', 'editor@example.org']);
   await fs.mkdir(path.join(root, 'handouts/section'), { recursive: true }); await fs.writeFile(path.join(root, pagePath), 'Original handout\n');
   await fs.mkdir(path.join(root, 'assets/handouts/STH-001'), { recursive: true });
   await fs.writeFile(path.join(root, 'assets/handouts/STH-001/manifest.json'), '{"assets":[]}\n');
   await fs.writeFile(path.join(root, 'unrelated.txt'), 'original\n');
   await git(['add', '.']); await git(['commit', '-m', 'Initial']); await git(['push', remote, 'HEAD:refs/heads/main']);
   await git(['remote', 'add', 'origin', 'https://github.com/test/repo.git']);
-  const remoteState = { private: privateRepo, prs: [], failPush: false, failCreate: false, lastBody: undefined, pushed: 0 };
+  const remoteState = { private: privateRepo, prs: [], failPush: false, failCreate: false, lastBody: undefined, pushed: 0, crlfWorktrees: false };
   async function run(command, args, options) {
     if (command === 'git') {
       const actual = [...args];
@@ -104,7 +95,8 @@ async function fixture(t, { privateRepo = false, privatePage = false, windowsPat
         if (remoteState.failPush) throw Error('Simulated push failure');
         actual[1] = remote; remoteState.pushed++;
       }
-      return runGitCommand(command, actual, options);
+      const output = await runGitCommand(command, actual, options);
+      return remoteState.crlfWorktrees && actual[0] === 'worktree' ? output.replace(/\r?\n/g, '\r\n') : output;
     }
     assert.equal(command, 'gh'); assert.equal(args[args.indexOf('--hostname') + 1], 'github.com'); const endpoint = args[1];
     if (endpoint === 'repos/test/repo') return JSON.stringify({ full_name: 'test/repo', private: remoteState.private, default_branch: 'main', permissions: { push: true } });
@@ -147,12 +139,43 @@ test('Git publication accepts Windows source paths and preserves editor paths wh
   assert.equal(await f.git(['show', `${first.commit}:${pagePath}`]), 'Windows handout edit\n');
   assert.equal((await f.git(['ls-tree', '-r', '--name-only', first.commit])).trim().split('\n').filter(file => file === pagePath).length, 1);
   await fs.writeFile(path.join(f.root, pagePath), 'Next Windows edit\n');
-  const next = await f.prepare();
+  // Discovery now returns '/', but a prior Windows publication stored '\\'.
+  const canonicalTarget = { ...await f.target(), path: pagePath };
+  const next = await f.publisher.prepare(canonicalTarget, session);
   assert.equal(next.branch, plan.branch);
   assert.deepEqual(next.files, [pagePath]);
   const second = await f.publish(next);
   assert.equal(second.number, first.number);
   assert.equal(await f.git(['show', `${second.commit}:${pagePath}`]), 'Next Windows edit\n');
+  f.state.prs[0].head.sha = second.commit;
+  assert.equal((await f.publisher.prepare(await f.target(), session)).branch, plan.branch);
+});
+
+test('Git publication applies checkout line-ending filters without treating CRLF as a content edit', async t => {
+  const f = await fixture(t);
+  await f.git(['config', 'core.autocrlf', 'true']);
+  await fs.writeFile(path.join(f.root, pagePath), 'Original handout\r\n');
+  await assert.rejects(f.prepare(), /already match GitHub/);
+  await fs.writeFile(path.join(f.root, pagePath), 'Changed handout\r\n');
+  const result = await f.publish(await f.prepare());
+  assert.equal(await f.git(['show', `${result.commit}:${pagePath}`]), 'Changed handout\n');
+  assert.equal(await fs.readFile(path.join(f.root, pagePath), 'utf8'), 'Changed handout\r\n');
+});
+
+test('CRLF Git worktree output protects checked-out editor branches during prepare and publish', async t => {
+  const f = await fixture(t);
+  await fs.writeFile(path.join(f.root, pagePath), 'First edit\n');
+  const first = await f.publish(await f.prepare());
+  const worktree = path.join(f.root, '..', 'editor-worktree');
+  f.state.crlfWorktrees = true;
+  await f.git(['worktree', 'add', worktree, first.branch]);
+  await assert.rejects(f.prepare(), /checked out in a worktree/);
+  await f.git(['worktree', 'remove', worktree]);
+  await fs.writeFile(path.join(f.root, pagePath), 'Next edit\n');
+  const plan = await f.prepare();
+  await f.git(['worktree', 'add', worktree, first.branch]);
+  await assert.rejects(f.publish(plan), /checkout changed after the review/);
+  assert.equal(f.state.pushed, 1);
 });
 
 test('Git publication includes only the page and declared assets and preserves the user checkout and index', async t => {

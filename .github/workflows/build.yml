@@ -18,8 +18,7 @@ jobs:
       - run: npm ci
         env:
           PUPPETEER_CACHE_DIR: ${{ runner.temp }}/puppeteer
-      - run: node --test test/local-setup.test.mjs test/private-content.test.mjs test/build-modules.test.mjs test/pdf-dates.test.mjs
-      - run: node --test test/private-editor.test.mjs
+      - run: npm test
         env:
           PUPPETEER_CACHE_DIR: ${{ runner.temp }}/puppeteer
       - run: npm run check -- --public
@@ -61,7 +60,9 @@ jobs:
       - run: npm ci
         env:
           PUPPETEER_CACHE_DIR: ${{ runner.temp }}/puppeteer
-      - run: node --test test/pdf-dates.test.mjs
+      - run: npm test
+        env:
+          PUPPETEER_CACHE_DIR: ${{ runner.temp }}/puppeteer
       - run: npm run lint:layout
         env:
           PUPPETEER_CACHE_DIR: ${{ runner.temp }}/puppeteer

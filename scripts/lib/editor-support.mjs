@@ -1,7 +1,7 @@
 import fs from 'node:fs/promises';
 import { constants } from 'node:fs';
 import path from 'node:path';
-import { encodedAssetName, sanitizeSvg, validateAssetEntry } from './asset-validation.mjs';
+import { encodedAssetName, isPortableAssetName, sanitizeSvg, validateAssetEntry } from './asset-validation.mjs';
 
 const IMAGE_TYPES = new Map([
   ['image/png', '.png'],
@@ -12,7 +12,7 @@ const IMAGE_TYPES = new Map([
 export function safeAssetName(name, mimeType) {
   const extension = IMAGE_TYPES.get(mimeType);
   if (!extension) throw Error('Images must be PNG, JPEG, or SVG');
-  const base = path.basename(name);
+  const base = path.posix.basename(name.replaceAll('\\', '/'));
   const originalExtension = path.extname(base);
   const suppliedExtension = originalExtension.toLowerCase();
   let stem = path.basename(base, originalExtension)
@@ -21,6 +21,7 @@ export function safeAssetName(name, mimeType) {
     .replace(/^-+|-+$/g, '')
     .toLowerCase();
   if (!stem) stem = 'image';
+  if (!isPortableAssetName(stem)) stem = `image-${stem}`;
   const normalizedExtension = mimeType === 'image/jpeg' && suppliedExtension === '.jpeg' ? '.jpeg' : extension;
   return `${stem}${normalizedExtension}`;
 }
@@ -61,9 +62,9 @@ export async function stageAsset(stagingDirectory, root, code, request, reserved
   const originalName = safeAssetName(request.name, request.mimeType);
   const extension = path.extname(originalName);
   const stem = path.basename(originalName, extension);
-  const reserved = new Set([...manifest.assets.map(asset => asset.file), ...reservedFiles]);
+  const reserved = new Set([...manifest.assets.map(asset => asset.file), ...reservedFiles].map(file => file.toLowerCase()));
   let file = originalName;
-  for (let suffix = 2; reserved.has(file); suffix += 1) file = `${stem}-${suffix}${extension}`;
+  for (let suffix = 2; reserved.has(file.toLowerCase()); suffix += 1) file = `${stem}-${suffix}${extension}`;
   const entry = {
     file, type: request.type, creator: request.creator?.trim(), source: request.source?.trim(),
     license: request.license?.trim(), alt: request.decorative ? '' : request.alt?.trim(),
@@ -110,7 +111,7 @@ export async function commitHandoutWithAssets(root, handoutFile, source, code, s
 }
 
 export async function deleteAsset(root, code, file, handoutSource) {
-  if (path.basename(file) !== file) throw Error('Invalid asset file name');
+  if (!isPortableAssetName(file)) throw Error('Invalid asset file name');
   const reference = `../assets/handouts/${code}/${file}`;
   if (handoutSource.includes(reference)) throw Error('Remove the image from the handout and save before deleting its asset');
   const record = await readManifest(root, code);

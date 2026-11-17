@@ -92,8 +92,9 @@ async function renderSources(root, outputRoot, documents, manifests) {
   );
 }
 
-export function browserOptions() {
+export function browserOptions({ temporaryRoot, userDataDir } = {}) {
   return {
+    ...(userDataDir ? { userDataDir } : {}),
     headless: true,
     args: [
       '--disable-background-networking',
@@ -109,7 +110,7 @@ export function browserOptions() {
       '--no-pings',
       '--no-sandbox'
     ],
-    env: { ...process.env, LANG: 'en_US.UTF-8', TZ: 'UTC' }
+    env: { ...process.env, LANG: 'en_US.UTF-8', TZ: 'UTC', ...(temporaryRoot ? { TMPDIR: temporaryRoot, TMP: temporaryRoot, TEMP: temporaryRoot } : {}) }
   };
 }
 
