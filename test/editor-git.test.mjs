@@ -83,7 +83,7 @@ test('GitHub command failures give recovery steps without exposing CLI output or
   }
 });
 
-async function fixture(t, { privateRepo = false, privatePage = false } = {}) {
+async function fixture(t, { privateRepo = false, privatePage = false, windowsPath = false } = {}) {
   const directory = await fs.mkdtemp(path.join(os.tmpdir(), 'editor-git-')); t.after(() => fs.rm(directory, { recursive: true, force: true }));
   const root = path.join(directory, 'checkout'), remote = path.join(directory, 'remote.git');
   await fs.mkdir(root); const git = (args, input) => runGitCommand('git', args, { cwd: root, input });
@@ -121,7 +121,7 @@ async function fixture(t, { privateRepo = false, privatePage = false } = {}) {
     remoteState.prs.push(pr); return JSON.stringify(pr);
   }
   const publisher = createGitPublisher({ run });
-  const target = async () => ({ root, publicRoot: path.join(directory, 'public'), private: privatePage, path: pagePath, code: 'STH-001', revision: digest(await fs.readFile(path.join(root, pagePath))) });
+  const target = async () => ({ root, publicRoot: path.join(directory, 'public'), private: privatePage, path: windowsPath ? pagePath.replaceAll('/', '\\') : pagePath, code: 'STH-001', revision: digest(await fs.readFile(path.join(root, pagePath))) });
   const prepare = async () => publisher.prepare(await target(), session);
   const publish = plan => publisher.publish(plan.token, session, 'Update preparedness handout', 'Review these edits.', async () => {});
   return { root, remote, git, publisher, target, prepare, publish, state: remoteState };
@@ -131,6 +131,28 @@ test('GitHub remote parsing rejects credentials and non-GitHub destinations', ()
   assert.equal(githubRemote('https://github.com/owner/repo.git'), 'owner/repo');
   assert.equal(githubRemote('git@github.com:owner/repo.git'), 'owner/repo');
   for (const remote of ['https://token@github.com/owner/repo.git', 'https://github.com.evil/owner/repo', '/tmp/repo', 'ssh://evil/repo']) assert.throws(() => githubRemote(remote));
+});
+
+test('Git publication accepts Windows source paths and preserves editor paths when verifying updates', async t => {
+  const f = await fixture(t, { windowsPath: true });
+  const nativePath = (await f.target()).path;
+  await fs.writeFile(path.join(f.root, pagePath), 'Windows handout edit\n');
+  await assert.rejects(f.publisher.prepare({ ...await f.target(), revision: 'stale' }, session), /saved handout changed/);
+  const plan = await f.prepare();
+  assert.deepEqual(plan.files, [pagePath]);
+  assert.match(plan.patch, /Windows handout edit/);
+  const first = await f.publisher.publish(plan.token, session, 'Update Windows handout', '', async target => {
+    assert.equal(target.path, nativePath);
+  });
+  assert.equal(await f.git(['show', `${first.commit}:${pagePath}`]), 'Windows handout edit\n');
+  assert.equal((await f.git(['ls-tree', '-r', '--name-only', first.commit])).trim().split('\n').filter(file => file === pagePath).length, 1);
+  await fs.writeFile(path.join(f.root, pagePath), 'Next Windows edit\n');
+  const next = await f.prepare();
+  assert.equal(next.branch, plan.branch);
+  assert.deepEqual(next.files, [pagePath]);
+  const second = await f.publish(next);
+  assert.equal(second.number, first.number);
+  assert.equal(await f.git(['show', `${second.commit}:${pagePath}`]), 'Next Windows edit\n');
 });
 
 test('Git publication includes only the page and declared assets and preserves the user checkout and index', async t => {
