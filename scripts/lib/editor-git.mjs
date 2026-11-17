@@ -138,7 +138,11 @@ export function createGitPublisher({ run = runGitCommand } = {}) {
     try { await git(info.root, ['fetch', '--no-tags', 'origin', `refs/heads/${base}:${ref}`], { label: 'Fetching the GitHub base branch' }); baseCommit = (await git(info.root, ['rev-parse', ref])).trim(); }
     finally { await git(info.root, ['update-ref', '-d', ref]).catch(() => {}); }
     const baseline = updating ? info.state.baseCommit : oldPr?.merged_at ? info.state.commit : info.state && oldPr?.state === 'closed' ? info.state.baseCommit : (await git(info.root, ['merge-base', info.head, baseCommit])).trim();
-    const assetDir = `assets/handouts/${target.code}`, scope = [target.path, assetDir];
+    // Git tree/index paths always use '/', even when the editor identifies a
+    // source with Windows separators. Keep target.path for editor verification
+    // and durable workflow state, which use the original library identifier.
+    const sourcePath = target.path.replaceAll('\\', '/');
+    const assetDir = `assets/handouts/${target.code}`, scope = [sourcePath, assetDir];
     if ((await git(info.root, ['diff', '--no-ext-diff', '--no-textconv', '--name-only', baseline, baseCommit, '--', ...scope])).trim()) throw fail('This handout or its assets changed on GitHub since your local baseline. Sync and review those changes before publishing; nothing was overwritten.');
     const parent = updating ? info.state.commit : baseCommit;
     const branch = updating ? info.state.branch : `editor/handout-${target.code}-${randomUUID().replaceAll('-', '').slice(0, 12)}`;
@@ -148,7 +152,7 @@ export function createGitPublisher({ run = runGitCommand } = {}) {
     }
     const worktrees = await git(info.root, ['worktree', 'list', '--porcelain']);
     if (worktrees.split('\n').includes(`branch refs/heads/${branch}`)) throw fail('This editor branch is checked out in a worktree. Switch that worktree before publishing.');
-    const files = new Set([target.path, `${assetDir}/manifest.json`]);
+    const files = new Set([sourcePath, `${assetDir}/manifest.json`]);
     for (const manifest of [await readFile(info.root, `${assetDir}/manifest.json`), await storedFile(info.root, parent, `${assetDir}/manifest.json`)]) {
       if (!manifest) continue;
       for (const entry of JSON.parse(manifest.toString()).assets || []) {
@@ -164,7 +168,7 @@ export function createGitPublisher({ run = runGitCommand } = {}) {
       await git(info.root, ['read-tree', parent], { env });
       for (const file of files) {
         const bytes = await readFile(info.root, file); snapshots.push({ file, hash: bytes ? hash(bytes) : null });
-        if (file === target.path && (!bytes || hash(bytes) !== target.revision)) throw fail('The saved handout changed. Save and prepare it again.');
+        if (file === sourcePath && (!bytes || hash(bytes) !== target.revision)) throw fail('The saved handout changed. Save and prepare it again.');
         if (!bytes) { await git(info.root, ['update-index', '--force-remove', '--', file], { env }); continue; }
         size += bytes.length; if (size > 30_000_000) throw fail('The handout and assets exceed the 30 MB editor publication limit.');
         const tracked = await git(info.root, ['ls-tree', parent, '--', file]);
@@ -179,7 +183,7 @@ export function createGitPublisher({ run = runGitCommand } = {}) {
       changed = Boolean((await git(info.root, ['diff', '--name-only', parent, tree, '--', ...scope])).trim());
       names = (await git(info.root, ['diff', '--no-renames', '--name-only', '-z', baseCommit, tree, '--', ...scope])).split('\0').filter(Boolean);
       if (!names.length && !updating) throw fail('These saved files already match GitHub. There is nothing to publish.');
-      patch = await git(info.root, ['diff', '--no-ext-diff', '--no-textconv', '--no-renames', baseCommit, tree, '--', target.path, `${assetDir}/manifest.json`]);
+      patch = await git(info.root, ['diff', '--no-ext-diff', '--no-textconv', '--no-renames', baseCommit, tree, '--', sourcePath, `${assetDir}/manifest.json`]);
       if (patch.length > 150_000) throw fail('The text diff is too large to review in the editor. Use the normal Git workflow for this change.');
       diff = await git(info.root, ['diff', '--no-ext-diff', '--no-textconv', '--no-renames', '--stat', baseCommit, tree, '--', ...scope]);
     } finally { await fs.rm(directory, { recursive: true, force: true }); }
