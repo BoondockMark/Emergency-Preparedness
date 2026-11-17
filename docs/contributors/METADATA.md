@@ -1,3 +1,6 @@
+> Implementation paths in this guide refer to the BinderPress application
+> dependency, which now owns validation and rendering.
+
 # Handout metadata
 
 Every handout starts with block-style YAML between `---` delimiters. The build

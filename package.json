@@ -4,25 +4,24 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "postinstall": "node scripts/setup.mjs",
-    "setup:private": "node scripts/setup.mjs",
-    "build": "node scripts/build.mjs",
-    "build:public": "node scripts/build.mjs --public",
-    "build:private": "node scripts/build.mjs --private",
-    "check": "node scripts/build.mjs --check",
-    "lint:layout": "node scripts/lint-layout.mjs",
-    "test:visual:update": "node scripts/build.mjs --update-visuals",
-    "preview": "node scripts/preview.mjs",
-    "editor": "node scripts/editor.mjs",
-    "editor:private": "node scripts/editor.mjs --private",
-    "editor:public": "node scripts/editor.mjs --public",
-    "test": "node --test"
+    "postinstall": "binderpress setup:private",
+    "setup:private": "binderpress setup:private",
+    "build": "binderpress build",
+    "build:public": "binderpress build --public",
+    "build:private": "binderpress build --private",
+    "check": "binderpress check",
+    "lint:layout": "binderpress lint:layout",
+    "preview": "binderpress preview",
+    "editor": "binderpress editor",
+    "editor:private": "binderpress editor --private",
+    "editor:public": "binderpress editor --public",
+    "test": "node --test test/*.test.mjs"
   },
   "engines": {
     "node": ">=22.12.0"
   },
   "dependencies": {
-    "puppeteer": "^25.12.0"
+    "binderpress": "https://codeload.github.com/BoondockMark/BinderPress/tar.gz/048c82db8ce9d2c132a13266b2a01803cba4f6a7"
   },
   "allowScripts": {
     "puppeteer@25.12.0": true

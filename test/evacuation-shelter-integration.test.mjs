@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { readFile, readdir } from 'node:fs/promises';
 import path from 'node:path';
 import test from 'node:test';
-import { loadDocument } from '../scripts/lib/metadata.mjs';
+import { loadDocument } from 'binderpress/scripts/lib/metadata.mjs';
 
 const directory = new URL('../handouts/evacuation-shelter/', import.meta.url);
 const catalog = new Map([

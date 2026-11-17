@@ -1,0 +1,49 @@
+{
+  "title": "Emergency Preparedness Binder",
+  "organization": "La Habra Heights Fire Watch",
+  "outputName": "EMERGENCY_PREPAREDNESS_BINDER",
+  "indexClass": "lhhfw-binder",
+  "privateSibling": "Emergency-Preparedness-Private",
+  "sections": [
+    {
+      "title": "Start Here",
+      "code": "STH",
+      "folder": "start-here"
+    },
+    {
+      "title": "Alerts & Communication",
+      "code": "COM",
+      "folder": "alerts-communication"
+    },
+    {
+      "title": "Evacuation & Shelter",
+      "code": "EVS",
+      "folder": "evacuation-shelter"
+    },
+    {
+      "title": "Water, Food & Cooking",
+      "code": "WFC",
+      "folder": "water-food-cooking"
+    },
+    {
+      "title": "Home & Utilities",
+      "code": "HUT",
+      "folder": "home-utilities"
+    },
+    {
+      "title": "Hands-On Skills",
+      "code": "SKL",
+      "folder": "hands-on-skills"
+    },
+    {
+      "title": "Hazard Guides",
+      "code": "HZD",
+      "folder": "hazard-guides"
+    },
+    {
+      "title": "Plans & Records",
+      "code": "PRP",
+      "folder": "plans-records"
+    }
+  ]
+}
