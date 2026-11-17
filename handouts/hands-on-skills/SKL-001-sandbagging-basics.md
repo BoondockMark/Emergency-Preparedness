@@ -3,7 +3,7 @@ code: SKL-001
 title: Sandbags for Home Runoff
 section: Hands-On Skills
 sectionNumber: 6
-status: draft
+status: under-review
 version: 0.4
 lastReviewed: 2026-10-02
 reviewers:
