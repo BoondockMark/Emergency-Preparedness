@@ -12,12 +12,31 @@ export function githubRemote(value) {
 }
 export function runGitCommand(command, args, { cwd, input, env = {}, label = command } = {}) {
   return new Promise((resolve, reject) => {
-    const child = execFile(command, args, { cwd, env: { ...process.env, GIT_TERMINAL_PROMPT: '0', GH_PROMPT_DISABLED: '1', GCM_INTERACTIVE: 'never', ...env }, timeout: 45_000, maxBuffer: 2_000_000, encoding: 'utf8' }, (error, stdout) => {
-      if (error) reject(fail(error.code === 'ENOENT' ? `${command} is not installed. Install it, then try again.` : `${label} failed. Check repository access and Git/GitHub CLI setup, then retry. Your saved files are preserved.`));
+    const environment = { ...process.env, GIT_TERMINAL_PROMPT: '0', GH_PROMPT_DISABLED: '1', GCM_INTERACTIVE: 'never', ...env };
+    const child = execFile(command, args, { cwd, env: environment, timeout: 45_000, maxBuffer: 2_000_000, encoding: 'utf8' }, (error, stdout, stderr) => {
+      if (error) reject(fail(error.code === 'ENOENT' ? `${command} is not installed. Install it, then try again.` : command === 'gh' ? githubFailure(error, stderr, environment) : `${label} failed. Check repository access and Git/GitHub CLI setup, then retry. Your saved files are preserved.`));
       else resolve(stdout);
     });
     child.stdin.on('error', () => {}); child.stdin.end(input);
   });
+}
+
+function githubFailure(error, stderr = '', environment) {
+  // Classify known failures without returning CLI output, which may contain credentials.
+  let message;
+  if (error.killed) message = 'The GitHub request timed out. Check your connection and retry.';
+  else if (/HTTP 401|bad credentials|authentication token|gh auth login|not logged into/i.test(stderr)) {
+    const token = environment.GH_TOKEN ? 'GH_TOKEN' : environment.GITHUB_TOKEN ? 'GITHUB_TOKEN' : null;
+    message = token
+      ? `GitHub authentication failed. The editor is using ${token}, which overrides saved GitHub CLI credentials. Replace or unset it in the environment that starts the editor, then restart the editor. Check gh auth status on that machine.`
+      : 'GitHub authentication is missing or expired. Run gh auth login --hostname github.com on the machine running the editor, then retry.';
+  } else if (/rate limit/i.test(stderr)) message = 'GitHub rate limit reached. Wait for the limit to reset, then retry.';
+  else if (/saml|single sign.on|\bsso\b/i.test(stderr)) message = 'GitHub requires organization SSO authorization. Authorize the editor’s GitHub CLI credentials for the organization, then retry.';
+  else if (/HTTP 403|resource not accessible|HTTP 404|not found/i.test(stderr)) message = 'GitHub denied repository access. Check origin and run gh auth status on the machine running the editor. The signed-in account or token needs repository write access and permission to create pull requests.';
+  else if (/HTTP 5\d\d/i.test(stderr)) message = 'GitHub is temporarily unavailable. Retry in a few minutes.';
+  else if (/could not resolve|no such host|dial tcp|connection refused|connection reset|network is unreachable|TLS|certificate|proxy|Forbidden|\bGet "https:\/\/api\.github\.com/i.test(stderr)) message = 'The editor could not connect to the GitHub API. Check the network, proxy, firewall, and environment access to api.github.com, then retry.';
+  else message = 'GitHub request failed. Run gh auth status and gh api repos/OWNER/REPO (using the origin repository) on the machine running the editor to diagnose access, then retry.';
+  return `${message} Your saved files are preserved.`;
 }
 
 export function createGitPublisher({ run = runGitCommand } = {}) {

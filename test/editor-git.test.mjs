@@ -8,6 +8,38 @@ import { createGitPublisher, githubRemote, runGitCommand } from '../scripts/lib/
 const digest = value => createHash('sha256').update(value).digest('hex');
 const pagePath = 'handouts/section/STH-001.md';
 const session = 'test-git-session';
+
+test('GitHub command failures give recovery steps without exposing CLI output or tokens', async t => {
+  const directory = await fs.mkdtemp(path.join(os.tmpdir(), 'editor-gh-errors-'));
+  t.after(() => fs.rm(directory, { recursive: true, force: true }));
+  await fs.writeFile(path.join(directory, 'gh'), `#!${process.execPath}\nprocess.stderr.write(process.env.TEST_GH_ERROR); process.exit(1);\n`, { mode: 0o700 });
+  const cases = [
+    ['gh: Bad credentials (HTTP 401)', { GH_TOKEN: 'secret-value' }, /GH_TOKEN, which overrides/],
+    ['gh: Bad credentials (HTTP 401)', { GITHUB_TOKEN: 'secret-value' }, /GITHUB_TOKEN, which overrides/],
+    ['To get started with GitHub CLI, please run: gh auth login', {}, /gh auth login --hostname github.com/],
+    ['gh: Resource not accessible by personal access token (HTTP 403)', {}, /repository write access/],
+    ['gh: Not Found (HTTP 404)', {}, /Check origin/],
+    ['gh: API rate limit exceeded (HTTP 403)', {}, /rate limit reached/],
+    ['gh: Resource protected by organization SAML enforcement (HTTP 403)', {}, /SSO authorization/],
+    ['gh: Service Unavailable (HTTP 503)', {}, /temporarily unavailable/],
+    ['Get "https://api.github.com/repos/test/repo": Forbidden', {}, /network, proxy, firewall/],
+    ['dial tcp: lookup api.github.com: no such host', {}, /could not connect/],
+    ['An unknown failure', {}, /gh api repos\/OWNER\/REPO/]
+  ];
+  for (const [stderr, credentials, expected] of cases) {
+    await assert.rejects(runGitCommand('gh', ['api', 'repos/test/repo'], {
+      cwd: directory,
+      env: { PATH: directory, GH_TOKEN: '', GITHUB_TOKEN: '', ...credentials, TEST_GH_ERROR: `${stderr}\nsecret-value` }
+    }), error => {
+      assert.equal(error.status, 409);
+      assert.match(error.message, expected);
+      assert.match(error.message, /saved files are preserved/);
+      assert.doesNotMatch(error.message, /secret-value/);
+      return true;
+    });
+  }
+});
+
 async function fixture(t, { privateRepo = false, privatePage = false } = {}) {
   const directory = await fs.mkdtemp(path.join(os.tmpdir(), 'editor-git-')); t.after(() => fs.rm(directory, { recursive: true, force: true }));
   const root = path.join(directory, 'checkout'), remote = path.join(directory, 'remote.git');

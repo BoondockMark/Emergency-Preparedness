@@ -267,6 +267,13 @@ gh auth login --hostname github.com
 gh auth setup-git --hostname github.com
 ```
 
+Run these commands on the machine running the editor. Use `gh auth status` and
+`gh api repos/OWNER/REPO` (substituting the origin repository) to diagnose access.
+`GH_TOKEN` and `GITHUB_TOKEN` override saved GitHub CLI credentials. If an
+environment token is invalid or lacks repository and pull request write access,
+replace or unset it in the editor's launch environment, then restart the editor.
+The environment must also allow requests to `api.github.com`.
+
 The origin's fetch and push URLs must identify the same repository. Your account
 needs write access. Private handouts use their separate private checkout and
 require GitHub to confirm the target repository is private, including on retries.
