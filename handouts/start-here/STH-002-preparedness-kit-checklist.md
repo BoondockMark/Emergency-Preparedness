@@ -4,8 +4,8 @@ title: Build a Two-Week Preparedness Kit
 section: Start Here
 sectionNumber: 1
 status: under-review
-version: 0.2
-lastReviewed: 2026-09-25
+version: 0.3
+lastReviewed: 2026-11-13
 reviewers:
   editor: unassigned
   subjectMatter: unassigned
@@ -131,6 +131,6 @@ If buying everything now is not possible, start with what you already have. Do n
 
 Ask local emergency management, public health, utilities, schools, disability organizations, food assistance programs, animal services, and community groups about local guidance or assistance.
 
-<p><strong>Go deeper:</strong> See <strong>Section 3 — Evacuation & Shelter</strong>, <strong>Section 4 — Water, Food & Cooking</strong>, <strong>Section 7 — Hazard Guides</strong>, and <strong>Section 8 — Plans & Records</strong> for detailed procedures.</p>
+<p><strong>Go deeper:</strong> Use <strong>EVS-002</strong> for portable go-bags, <strong>COM-005</strong> for household contacts, <strong>STH-004–006</strong> for access, caregiver, and animal needs, and <strong>STH-007</strong> for maintenance records.</p>
 
 <div class="sources">Sources: Ready.gov, “Build A Kit,” “Personal Needs,” “Individuals with Disabilities,” and “Pets and Animals”; CDC, “Creating and Storing an Emergency Water Supply”; American Red Cross, “Survival Kit Supplies”; FDA, “Food.” Accessed 2026-09-25.</div>

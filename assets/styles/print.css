@@ -3,26 +3,11 @@
  * Geometry is expressed in physical units so browser and PDF output agree.
  * Component intent and approved values are documented in docs/contributors/PRINT-DESIGN-SYSTEM.md.
  */
-@font-face {
-  font-family: "Binder Sans";
-  src: url("./fonts/DejaVuSans.ttf") format("truetype");
-  font-style: normal;
-  font-weight: 400;
-  font-display: block;
-}
-@font-face {
-  font-family: "Binder Sans";
-  src: url("./fonts/DejaVuSans-Bold.ttf") format("truetype");
-  font-style: normal;
-  font-weight: 700 900;
-  font-display: block;
-}
-
 @page { size: Letter portrait; margin: 0; }
 
 :root {
   /* Typography: never set instructional text below --type-body. */
-  --font-sans: "Binder Sans", sans-serif;
+  --font-sans: Arial, Helvetica, sans-serif;
   --type-title: 25pt;
   --type-title-compact: 19pt;
   --type-lede: 11pt;

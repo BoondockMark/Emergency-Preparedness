@@ -26,7 +26,6 @@ async function setup(t, { gitPublisher } = {}) {
   await fs.copyFile(path.join(repository, 'templates/handout.html'), path.join(root, 'templates/handout.html'));
   for (const name of ['index.html', 'editor.js', 'editor.css', 'editor-model.js', 'preview-controls.js', 'library-controls.js', 'proof-controls.js', 'change-controls.js', 'change-model.js', 'navigation-controls.js', 'navigation-model.js', 'command-controls.js', 'link-controls.js', 'link-model.js', 'review-controls.js', 'review-model.js', 'git-controls.js']) await fs.copyFile(path.join(repository, 'editor', name), path.join(root, 'editor', name));
   await fs.copyFile(path.join(repository, 'assets/styles/print.css'), path.join(root, 'assets/styles/print.css'));
-  await fs.cp(path.join(repository, 'assets/fonts'), path.join(root, 'assets/fonts'), { recursive: true });
   const assetDirectory = path.join(root, 'assets/handouts/STH-001');
   await fs.mkdir(assetDirectory, { recursive: true });
   await fs.writeFile(path.join(assetDirectory, 'route.svg'), '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10"><title>Route</title><desc>A route marker</desc><circle cx="5" cy="5" r="4"/></svg>');

@@ -3,7 +3,7 @@ import test from 'node:test';
 import { inspectEmbeddedFonts, normalizePdfDates } from '../scripts/lib/pdf-validation.mjs';
 import { renderPrintPdf } from '../scripts/lib/artifact-generation.mjs';
 
-test('PDF validation detects system fallback fonts declared only in FontName', async () => {
+test('PDF validation accepts system fonts and still requires an embedded font program', async () => {
   const pdf = Buffer.from(`%PDF-1.4
 1 0 obj
 <</Type /Catalog /Pages 2 0 R>>
@@ -12,10 +12,10 @@ endobj
 <</Type /Pages /Count 1>>
 endobj
 3 0 obj
-<</BaseFont /AAAAAA+DejaVuSans /FontFile2 4 0 R>>
+<</BaseFont /AAAAAA+ArialMT /FontFile2 4 0 R>>
 endobj
 5 0 obj
-<</FontName /BAAAAA+NotoSansSymbols2-Regular>>
+<</FontName /BAAAAA+Arial-BoldMT>>
 endobj
 6 0 obj
 <</CreationDate (D:20261029000000+00'00') /ModDate (D:20261029000000+00'00')>>
@@ -23,10 +23,10 @@ endobj
 trailer
 <</Root 1 0 R>>
 `, 'latin1');
-  assert.deepEqual(inspectEmbeddedFonts(pdf).fontNames, ['AAAAAA+DejaVuSans', 'BAAAAA+NotoSansSymbols2-Regular']);
-  await assert.rejects(renderPrintPdf({ pdf: async () => pdf }, 'TEST', 1), /unbundled fonts.*NotoSansSymbols2/);
-  const bundledOnly = Buffer.from(pdf.toString('latin1').replace('BAAAAA+NotoSansSymbols2-Regular', 'AAAAAA+DejaVuSans'));
-  await renderPrintPdf({ pdf: async () => bundledOnly }, 'TEST', 1);
+  assert.deepEqual(inspectEmbeddedFonts(pdf).fontNames, ['AAAAAA+ArialMT', 'BAAAAA+Arial-BoldMT']);
+  await renderPrintPdf({ pdf: async () => pdf }, 'TEST', 1);
+  const withoutEmbedding = Buffer.from(pdf.toString('latin1').replace('/FontFile2 4 0 R', ''));
+  await assert.rejects(renderPrintPdf({ pdf: async () => withoutEmbedding }, 'TEST', 1), /no embedded font program/);
 });
 
 test('Chrome PDF timestamps normalize without moving byte offsets', () => {

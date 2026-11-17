@@ -3,26 +3,11 @@
  * Geometry is expressed in physical units so browser and PDF output agree.
  * Component intent and approved values are documented in docs/contributors/PRINT-DESIGN-SYSTEM.md.
  */
-@font-face {
-  font-family: "Binder Sans";
-  src: url("./fonts/DejaVuSans.ttf") format("truetype");
-  font-style: normal;
-  font-weight: 400;
-  font-display: block;
-}
-@font-face {
-  font-family: "Binder Sans";
-  src: url("./fonts/DejaVuSans-Bold.ttf") format("truetype");
-  font-style: normal;
-  font-weight: 700 900;
-  font-display: block;
-}
-
 @page { size: Letter portrait; margin: 0; }
 
 :root {
   /* Typography: never set instructional text below --type-body. */
-  --font-sans: "Binder Sans", sans-serif;
+  --font-sans: Arial, Helvetica, sans-serif;
   --type-title: 25pt;
   --type-title-compact: 19pt;
   --type-lede: 11pt;
@@ -150,6 +135,14 @@ caption { caption-side: top; text-align: left; color: var(--ink-secondary); font
 th, td { border: 1px solid var(--rule-strong); padding: .055in .07in; text-align: left; vertical-align: top; }
 th { background: var(--shade-medium); font-weight: 800; }
 
+.toc-sheet .content { right: var(--page-inner); }
+.toc-table { margin-top: .16in; table-layout: fixed; }
+.toc-table th, .toc-table td { font-size: 9pt; line-height: 1.12; padding: .035in .05in; }
+.toc-table th:nth-child(1) { width: .72in; }
+.toc-table th:nth-child(3) { width: 1.55in; }
+.toc-table th:nth-child(4) { width: .68in; }
+.toc-pages { text-align: right; white-space: nowrap; }
+
 .figure { margin: .13in 0; break-inside: avoid; }
 .figure--full { width: 100%; }
 .figure--half { width: calc(50% - .075in); }
@@ -171,6 +164,43 @@ th { background: var(--shade-medium); font-weight: 800; }
 .footer span:nth-child(2) { text-align: center; }
 .footer span:last-child { text-align: right; }
 .placeholder { background: repeating-linear-gradient(-45deg, var(--paper), var(--paper) 5px, var(--shade-soft) 5px, var(--shade-soft) 10px); border: 1px dashed var(--rule-strong); padding: .08in; }
+
+/* SKL-001: eight illustrated topic pages, using the shared type/spacing tokens. */
+.sheet[data-handout-code="SKL-001"] { --ink: #101b2a; --warning-ink: #b30000; --danger-ink: #b30000; --danger-fill: #fff0f0; }
+.sheet[data-handout-code="SKL-001"] .kicker { font-size: var(--type-micro); letter-spacing: 0; }
+.sheet[data-handout-code="SKL-001"] h1 { font-size: var(--type-title); }
+.sheet[data-handout-code="SKL-001"] h1.title--compact { font-size: var(--type-title-compact); }
+.sandbag-page .lede { margin-bottom: var(--space-4); }
+.sandbag-page h2 { margin-top: var(--space-4); margin-bottom: var(--space-2); }
+.sandbag-page h3 { margin-top: var(--space-2); }
+.sandbag-page p, .sandbag-page li { line-height: 1.2; }
+.sandbag-page li { margin-bottom: var(--space-1); }
+.sandbag-page ul, .sandbag-page ol { margin-top: var(--space-2); margin-bottom: var(--space-2); }
+.sandbag-page .figure { margin: var(--space-2) 0; }
+.sandbag-page .warning { font-size: var(--type-body); line-height: 1.2; margin: var(--space-3) 0; }
+.sandbag-page .grid > .warning { margin-top: 0; }
+.sandbag-page .figure figcaption { text-align: center; }
+.sandbag-page .sandbag-equipment ul { margin-top: 0; }
+.sandbag-step { break-inside: avoid; }
+.sandbag-fixture img { height: 2.05in; }
+.sandbag-lift img { height: 2in; }
+.sandbag-reset img { height: 1.6in; }
+.sandbag-fold img { height: .72in; }
+.sandbag-pallet img { height: 1.1in; }
+.sandbag-plan img { height: 4.6in; }
+.sandbag-overlap img { height: 1.15in; }
+.sandbag-stacks img { height: 1.55in; }
+.sandbag-opening img { height: 2.1in; }
+.sandbag-water-row { grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); }
+.sandbag-water img { height: 1.55in; }
+.sandbag-mistake { border: 1px solid var(--rule); padding: var(--space-2); break-inside: avoid; }
+.sandbag-mistake h2 { font-size: var(--type-h3); text-transform: none; letter-spacing: 0; border: 0; margin: 0; padding: 0; }
+.sandbag-mistakes { margin-bottom: var(--space-3); }
+.sandbag-pair img { height: 1.62in; }
+.sandbag-field-row { grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); }
+.sandbag-field img { height: 3.9in; }
+.sandbag-checklist { padding: 0; border: 0; margin: var(--space-2) 0; }
+.sandbag-flow img { filter: none; }
 
 @media print { body { background: var(--paper); } .sheet { margin: 0; box-shadow: none; } }
 @media screen and (max-width: 900px) { body { overflow-x: auto; } }

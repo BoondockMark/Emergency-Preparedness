@@ -4,8 +4,8 @@ title: Evacuation Readiness Checklist
 section: Evacuation & Shelter
 sectionNumber: 3
 status: draft
-version: 0.1
-lastReviewed: 2026-09-25
+version: 0.2
+lastReviewed: 2026-11-13
 reviewers:
   editor: unassigned
   subjectMatter: unassigned
@@ -36,7 +36,7 @@ sources:
     url: https://www.ready.gov/pets
     accessDate: 2026-09-25
 ---
-<p class="lede">Prepare and practice before an emergency so everyone can leave promptly. Check what is ready; write in what still needs action.</p>
+<p class="lede">Preparing today: complete sections 1–5. Leaving now: use the final page; do not finish planning worksheets first.</p>
 
 <div class="warning"><strong>Life safety comes first.</strong> If danger is immediate or officials direct you to evacuate, leave now. Do not wait to finish this checklist, gather belongings, or complete home-departure tasks.</div>
 
@@ -54,7 +54,7 @@ sources:
 <li>We will use official information rather than rumors and will not enter a closed area until authorities permit re-entry.</li>
 </ul></div>
 
-See **EVS-003** for evacuation timing, levels, and locally verified terminology.
+Use **COM-003** for alert setup and **COM-004** for official information. See **EVS-003** for departure decisions and local terminology that still needs verification.
 
 ### 2. Contacts, meeting places, and destinations selected
 
@@ -120,7 +120,7 @@ See **EVS-002** for go-bags, documents, medicines, power, and necessary equipmen
 Person/animal: __________________ Need: __________________ Primary helper: _________________<br>
 Backup helper/contact: __________________________________________________________________
 
-See **EVS-006** for children and animals and **EVS-010** for access needs and support networks.
+See **EVS-006** for children and animals, **EVS-010** for access needs and support networks, and **EVS-011** for small-animal evacuation.
 
 <!-- pagebreak -->
 

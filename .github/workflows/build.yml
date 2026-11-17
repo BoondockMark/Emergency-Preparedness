@@ -23,10 +23,20 @@ jobs:
         env:
           PUPPETEER_CACHE_DIR: ${{ runner.temp }}/puppeteer
       - run: npm run check -- --public
+        id: artifact-check
         env:
           PUPPETEER_CACHE_DIR: ${{ runner.temp }}/puppeteer
       - name: Confirm generated files are committed
         run: git diff --exit-code -- BINDER_INDEX.md docs/moodle-index.html docs/pdfs docs/previews
+      # Keep the check failed, but upload the newly rendered candidates so a
+      # maintainer can review and commit stale artifacts from the CI renderer.
+      - name: Regenerate stale artifacts for review
+        if: failure() && steps.artifact-check.outcome == 'failure'
+        run: |
+          npm run build:public
+          git diff --binary -- docs/pdfs
+        env:
+          PUPPETEER_CACHE_DIR: ${{ runner.temp }}/puppeteer
       - name: Upload proofs and failure diagnostics
         if: always()
         uses: actions/upload-artifact@v4
@@ -39,3 +49,33 @@ jobs:
             build/diagnostics/**
           if-no-files-found: warn
 # Deliberately no deployment job: reviewed files are handed to Moodle manually.
+
+  windows-build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+        env:
+          PUPPETEER_CACHE_DIR: ${{ runner.temp }}/puppeteer
+      - run: node --test test/pdf-dates.test.mjs
+      - run: npm run lint:layout
+        env:
+          PUPPETEER_CACHE_DIR: ${{ runner.temp }}/puppeteer
+      # Windows uses its installed fonts; Linux remains the release-artifact
+      # environment. Validate the build without comparing PDF bytes across OSes.
+      - run: npm run build:public
+        env:
+          PUPPETEER_CACHE_DIR: ${{ runner.temp }}/puppeteer
+      - name: Upload Windows proofs and diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-handout-proofs-${{ github.sha }}
+          path: |
+            docs/pdfs/*.pdf
+            build/diagnostics/**
+          if-no-files-found: warn
