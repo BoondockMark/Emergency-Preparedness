@@ -14,11 +14,37 @@ export function runGitCommand(command, args, { cwd, input, env = {}, label = com
   return new Promise((resolve, reject) => {
     const environment = { ...process.env, GIT_TERMINAL_PROMPT: '0', GH_PROMPT_DISABLED: '1', GCM_INTERACTIVE: 'never', ...env };
     const child = execFile(command, args, { cwd, env: environment, timeout: 45_000, maxBuffer: 2_000_000, encoding: 'utf8' }, (error, stdout, stderr) => {
-      if (error) reject(fail(error.code === 'ENOENT' ? `${command} is not installed. Install it, then try again.` : command === 'gh' ? githubFailure(error, stderr, environment) : `${label} failed. Check repository access and Git/GitHub CLI setup, then retry. Your saved files are preserved.`));
+      if (error) reject(fail(error.code === 'ENOENT' ? `${command} is not installed. Install it, then try again.` : command === 'gh' ? githubFailure(error, stderr, environment) : command === 'git' ? gitFailure(error, args, stderr, environment, label) : `${label} failed. Check repository access and Git/GitHub CLI setup, then retry. Your saved files are preserved.`));
       else resolve(stdout);
     });
     child.stdin.on('error', () => {}); child.stdin.end(input);
   });
+}
+
+export function gitFailure(error, args, stderr = '', environment = {}, label = 'git') {
+  const step = label === 'git' ? `git ${args[0]}` : `${label} (git ${args[0]})`;
+  let help;
+  if (error.killed) help = 'The command timed out. Check the connection for network commands, then retry.';
+  else if (/not a git repository/i.test(stderr)) help = 'Run the editor from the handout library’s Git checkout.';
+  else if (/dubious ownership|unsafe repository/i.test(stderr)) help = 'Git does not trust this checkout’s ownership. Review the ownership and Git safe.directory configuration on the machine running the editor.';
+  else if (/unable to auto-detect email|identity unknown|empty ident name/i.test(stderr)) help = 'Configure git config user.name and git config user.email in this checkout.';
+  else if (/authentication failed|could not read Username|terminal prompts disabled|permission denied \(publickey\)/i.test(stderr)) help = 'Git transport authentication failed. GitHub CLI access alone does not configure Git. For HTTPS, run gh auth setup-git --hostname github.com, then retry.';
+  else if (args[0] === 'merge-base' && error.code === 1 && !stderr.trim()) help = 'The local checkout and GitHub base branch have no common commit available. Check for a shallow checkout or unrelated history before syncing.';
+  else if (/unknown (?:option|switch)|unrecognized option/i.test(stderr)) help = 'Check git --version and update Git for Windows or your Git installation, then retry.';
+  else help = 'Run this Git step from the library checkout on the machine running the editor to investigate.';
+  // Show Git’s reason, but never echo command arguments (which can contain a
+  // remote credential) or environment credentials into the browser response.
+  let detail = stderr;
+  for (const [name, value] of Object.entries(environment)) {
+    if (/(?:TOKEN|PASSWORD|SECRET|CREDENTIAL|AUTHORIZATION|API_KEY)/i.test(name) && typeof value === 'string' && value.length >= 4) detail = detail.replaceAll(value, '[redacted]');
+  }
+  detail = detail.replace(/https?:\/\/[^\s/]*@/gi, 'https://[redacted]@')
+    .replace(/\b(?:gh[pousr]_[A-Za-z0-9_]+|github_pat_[A-Za-z0-9_]+)/g, '[redacted]')
+    .replace(/(authorization\s*:\s*)(?:basic|bearer)\s+\S+/gi, '$1[redacted]')
+    .replace(/([?&](?:access_token|token|password|secret)=)[^\s&]+/gi, '$1[redacted]')
+    .replace(/[\x00-\x1f\x7f]+/g, ' ').trim().slice(0, 1200);
+  const code = typeof error.code === 'number' ? ` (exit ${error.code})` : /^[A-Z][A-Z0-9_]*$/.test(error.code || '') ? ` (${error.code})` : '';
+  return `${step} failed${code}. ${help}${detail ? ` Git reported: ${detail}` : ''} Your saved files are preserved.`;
 }
 
 function githubFailure(error, stderr = '', environment) {
