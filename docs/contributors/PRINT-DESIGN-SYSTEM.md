@@ -1,3 +1,7 @@
+> The application styles and component fixtures described here now live in
+> BinderPress. Make shared-design changes there, then validate this binder with
+> the updated pinned application dependency.
+
 # Print design system
 
 This is the approved reference for resident-facing US Letter handouts. The
