@@ -3,12 +3,12 @@ code: COM-002
 title: Radio Usage and Etiquette
 section: Alerts & Communication
 sectionNumber: 2
-status: draft
+status: approved
 version: 0.3
 lastReviewed: 2026-10-23
 reviewers:
-  editor: unassigned
-  subjectMatter: unassigned
+  editor: Mark
+  subjectMatter: Mark J Hughes
 sources:
   - type: local
     title: Firewatch Heights 6 radio settings and directed-net practices
@@ -94,9 +94,9 @@ sources:
 
 <p><strong>Follow the directed procedure even when the channel sounds quiet.</strong> Net Control may be waiting for a reply or coordinating a relay. Listen continuously, leave pauses for urgent calls, and keep unrelated conversation off the net. Net Control coordinates radio traffic; that role does not grant incident command authority.</p>
 
-<div class="local-info"><strong>[VERIFY] Changing modes:</strong> The designated operator announces when a directed net starts, its purpose, and its channel. Use directed procedures until Net Control explicitly closes the net or transfers control. A pause or a change of operator does not return the channel to normal operation.</div>
+<div class="local-info"><strong>Changing modes:</strong> The designated operator announces when a directed net starts, its purpose, and its channel. Use directed procedures until Net Control explicitly closes the net or transfers control. A pause or a change of operator does not return the channel to normal operation.</div>
 
-<div class="sources">SAMPLE TEXT — NOT APPROVED ADVICE. Fire Watch owner brief (October 23, 2026). General net principles: IARU, Emergency Telecommunications Guide (September 2016), Chapters 7–11; accessed October 23, 2026. www.iaru.org/wp-content/uploads/2020/01/emcommguide_1sept2016.pdf</div>
+<div class="sources">Fire Watch owner brief (October 23, 2026). General net principles: IARU, Emergency Telecommunications Guide (September 2016), Chapters 7–11; accessed October 23, 2026. www.iaru.org/wp-content/uploads/2020/01/emcommguide_1sept2016.pdf</div>
 
 <!-- pagebreak -->
 <!-- page-title: Radio Calls and Emergency Traffic -->
@@ -109,9 +109,7 @@ sources:
 <li><strong>Call and identify:</strong> “Net Control, [callsign].” Release and wait for “Go ahead.” If unanswered, pause and try once more.</li>
 <li><strong>Report</strong> location, observation, time, threats, action taken, and help needed. Identify unconfirmed information.</li>
 <li><strong>Confirm.</strong> Read back critical details; ask “Say again” if unclear. End with your callsign; resume monitoring.</li>
-</ol>
-
-<div class="local-info"><strong>[VERIFY] Fire Watch identification:</strong> Use your assigned three-digit callsign and any legally required station ID. Address city personnel by title. Outside a net, call the member directly: “145, 238.” Wait for “This is 238, go ahead.”</div>
+</o<div class="local-info"><strong>Fire Watch identification:</strong> Use your assigned three-digit callsign and any legally required station ID. Address city personnel by title. Outside a net, call the member directly: “145, 238.” Wait for “This is 238, go ahead.”</div>div>
 
 ## Give emergency traffic priority
 
@@ -148,21 +146,18 @@ sources:
 </div>
 </div>
 
-## Monitor updates and check out
-
-<div class="local-info"><strong>[VERIFY] Net Control updates:</strong> High activity: :00, :15, :30, :45; quieter: :00, :30; stand-down: :00 hourly. Hold routine calls for updates; follow current net instructions.</div>
+<h2>Monitor updates and check<div class="local-info"><strong>Net Control updates:</strong>&nbsp;<br><span style="letter-spacing: 0.03em;">High activity: :00, :15, :30, :45; <br>quieter: :00, :30; <br>stand-down: :00 hourly. <br>Hold routine calls for updates; follow current net instructions.</span></div></h2>
 
 <p>Ask to check out or report a channel/radio change before leaving the net. After duty, report equipment problems and recharge. Neighborhood radio coordination does not replace official emergency instructions.</p>
 
-<div class="sources">SAMPLE TEXT — NOT APPROVED ADVICE. Fire Watch brief and supplied pages. Verify local procedures. Programming: COM-009; UV-PRO: COM-008.</div>
+<div class="sources">Fire Watch brief and supplied pages. Verify local procedures. Programming: COM-009; UV-PRO: COM-008.</div>
 
 
 <!-- pagebreak -->
 <!-- page-title: Scheduled Check In Net Script -->
 
-<p class="lede">Use a check-in net to practice the same speaking order and acknowledgments needed during an emergency.</p>
-
-<div class="local-info"><strong>[VERIFY] Local script examples:</strong> Confirm Heights 6, callsign 172, the Saturday 1800 schedule, and the ten-minute duration before use. Substitute the assigned operator, channel, date, and actual times. Times below use local 24-hour time. Include any legally required station identification.</div>
+<p class="lede">Use a check-in net to practice the same speaking order and acknowledgments needed during an emergency.&nbsp;<!--<div class="local-info"--><strong>Local script examples:</strong> Confirm Heights 6, callsign 172, the Saturday 1800 schedule, and the ten-minute duration before use. Substitute the assigned operator, channel, date, and actual times. Times below use local 24-hour time. Include any legally required station identification.div&gt;
+</p>
 
 ## Open the net
 
@@ -191,14 +186,12 @@ When ready: “145, go ahead with your traffic.”</p>
 
 <p>If an actual emergency develops, suspend the practice check-in and announce the change to emergency net operation. Do not close at ten minutes while emergency traffic remains unresolved.</p>
 
-<div class="sources">SAMPLE TEXT — NOT APPROVED ADVICE. Adapted from Fire Watch owner script examples (October 23, 2026). Verify local schedule, identification, and procedures before duty.</div>
+<div class="sources">Adapted from Fire Watch owner script examples (October 23, 2026). Verify local schedule, identification, and procedures before duty.</div>
 
 <!-- pagebreak -->
 <!-- page-title: Emergency Net Control Script -->
 
-<p class="lede">Keep emergency traffic moving first. Use short transmissions, release to listen, and record messages and follow-up actions.</p>
-
-<div class="local-info"><strong>[VERIFY] Activation and closure:</strong> Use the team's designated Net Control and incident coordination process. Replace bracketed fields with confirmed information. An emergency net has no automatic ten-minute end. Include required station identification.</div>
+<p class="lede">Keep emergency traffic moving first. Use short transmissions, release to listen, and record messages and follow-up actions.</<div class="local-info"><strong>Activation and closure:</strong> Use the team's designated Net Control and incident coordination process. Replace bracketed fields with confirmed information. An emergency net has no automatic ten-minute end. Include required station identification.</div>div>
 
 ## Activate or change from a check in net
 
@@ -224,7 +217,7 @@ When ready: “145, go ahead with your traffic.”</p>
 
 <p>Confirm unresolved traffic has been completed or handed to an identified station or agency. Then announce: “All stations, this is [callsign], Net Control. The directed emergency net for [incident] is closed at [time]. [State any continuing monitoring or reporting instructions.] Heights 6 is returned to normal use by authorized members of La Habra Heights Firewatch. Net Control clear. [Callsign] clear [and monitoring, if true].”</p>
 
-<div class="sources">SAMPLE TEXT — NOT APPROVED ADVICE. Fire Watch owner brief (October 23, 2026); IARU, Emergency Telecommunications Guide (2016), Chapters 7–11. Source URL on page 2.</div>
+<div class="sources">Fire Watch owner brief (October 23, 2026); IARU, Emergency Telecommunications Guide (2016), Chapters 7–11. Source URL on page 2.</div>
 
 <!-- pagebreak -->
 <!-- page-title: NATO and LAPD Phonetic Alphabets -->
@@ -249,4 +242,4 @@ When ready: “145, go ahead with your traffic.”</p>
 
 <p>Use the alphabet specified by the team or Net Control; keep it consistent within a spelling. Read back critical spellings.</p>
 
-<div class="sources">SAMPLE TEXT — NOT APPROVED ADVICE. NATO, Phonetic alphabet, codes and signals (2018), accessed October 23, 2026. www.nato.int/alphabet. LAPD, Candidate Advancement Program Guide, “Phonetic Codes,” p. 8; accessed October 23, 2026. personnel.lacity.gov/joinlapd/pdf/LAPD_CAP_Manual.pdf</div>
+<div class="sources">NATO, Phonetic alphabet, codes and signals (2018), accessed October 23, 2026. www.nato.int/alphabet. LAPD, Candidate Advancement Program Guide, “Phonetic Codes,” p. 8; accessed October 23, 2026. personnel.lacity.gov/joinlapd/pdf/LAPD_CAP_Manual.pdf</div>
