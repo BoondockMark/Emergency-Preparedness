@@ -43,7 +43,7 @@ sources:
 ---
 <p class="lede">Use this list to pack what your household needs to leave quickly. Tailor every bag to each person's health, age, abilities, language, animals, local hazards, and destination—and to what that person can safely carry.</p>
 
-<div class="warning warning--caution"><strong>Leave when officials say to leave.</strong> A go-bag supports an evacuation; it is never a reason to delay. Follow current local instructions about routes, shelters, allowed items, and supplies.</div>
+<div class="warning warning--caution"><strong>Leave immediately if officials say to leave or if you feel unsafe.&nbsp;</strong>A go-bag supports an evacuation; it is never a reason to delay. Follow current local instructions about routes, shelters, allowed items, and supplies.</div>
 
 Household/member: ____________________ &nbsp; Bag number: ____ of ____<br>
 Likely destination or meeting place: ________________________________________
